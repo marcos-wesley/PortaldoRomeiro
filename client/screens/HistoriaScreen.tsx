@@ -18,6 +18,19 @@ import { Spacing, BorderRadius, Colors } from "@/constants/theme";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
+const VibrantColors = {
+  purple: "#8B5CF6",
+  orange: "#F97316",
+  teal: "#14B8A6",
+  pink: "#EC4899",
+  blue: "#3B82F6",
+  green: "#22C55E",
+  yellow: "#EAB308",
+  red: "#EF4444",
+  indigo: "#6366F1",
+  cyan: "#06B6D4",
+};
+
 const cityImages = [
   { id: "1", uri: "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?w=600", caption: "Santuario Basilica" },
   { id: "2", uri: "https://images.unsplash.com/photo-1438032005730-c779502df39b?w=600", caption: "Vista aerea" },
@@ -26,10 +39,10 @@ const cityImages = [
 ];
 
 const cityInfo = [
-  { icon: "calendar", label: "Fundacao", value: "1920" },
-  { icon: "trending-up", label: "Altitude", value: "761m" },
-  { icon: "users", label: "Populacao", value: "129 mil" },
-  { icon: "map", label: "Area", value: "719 km2" },
+  { icon: "calendar", label: "Fundacao", value: "1920", color: VibrantColors.purple },
+  { icon: "trending-up", label: "Altitude", value: "761m", color: VibrantColors.teal },
+  { icon: "users", label: "Populacao", value: "129 mil", color: VibrantColors.orange },
+  { icon: "map", label: "Area", value: "719 km2", color: VibrantColors.pink },
 ];
 
 const timelineEvents = [
@@ -69,40 +82,43 @@ const curiosities = [
     icon: "star",
     title: "Origem do Nome",
     description: "O nome Trindade e uma homenagem direta a Santissima Trindade, cuja imagem foi encontrada no medalhao sagrado.",
+    color: VibrantColors.blue,
   },
   {
     id: "2",
     icon: "users",
     title: "Populacao Flutuante",
     description: "Durante a Romaria, a populacao da cidade pode se multiplicar em ate 20 vezes com a chegada de milhoes de fieis.",
+    color: VibrantColors.green,
   },
   {
     id: "3",
     icon: "heart",
     title: "Capital da Fe",
     description: "Trindade e conhecida mundialmente como a Capital da Fe, recebendo mais de 3 milhoes de romeiros anualmente.",
+    color: VibrantColors.pink,
   },
 ];
 
 const economicSectors = [
-  { icon: "briefcase", label: "Turismo Religioso" },
-  { icon: "shopping-bag", label: "Comercio" },
-  { icon: "home", label: "Construcao" },
-  { icon: "grid", label: "Servicos" },
+  { icon: "briefcase", label: "Turismo Forte", color: VibrantColors.teal },
+  { icon: "shopping-bag", label: "Comercio Ativo", color: VibrantColors.orange },
+  { icon: "home", label: "Construcao", color: VibrantColors.purple },
+  { icon: "grid", label: "Servicos", color: VibrantColors.blue },
 ];
 
 const exploreLinks = [
-  { id: "1", icon: "map-pin", title: "Pontos Turisticos", screen: "Roteiros" },
-  { id: "2", icon: "shopping-bag", title: "Guia Comercial", screen: "GuiaComercial" },
-  { id: "3", icon: "home", title: "Hospedagens", screen: "Hospedagem" },
+  { id: "1", icon: "map-pin", title: "Pontos Turisticos", screen: "Roteiros", color: VibrantColors.purple },
+  { id: "2", icon: "shopping-bag", title: "Guia Comercial", screen: "GuiaComercial", color: VibrantColors.orange },
+  { id: "3", icon: "home", title: "Hospedagens", screen: "Hospedagem", color: VibrantColors.teal },
 ];
 
-function InfoBadge({ icon, label, value }: { icon: string; label: string; value: string }) {
+function InfoBadge({ icon, label, value, color }: { icon: string; label: string; value: string; color: string }) {
   const { theme } = useTheme();
   return (
     <View style={[styles.infoBadge, { backgroundColor: theme.backgroundDefault }]}>
-      <View style={[styles.infoBadgeIcon, { backgroundColor: Colors.light.primary + "15" }]}>
-        <Feather name={icon as any} size={16} color={Colors.light.primary} />
+      <View style={[styles.infoBadgeIcon, { backgroundColor: color + "20" }]}>
+        <Feather name={icon as any} size={16} color={color} />
       </View>
       <View>
         <ThemedText type="caption" secondary>{label}</ThemedText>
@@ -117,7 +133,9 @@ function ImageMosaic() {
   return (
     <View style={styles.mosaicContainer}>
       <View style={styles.mosaicHeader}>
-        <Feather name="image" size={18} color={Colors.light.primary} />
+        <View style={[styles.sectionHeaderIcon, { backgroundColor: VibrantColors.indigo + "20" }]}>
+          <Feather name="image" size={18} color={VibrantColors.indigo} />
+        </View>
         <ThemedText type="h4" style={styles.mosaicTitle}>Imagens da Cidade</ThemedText>
       </View>
       <FlatList
@@ -141,19 +159,21 @@ function TimelineSection() {
   return (
     <View style={styles.timelineSection}>
       <View style={styles.sectionHeader}>
-        <Feather name="clock" size={18} color={Colors.light.primary} />
+        <View style={[styles.sectionHeaderIcon, { backgroundColor: VibrantColors.purple + "20" }]}>
+          <Feather name="clock" size={18} color={VibrantColors.purple} />
+        </View>
         <ThemedText type="h4" style={styles.sectionHeaderTitle}>Trindade na Linha do Tempo</ThemedText>
       </View>
       {timelineEvents.map((event, index) => (
         <View key={event.id} style={styles.timelineItem}>
           <View style={styles.timelineLeft}>
-            <View style={[styles.timelineDot, { backgroundColor: Colors.light.primary }]} />
+            <View style={[styles.timelineDot, { backgroundColor: VibrantColors.purple }]} />
             {index < timelineEvents.length - 1 ? (
               <View style={[styles.timelineLine, { backgroundColor: theme.border }]} />
             ) : null}
           </View>
           <View style={[styles.timelineContent, { backgroundColor: theme.backgroundDefault }]}>
-            <ThemedText style={[styles.yearBadge, { color: Colors.light.primary }]}>{event.year}</ThemedText>
+            <ThemedText style={[styles.yearBadge, { color: VibrantColors.purple }]}>{event.year}</ThemedText>
             <ThemedText type="h4" style={styles.eventTitle}>{event.title}</ThemedText>
             <ThemedText type="small" secondary style={styles.eventDescription}>{event.description}</ThemedText>
             {event.image ? (
@@ -186,7 +206,9 @@ function PedraFundamentalSection() {
   return (
     <View style={[styles.sectionCard, { backgroundColor: theme.backgroundDefault }]}>
       <View style={styles.sectionHeader}>
-        <Feather name="award" size={18} color={Colors.light.primary} />
+        <View style={[styles.sectionHeaderIcon, { backgroundColor: VibrantColors.yellow + "20" }]}>
+          <Feather name="award" size={18} color={VibrantColors.yellow} />
+        </View>
         <ThemedText type="h4" style={styles.sectionHeaderTitle}>Pedra Fundamental</ThemedText>
       </View>
       <ThemedText type="small" secondary style={styles.sectionText}>
@@ -201,7 +223,9 @@ function DevelopmentSection() {
   return (
     <View style={[styles.sectionCard, { backgroundColor: theme.backgroundDefault }]}>
       <View style={styles.sectionHeader}>
-        <Feather name="trending-up" size={18} color={Colors.light.primary} />
+        <View style={[styles.sectionHeaderIcon, { backgroundColor: VibrantColors.green + "20" }]}>
+          <Feather name="trending-up" size={18} color={VibrantColors.green} />
+        </View>
         <ThemedText type="h4" style={styles.sectionHeaderTitle}>Desenvolvimento</ThemedText>
       </View>
       <ThemedText type="small" secondary style={styles.sectionText}>
@@ -209,9 +233,9 @@ function DevelopmentSection() {
       </ThemedText>
       <View style={styles.economicGrid}>
         {economicSectors.map((sector, index) => (
-          <View key={index} style={[styles.economicItem, { backgroundColor: Colors.light.primary + "10" }]}>
-            <Feather name={sector.icon as any} size={14} color={Colors.light.primary} />
-            <ThemedText type="caption" style={styles.economicLabel}>{sector.label}</ThemedText>
+          <View key={index} style={[styles.economicItem, { backgroundColor: sector.color + "15" }]}>
+            <Feather name={sector.icon as any} size={14} color={sector.color} />
+            <ThemedText type="caption" style={[styles.economicLabel, { color: sector.color }]}>{sector.label}</ThemedText>
           </View>
         ))}
       </View>
@@ -226,8 +250,8 @@ function CuriositiesSection() {
       <ThemedText type="h4" style={styles.curiositiesTitle}>Curiosidades</ThemedText>
       {curiosities.map((item) => (
         <View key={item.id} style={[styles.curiosityCard, { backgroundColor: theme.backgroundDefault }]}>
-          <View style={[styles.curiosityIcon, { backgroundColor: Colors.light.primary + "15" }]}>
-            <Feather name={item.icon as any} size={20} color={Colors.light.primary} />
+          <View style={[styles.curiosityIcon, { backgroundColor: item.color + "20" }]}>
+            <Feather name={item.icon as any} size={20} color={item.color} />
           </View>
           <View style={styles.curiosityContent}>
             <ThemedText style={styles.curiosityTitle}>{item.title}</ThemedText>
@@ -272,7 +296,7 @@ function TodaySection() {
   );
 }
 
-function ExploreCard({ icon, title, screen }: { icon: string; title: string; screen: string }) {
+function ExploreCard({ icon, title, screen, color }: { icon: string; title: string; screen: string; color: string }) {
   const { theme } = useTheme();
   const navigation = useNavigation<any>();
   const scale = useSharedValue(1);
@@ -292,8 +316,8 @@ function ExploreCard({ icon, title, screen }: { icon: string; title: string; scr
       onPressOut={() => { scale.value = withSpring(1); }}
       style={[styles.exploreCard, { backgroundColor: theme.backgroundDefault }, animatedStyle]}
     >
-      <View style={[styles.exploreIcon, { backgroundColor: Colors.light.primary + "15" }]}>
-        <Feather name={icon as any} size={24} color={Colors.light.primary} />
+      <View style={[styles.exploreIcon, { backgroundColor: color + "20" }]}>
+        <Feather name={icon as any} size={24} color={color} />
       </View>
       <ThemedText type="small" style={styles.exploreLabel}>{title}</ThemedText>
     </AnimatedPressable>
@@ -306,7 +330,7 @@ function ExploreSection() {
       <ThemedText type="h4" style={styles.exploreTitle}>Explore mais</ThemedText>
       <View style={styles.exploreGrid}>
         {exploreLinks.map((link) => (
-          <ExploreCard key={link.id} icon={link.icon} title={link.title} screen={link.screen} />
+          <ExploreCard key={link.id} icon={link.icon} title={link.title} screen={link.screen} color={link.color} />
         ))}
       </View>
     </View>
@@ -353,7 +377,7 @@ export default function HistoriaScreen() {
           </ThemedText>
           <View style={styles.infoGrid}>
             {cityInfo.map((info, index) => (
-              <InfoBadge key={index} icon={info.icon} label={info.label} value={info.value} />
+              <InfoBadge key={index} icon={info.icon} label={info.label} value={info.value} color={info.color} />
             ))}
           </View>
         </View>
@@ -489,6 +513,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: Spacing.lg,
   },
+  sectionHeaderIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   sectionHeaderTitle: {
     marginLeft: Spacing.sm,
   },
@@ -568,7 +599,7 @@ const styles = StyleSheet.create({
     gap: Spacing.xs,
   },
   economicLabel: {
-    color: Colors.light.primary,
+    fontWeight: "500",
   },
   curiositiesSection: {
     marginBottom: Spacing.xl,
