@@ -1,0 +1,195 @@
+Quero que você crie a tela completa de História de Trindade para o aplicativo Portal do Romeiro, baseada na página web fornecida, mas totalmente adaptada para mobile, com leitura fluida, seções claras, imagens destacadas e narrativa envolvente.
+
+A tela deve ser moderna, leve, inspiradora e organizada em blocos, seguindo o mesmo padrão visual das outras telas do app.
+
+🧱 ESTRUTURA DA TELA “HISTÓRIA DE TRINDADE”
+1. Header
+
+Botão de voltar
+
+Título: História de Trindade
+
+Ícone opcional de compartilhamento
+
+2. Banner principal
+
+Criar um banner com imagem panorâmica de Trindade ou da Avenida principal da cidade.
+
+O banner deve ter:
+
+Bordas arredondadas
+
+Leve overlay
+
+Texto central ou inferior:
+“Trindade, a Capital da Fé”
+
+3. Seção: Introdução à Cidade
+
+Criar um bloco de introdução moderno contendo:
+
+Título: Trindade – Goiás
+
+Texto introdutório curto apresentando a cidade
+
+Mini bloco de informações rápidas, como:
+
+Fundação
+
+Altitude
+
+População
+
+Área
+
+Apresente essas informações em uma grade estilizada, com ícones pequenos.
+
+4. Seção visual “Mosaico da Cidade”
+
+Criar um bloco visual com:
+
+Um mosaico de fotos (inspirado no do site)
+
+Preferencialmente em carrossel ou composição responsiva
+
+Deve valorizar pontos turísticos, a Basílica, paisagens e fotos aéreas
+
+5. Seção de narrativa histórica
+
+Adicionar uma área com o texto histórico da cidade, dividido em blocos:
+
+Título: Trindade na Linha do Tempo
+
+Cada bloco deve conter:
+
+Subtítulo (por exemplo: "Origem", "Crescimento da Romaria", "Século XIX", etc.)
+
+Parágrafos curtos
+
+Boa hierarquia visual
+
+Imagens intermediárias relacionadas
+
+A leitura deve ser confortável e organizada em seções pequenas.
+
+6. Imagem panorâmica central
+
+Inserir uma imagem grande (foto aérea noturna ou diurna da cidade) com:
+
+Bordas arredondadas
+
+Legenda opcional “Foto: Prefeitura de Trindade”
+
+Essa imagem ajuda a separar seções mais longas.
+
+7. Seção “Pedra Fundamental”
+
+Criar bloco próprio com:
+
+Título: Pedra Fundamental
+
+Parágrafo explicando o evento e sua importância histórica
+
+Imagem da peça/monumento, se disponível
+
+8. Seção “Desenvolvimento econômico e social”
+
+Adicionar outra seção com:
+
+Título claro
+
+Texto dividido em parágrafos curtos
+
+Ícones ou bullets para destacar:
+
+atividades econômicas
+
+setores que cresceram
+
+impacto do turismo religioso
+
+9. Seção de curiosidades e fatos históricos
+
+Criar um bloco tipo "Cartões de Curiosidades":
+
+Cada cartão deve conter:
+
+Ícone
+
+Título curto
+
+Pequeno parágrafo
+
+Exemplos:
+
+Origem da Romaria
+
+Transformações da cidade
+
+Crescimento do turismo
+
+Momentos marcantes na história
+
+10. Bloco de Destaque do Santuário
+
+Criar uma seção com:
+
+Imagem grande ou carrossel da Basílica
+
+Texto curto sobre sua importância histórica e religiosa
+
+11. Conclusão da narrativa
+
+Adicionar um bloco final com:
+
+Título: Trindade Hoje
+
+Parágrafo curto resumindo a importância atual da cidade
+
+Uma imagem complementar opcional
+
+12. Seção: “Explore mais sobre Trindade”
+
+Criar um bloco com links ou cards curtos para:
+
+Pontos Turísticos
+
+Guia Comercial
+
+História da Romaria
+
+Dicas do Romeiro
+
+Hospedagens
+
+Formato: cards horizontais ou carrossel.
+
+13. Rodapé da tela
+
+Adicionar:
+
+Pequeno texto institucional
+
+Ícones das redes sociais
+
+Link para políticas (opcional)
+
+📱 Requisitos de UX
+
+A tela deve:
+
+Permitir leitura fluida de textos longos
+
+Alternar blocos de texto e imagens para dinamismo
+
+Usar carrosséis sempre que o conteúdo for visual
+
+Organizar tudo em seções modulares, fáceis de entender
+
+Reaproveitar componentes do app
+
+Ser acolhedora e inspiradora, reforçando fé, cultura e história
+
+✔️ INSTRUÇÃO FINAL
+
+Crie a tela completa de História de Trindade no estilo mobile moderno do app Portal do Romeiro, com blocos visuais, imagens, mosaicos, seções históricas bem divididas, textos curtos, carrosséis e narrativa adaptada ao mobile, mantendo profundidade e fluidez.
