@@ -1,0 +1,128 @@
+Quero que você crie a tela completa de Detalhe da Notícia para o aplicativo Portal do Romeiro, seguindo o design moderno que você já está utilizando no restante do app.
+
+A tela deve ser leve, elegante, religiosa-informativa, e totalmente adaptada para leitura em dispositivos móveis.
+
+🎯 Objetivo da tela
+
+Permitir ao usuário ler uma notícia completa com fluidez, incluir destaques visuais, imagens internas e blocos de anúncios integrados ao conteúdo.
+
+🧱 ESTRUTURA DA TELA
+1. Header
+
+Botão de voltar
+
+Título curto da notícia (ou apenas o título na tela abaixo do header)
+
+Ícone de compartilhar
+
+Ícone de salvar notícia (favoritar)
+
+2. Capa da notícia
+
+Logo no topo da tela:
+
+Imagem grande e responsiva
+
+Título completo da notícia
+
+Subtítulo ou linha de apoio (opcional)
+
+Data da publicação
+
+Autor (opcional)
+
+Layout moderno com espaçamento confortável.
+
+3. Conteúdo textual da notícia
+
+O texto deve ter:
+
+Parágrafos curtos
+
+Tipografia adequada para leitura longa no mobile
+
+Espaçamento entre blocos
+
+Destaques (negrito, subtítulos, citações)
+
+4. Inserção de anúncios no meio da notícia (obrigatório)
+
+O app deve exibir um bloco de anúncios nativo após alguns parágrafos.
+
+Modelo esperado:
+
+📌 Bloco de Anúncio Interno
+
+Card com fundo clean
+
+Imagem ou banner do anunciante
+
+Título curto do anúncio
+
+CTA: “Saiba mais”
+
+Estilo visual integrado ao app
+
+Deve aparecer naturalmente entre os parágrafos
+
+Podem existir:
+
+Anúncio depois do 2º ou 3º parágrafo
+
+Outro ao final, caso necessário
+
+5. Imagens internas
+
+Sempre que uma notícia tiver imagens no corpo do texto, a tela deve:
+
+Exibir imagens no formato wide
+
+Bordas levemente arredondadas
+
+Espaço acima e abaixo da imagem
+
+Legenda opcional
+
+6. Seção: “Últimas Notícias”
+
+Ao final do conteúdo, adicionar uma seção de recomendações:
+
+Título: Últimas Notícias
+
+Carrossel horizontal com cards modernos
+
+Cada card deve exibir:
+
+Imagem
+
+Título curto
+
+Pequeno resumo (1 linha)
+
+7. Rodapé
+
+Adicionar:
+
+Botões de compartilhar notícia
+
+Botão de acessar outras notícias
+
+Espaço para outro anúncio opcional
+
+📱 Comportamento e UX
+
+A tela deve:
+
+Permitir scroll suave em toda a página
+
+Adaptar o conteúdo para leitura contínua
+
+Manter botões de interação fáceis de alcançar
+
+Integrar anúncios sem prejudicar a experiência
+
+Reaproveitar componentes usados no restante do app
+
+✔️ INSTRUÇÃO FINAL
+
+Crie a tela completa de Detalhe da Notícia do app Portal do Romeiro com todos os elementos acima, incluindo blocos nativos de anunciantes dentro do conteúdo, mantendo a mesma modernidade, estilo e componentes do app já desenvolvido.
