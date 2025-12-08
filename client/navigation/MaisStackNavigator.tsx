@@ -1,8 +1,8 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import MaisScreen from "@/screens/MaisScreen";
-import { HeaderTitle } from "@/components/HeaderTitle";
-import { useScreenOptions } from "@/hooks/useScreenOptions";
+import { AppHeader } from "@/components/AppHeader";
+import { useTheme } from "@/hooks/useTheme";
 
 export type MaisStackParamList = {
   Mais: undefined;
@@ -11,15 +11,22 @@ export type MaisStackParamList = {
 const Stack = createNativeStackNavigator<MaisStackParamList>();
 
 export default function MaisStackNavigator() {
-  const screenOptions = useScreenOptions();
+  const { theme } = useTheme();
 
   return (
-    <Stack.Navigator screenOptions={screenOptions}>
+    <Stack.Navigator
+      screenOptions={{
+        header: (props) => <AppHeader {...props} showBackButton={props.navigation.canGoBack()} />,
+        contentStyle: {
+          backgroundColor: theme.backgroundRoot,
+        },
+      }}
+    >
       <Stack.Screen
         name="Mais"
         component={MaisScreen}
         options={{
-          headerTitle: () => <HeaderTitle />,
+          header: (props) => <AppHeader {...props} showBackButton={false} />,
         }}
       />
     </Stack.Navigator>

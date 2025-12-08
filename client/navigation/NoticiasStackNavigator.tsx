@@ -2,8 +2,8 @@ import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import NoticiasScreen from "@/screens/NoticiasScreen";
 import NoticiaDetailScreen from "@/screens/NoticiaDetailScreen";
-import { HeaderTitle } from "@/components/HeaderTitle";
-import { useScreenOptions } from "@/hooks/useScreenOptions";
+import { AppHeader } from "@/components/AppHeader";
+import { useTheme } from "@/hooks/useTheme";
 
 export type NoticiasStackParamList = {
   Noticias: undefined;
@@ -13,24 +13,25 @@ export type NoticiasStackParamList = {
 const Stack = createNativeStackNavigator<NoticiasStackParamList>();
 
 export default function NoticiasStackNavigator() {
-  const screenOptions = useScreenOptions();
+  const { theme } = useTheme();
 
   return (
-    <Stack.Navigator screenOptions={screenOptions}>
+    <Stack.Navigator
+      screenOptions={{
+        header: (props) => <AppHeader {...props} showBackButton={props.navigation.canGoBack()} />,
+        contentStyle: {
+          backgroundColor: theme.backgroundRoot,
+        },
+      }}
+    >
       <Stack.Screen
         name="Noticias"
         component={NoticiasScreen}
         options={{
-          headerTitle: () => <HeaderTitle />,
+          header: (props) => <AppHeader {...props} showBackButton={false} />,
         }}
       />
-      <Stack.Screen
-        name="NoticiaDetail"
-        component={NoticiaDetailScreen}
-        options={{
-          headerTitle: "",
-        }}
-      />
+      <Stack.Screen name="NoticiaDetail" component={NoticiaDetailScreen} />
     </Stack.Navigator>
   );
 }

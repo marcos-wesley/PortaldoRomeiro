@@ -27,6 +27,9 @@ export const Colors = {
     categoryPurple: "#8B5CF6",
     categoryRed: "#EF4444",
     cardOverlay: "rgba(0, 0, 0, 0.4)",
+    headerBurgundy: "#722F37",
+    headerAccent: "#C9A86C",
+    avatarBorder: "#4CAF50",
   },
   dark: {
     text: "#ECEDEE",
@@ -51,6 +54,9 @@ export const Colors = {
     categoryPurple: "#A78BFA",
     categoryRed: "#F87171",
     cardOverlay: "rgba(0, 0, 0, 0.6)",
+    headerBurgundy: "#5A252B",
+    headerAccent: "#C9A86C",
+    avatarBorder: "#4CAF50",
   },
 };
 

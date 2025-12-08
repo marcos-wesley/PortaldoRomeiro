@@ -1,28 +1,43 @@
 import React from "react";
-import { View, StyleSheet, Text } from "react-native";
+import { View, StyleSheet, Text, Pressable } from "react-native";
 import { Image } from "expo-image";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { NativeStackHeaderProps } from "@react-navigation/native-stack";
 
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { useTheme } from "@/hooks/useTheme";
 
-interface HeaderTitleProps {
+interface AppHeaderProps extends Partial<NativeStackHeaderProps> {
   userName?: string;
   userAvatar?: string;
-  onMenuPress?: () => void;
+  showBackButton?: boolean;
 }
 
-export function HeaderTitle({ 
+export function AppHeader({ 
   userName = "Romeiro", 
   userAvatar,
-}: HeaderTitleProps) {
+  showBackButton = false,
+  navigation,
+}: AppHeaderProps) {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
 
+  const handleBack = () => {
+    if (navigation?.canGoBack()) {
+      navigation.goBack();
+    }
+  };
+
   return (
     <View style={[styles.container, { paddingTop: insets.top + Spacing.sm, backgroundColor: theme.headerBurgundy }]}>
-      <View style={styles.logoContainer}>
+      {showBackButton && navigation?.canGoBack() ? (
+        <Pressable onPress={handleBack} style={styles.backButton}>
+          <Feather name="arrow-left" size={24} color="#FFFFFF" />
+        </Pressable>
+      ) : null}
+      
+      <View style={[styles.logoContainer, showBackButton && styles.logoWithBack]}>
         <Image
           source={require("../../assets/images/portal-logo.webp")}
           style={styles.logo}
@@ -63,9 +78,16 @@ const styles = StyleSheet.create({
     paddingBottom: Spacing.md,
     width: "100%",
   },
+  backButton: {
+    marginRight: Spacing.sm,
+    padding: Spacing.xs,
+  },
   logoContainer: {
     flex: 1,
     alignItems: "flex-start",
+  },
+  logoWithBack: {
+    marginLeft: 0,
   },
   logo: {
     width: 140,

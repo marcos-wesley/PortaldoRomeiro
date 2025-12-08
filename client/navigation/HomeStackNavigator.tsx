@@ -11,8 +11,8 @@ import ServicosScreen from "@/screens/ServicosScreen";
 import VideosScreen from "@/screens/VideosScreen";
 import VideoDetailScreen from "@/screens/VideoDetailScreen";
 import NoticiaDetailScreen from "@/screens/NoticiaDetailScreen";
-import { HeaderTitle } from "@/components/HeaderTitle";
-import { useScreenOptions } from "@/hooks/useScreenOptions";
+import { AppHeader } from "@/components/AppHeader";
+import { useTheme } from "@/hooks/useTheme";
 
 export type HomeStackParamList = {
   Home: undefined;
@@ -31,87 +31,34 @@ export type HomeStackParamList = {
 const Stack = createNativeStackNavigator<HomeStackParamList>();
 
 export default function HomeStackNavigator() {
-  const screenOptions = useScreenOptions();
+  const { theme } = useTheme();
 
   return (
-    <Stack.Navigator screenOptions={screenOptions}>
+    <Stack.Navigator
+      screenOptions={{
+        header: (props) => <AppHeader {...props} showBackButton={props.navigation.canGoBack()} />,
+        contentStyle: {
+          backgroundColor: theme.backgroundRoot,
+        },
+      }}
+    >
       <Stack.Screen
         name="Home"
         component={HomeScreen}
         options={{
-          headerTitle: () => <HeaderTitle />,
+          header: (props) => <AppHeader {...props} showBackButton={false} />,
         }}
       />
-      <Stack.Screen
-        name="Historia"
-        component={HistoriaScreen}
-        options={{
-          headerTitle: "Historia",
-        }}
-      />
-      <Stack.Screen
-        name="TVAoVivo"
-        component={TVAoVivoScreen}
-        options={{
-          headerTitle: "TV Ao Vivo",
-        }}
-      />
-      <Stack.Screen
-        name="Roteiros"
-        component={RoteirosScreen}
-        options={{
-          headerTitle: "Roteiros",
-        }}
-      />
-      <Stack.Screen
-        name="Info"
-        component={InfoScreen}
-        options={{
-          headerTitle: "Informacoes",
-        }}
-      />
-      <Stack.Screen
-        name="Hospedagem"
-        component={HospedagemScreen}
-        options={{
-          headerTitle: "Hospedagem",
-        }}
-      />
-      <Stack.Screen
-        name="HospedagemDetail"
-        component={HospedagemDetailScreen}
-        options={{
-          headerTitle: "",
-        }}
-      />
-      <Stack.Screen
-        name="Servicos"
-        component={ServicosScreen}
-        options={{
-          headerTitle: "Servicos",
-        }}
-      />
-      <Stack.Screen
-        name="Videos"
-        component={VideosScreen}
-        options={{
-          headerTitle: "Videos",
-        }}
-      />
-      <Stack.Screen
-        name="VideoDetail"
-        component={VideoDetailScreen}
-        options={{
-          headerTitle: "",
-        }}
-      />
-      <Stack.Screen
-        name="NoticiaDetail"
-        component={NoticiaDetailScreen}
-        options={{
-          headerTitle: "",
-        }}
-      />
+      <Stack.Screen name="Historia" component={HistoriaScreen} />
+      <Stack.Screen name="TVAoVivo" component={TVAoVivoScreen} />
+      <Stack.Screen name="Roteiros" component={RoteirosScreen} />
+      <Stack.Screen name="Info" component={InfoScreen} />
+      <Stack.Screen name="Hospedagem" component={HospedagemScreen} />
+      <Stack.Screen name="HospedagemDetail" component={HospedagemDetailScreen} />
+      <Stack.Screen name="Servicos" component={ServicosScreen} />
+      <Stack.Screen name="Videos" component={VideosScreen} />
+      <Stack.Screen name="VideoDetail" component={VideoDetailScreen} />
+      <Stack.Screen name="NoticiaDetail" component={NoticiaDetailScreen} />
     </Stack.Navigator>
   );
 }
