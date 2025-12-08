@@ -85,7 +85,7 @@ function SocialButton({ icon, onPress }: { icon: string; onPress: () => void }) 
       onPressOut={() => { scale.value = withSpring(1); }}
       style={[styles.socialButton, { backgroundColor: theme.backgroundDefault }, animatedStyle]}
     >
-      <Feather name={icon as any} size={22} color={theme.textPrimary} />
+      <Feather name={icon as any} size={22} color={theme.text} />
     </AnimatedPressable>
   );
 }
@@ -340,10 +340,11 @@ const styles = StyleSheet.create({
   offeringsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: Spacing.sm,
+    justifyContent: "space-between",
+    rowGap: Spacing.md,
   },
   offeringCard: {
-    width: (SCREEN_WIDTH - Spacing.lg * 2 - Spacing.sm * 2) / 3,
+    width: "31%",
     borderRadius: BorderRadius.md,
     padding: Spacing.md,
     alignItems: "center",
