@@ -1,10 +1,9 @@
 import { ScrollView, View, StyleSheet, Pressable, ImageBackground, Platform, Linking, Alert } from "react-native";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import MapView, { Marker, Polyline, PROVIDER_DEFAULT } from "react-native-maps";
 import * as Location from "expo-location";
 import Animated, {
   useAnimatedStyle,
@@ -128,21 +127,53 @@ function RoutePoints({ route }: { route: Route }) {
   );
 }
 
-function RouteMap({ selectedRoute, userLocation }: { selectedRoute: Route | null; userLocation: Location.LocationObject | null }) {
+function WebMapPlaceholder() {
+  const { theme } = useTheme();
+  
+  return (
+    <View style={[styles.mapPlaceholder, { backgroundColor: theme.backgroundDefault }]}>
+      <Feather name="map" size={48} color={Colors.light.primary} />
+      <ThemedText type="h4" style={styles.mapPlaceholderTitle}>Mapa Interativo</ThemedText>
+      <ThemedText type="caption" secondary style={styles.mapPlaceholderText}>
+        Execute no Expo Go para ver o mapa com GPS e navegacao.
+      </ThemedText>
+    </View>
+  );
+}
+
+function LocationPermissionRequest({ onRequestPermission, onOpenSettings, canAskAgain }: { 
+  onRequestPermission: () => void; 
+  onOpenSettings: () => void;
+  canAskAgain: boolean;
+}) {
+  const { theme } = useTheme();
+  
+  return (
+    <View style={[styles.permissionCard, { backgroundColor: theme.backgroundDefault }]}>
+      <Feather name="map-pin" size={32} color={Colors.light.primary} />
+      <ThemedText type="h4" style={styles.permissionTitle}>Localizacao Necessaria</ThemedText>
+      <ThemedText type="caption" secondary style={styles.permissionText}>
+        Permita o acesso a sua localizacao para ver sua posicao no mapa.
+      </ThemedText>
+      {canAskAgain ? (
+        <Pressable onPress={onRequestPermission} style={[styles.permissionButton, { backgroundColor: Colors.light.primary }]}>
+          <ThemedText style={styles.permissionButtonText}>Permitir Localizacao</ThemedText>
+        </Pressable>
+      ) : (
+        <Pressable onPress={onOpenSettings} style={[styles.permissionButton, { backgroundColor: Colors.light.primary }]}>
+          <ThemedText style={styles.permissionButtonText}>Abrir Configuracoes</ThemedText>
+        </Pressable>
+      )}
+    </View>
+  );
+}
+
+function NativeMapView({ selectedRoute, userLocation }: { selectedRoute: Route | null; userLocation: Location.LocationObject | null }) {
   const { theme } = useTheme();
   const coords = selectedRoute ? routeCoordinates[selectedRoute.id] || [] : [];
-
-  if (Platform.OS === "web") {
-    return (
-      <View style={[styles.mapPlaceholder, { backgroundColor: theme.backgroundDefault }]}>
-        <Feather name="map" size={48} color={Colors.light.primary} />
-        <ThemedText type="h4" style={styles.mapPlaceholderTitle}>Mapa Interativo</ThemedText>
-        <ThemedText type="caption" secondary style={styles.mapPlaceholderText}>
-          Execute no Expo Go para ver o mapa com GPS e navegacao.
-        </ThemedText>
-      </View>
-    );
-  }
+  
+  const MapView = require("react-native-maps").default;
+  const { Marker, Polyline, PROVIDER_DEFAULT } = require("react-native-maps");
 
   return (
     <View style={styles.mapContainer}>
@@ -195,27 +226,51 @@ export default function RoteirosScreen() {
   const { theme } = useTheme();
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(routesData[0] || null);
   const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null);
-  const [locationPermission, setLocationPermission] = useState<Location.PermissionStatus | null>(null);
+  const [permissionStatus, setPermissionStatus] = useState<Location.PermissionResponse | null>(null);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+
+  const requestLocationPermission = useCallback(async () => {
+    if (Platform.OS === "web") return;
+    
+    setIsLoadingLocation(true);
+    try {
+      const response = await Location.requestForegroundPermissionsAsync();
+      setPermissionStatus(response);
+      
+      if (response.granted) {
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
+        setUserLocation(location);
+      }
+    } catch (error) {
+      console.log("Error getting location:", error);
+      Alert.alert("Erro", "Nao foi possivel obter sua localizacao. Tente novamente.");
+    } finally {
+      setIsLoadingLocation(false);
+    }
+  }, []);
+
+  const handleOpenSettings = useCallback(async () => {
+    if (Platform.OS === "web") return;
+    
+    try {
+      await Linking.openSettings();
+    } catch (error) {
+      Alert.alert("Erro", "Nao foi possivel abrir as configuracoes.");
+    }
+  }, []);
 
   useEffect(() => {
-    (async () => {
-      if (Platform.OS === "web") return;
-      
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      setLocationPermission(status);
-      
-      if (status === "granted") {
-        try {
-          const location = await Location.getCurrentPositionAsync({
-            accuracy: Location.Accuracy.Balanced,
-          });
-          setUserLocation(location);
-        } catch (error) {
-          console.log("Error getting location:", error);
+    if (Platform.OS !== "web") {
+      Location.getForegroundPermissionsAsync().then((response) => {
+        setPermissionStatus(response);
+        if (response.granted) {
+          requestLocationPermission();
         }
-      }
-    })();
-  }, []);
+      });
+    }
+  }, [requestLocationPermission]);
 
   const handleOpenNavigation = () => {
     if (!selectedRoute) return;
@@ -238,6 +293,24 @@ export default function RoteirosScreen() {
     });
   };
 
+  const renderMapSection = () => {
+    if (Platform.OS === "web") {
+      return <WebMapPlaceholder />;
+    }
+
+    if (!permissionStatus?.granted) {
+      return (
+        <LocationPermissionRequest
+          onRequestPermission={requestLocationPermission}
+          onOpenSettings={handleOpenSettings}
+          canAskAgain={permissionStatus?.canAskAgain !== false}
+        />
+      );
+    }
+
+    return <NativeMapView selectedRoute={selectedRoute} userLocation={userLocation} />;
+  };
+
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.backgroundRoot }}
@@ -258,9 +331,9 @@ export default function RoteirosScreen() {
         </View>
       </View>
 
-      <RouteMap selectedRoute={selectedRoute} userLocation={userLocation} />
+      {renderMapSection()}
 
-      {selectedRoute && Platform.OS !== "web" ? (
+      {selectedRoute && Platform.OS !== "web" && permissionStatus?.granted ? (
         <Pressable
           onPress={handleOpenNavigation}
           style={[styles.navigateButton, { backgroundColor: Colors.light.primary }]}
@@ -333,6 +406,32 @@ const styles = StyleSheet.create({
   },
   mapPlaceholderText: {
     textAlign: "center",
+  },
+  permissionCard: {
+    height: 220,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.lg,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: Spacing.xl,
+  },
+  permissionTitle: {
+    marginTop: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  permissionText: {
+    textAlign: "center",
+    marginBottom: Spacing.lg,
+  },
+  permissionButton: {
+    paddingHorizontal: Spacing.xl,
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+  },
+  permissionButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "600",
+    fontSize: 14,
   },
   mapOverlay: {
     position: "absolute",

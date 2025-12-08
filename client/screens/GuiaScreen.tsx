@@ -206,36 +206,48 @@ export default function GuiaScreen() {
 
   const handleToggleFavorite = async (prayer: Prayer) => {
     const isFav = favorites[prayer.id];
+    let success: boolean;
     if (isFav) {
-      await removeFavorite(prayer.id, "prayer");
+      success = await removeFavorite(prayer.id, "prayer");
     } else {
-      await addFavorite({ id: prayer.id, type: "prayer", title: prayer.title });
+      success = await addFavorite({ id: prayer.id, type: "prayer", title: prayer.title });
     }
-    setFavorites((prev) => ({ ...prev, [prayer.id]: !isFav }));
+    if (success) {
+      setFavorites((prev) => ({ ...prev, [prayer.id]: !isFav }));
+    }
   };
 
   const handleToggleOffline = async (prayer: Prayer) => {
     const isOffline = offlineSaved[prayer.id];
+    let success: boolean;
     if (isOffline) {
-      await removeOfflinePrayer(prayer.id);
-      Alert.alert("Removido", "Oracao removida do acesso offline.");
+      success = await removeOfflinePrayer(prayer.id);
+      if (success) {
+        Alert.alert("Removido", "Oracao removida do acesso offline.");
+      }
     } else {
-      await saveOfflinePrayer({ 
+      success = await saveOfflinePrayer({ 
         id: prayer.id, 
         title: prayer.title, 
         content: prayer.content, 
         category: prayer.category 
       });
-      Alert.alert("Salvo", "Oracao salva para acesso offline.");
+      if (success) {
+        Alert.alert("Salvo", "Oracao salva para acesso offline.");
+      }
     }
-    setOfflineSaved((prev) => ({ ...prev, [prayer.id]: !isOffline }));
-    loadStates();
+    if (success) {
+      setOfflineSaved((prev) => ({ ...prev, [prayer.id]: !isOffline }));
+      loadStates();
+    }
   };
 
   const handleRemoveOfflinePrayer = async (id: string) => {
-    await removeOfflinePrayer(id);
-    setOfflineSaved((prev) => ({ ...prev, [id]: false }));
-    loadStates();
+    const success = await removeOfflinePrayer(id);
+    if (success) {
+      setOfflineSaved((prev) => ({ ...prev, [id]: false }));
+      loadStates();
+    }
   };
 
   return (
