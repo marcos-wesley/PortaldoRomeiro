@@ -12,6 +12,10 @@ interface AppHeaderProps extends Partial<NativeStackHeaderProps> {
   userName?: string;
   userAvatar?: string;
   showBackButton?: boolean;
+  onSearchPress?: () => void;
+  onNotificationsPress?: () => void;
+  onAvatarPress?: () => void;
+  hasNotifications?: boolean;
 }
 
 export function AppHeader({ 
@@ -19,6 +23,10 @@ export function AppHeader({
   userAvatar,
   showBackButton = false,
   navigation,
+  onSearchPress,
+  onNotificationsPress,
+  onAvatarPress,
+  hasNotifications = true,
 }: AppHeaderProps) {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
@@ -30,40 +38,65 @@ export function AppHeader({
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + Spacing.sm, backgroundColor: theme.headerBurgundy }]}>
+    <View style={[styles.container, { paddingTop: insets.top + Spacing.sm, backgroundColor: theme.headerBackground }]}>
       {showBackButton && navigation?.canGoBack() ? (
         <Pressable onPress={handleBack} style={styles.backButton}>
-          <Feather name="arrow-left" size={24} color="#FFFFFF" />
+          <Feather name="arrow-left" size={24} color={theme.headerTitleText} />
         </Pressable>
       ) : null}
       
-      <View style={[styles.logoContainer, showBackButton && styles.logoWithBack]}>
+      <View style={[styles.leftSection, showBackButton && styles.leftWithBack]}>
         <Image
           source={require("../../assets/images/portal-logo.webp")}
-          style={styles.logo}
+          style={styles.logoIcon}
           contentFit="contain"
         />
+        <View style={styles.titleContainer}>
+          <Text style={[styles.titleText, { color: theme.headerTitleText }]}>
+            PORTAL DO ROMEIRO
+          </Text>
+          <Text style={[styles.subtitleText, { color: theme.headerSubtitleText }]}>
+            FÉ, DEVOÇÃO E INFORMAÇÃO
+          </Text>
+        </View>
       </View>
 
       <View style={styles.rightSection}>
-        <View style={styles.userInfo}>
-          <Text style={styles.userName}>{userName}</Text>
-          <Text style={[styles.welcomeText, { color: theme.headerAccent }]}>Bem-vindo</Text>
-        </View>
+        <Pressable 
+          onPress={onSearchPress} 
+          style={({ pressed }) => [styles.iconButton, pressed && styles.iconButtonPressed]}
+        >
+          <Feather name="search" size={22} color={theme.headerIconColor} />
+        </Pressable>
         
-        <View style={[styles.avatarContainer, { borderColor: theme.avatarBorder, backgroundColor: theme.headerBurgundy }]}>
-          {userAvatar ? (
-            <Image
-              source={{ uri: userAvatar }}
-              style={styles.avatar}
-              contentFit="cover"
-            />
-          ) : (
-            <View style={styles.avatarPlaceholder}>
-              <Feather name="user" size={24} color="#FFFFFF" />
-            </View>
-          )}
-        </View>
+        <Pressable 
+          onPress={onNotificationsPress} 
+          style={({ pressed }) => [styles.iconButton, pressed && styles.iconButtonPressed]}
+        >
+          <Feather name="bell" size={22} color={theme.headerIconColor} />
+          {hasNotifications ? (
+            <View style={[styles.notificationBadge, { backgroundColor: theme.notificationBadge }]} />
+          ) : null}
+        </Pressable>
+        
+        <Pressable 
+          onPress={onAvatarPress}
+          style={({ pressed }) => [pressed && styles.avatarPressed]}
+        >
+          <View style={[styles.avatarContainer, { borderColor: theme.avatarBorder, backgroundColor: theme.backgroundSecondary }]}>
+            {userAvatar ? (
+              <Image
+                source={{ uri: userAvatar }}
+                style={styles.avatar}
+                contentFit="cover"
+              />
+            ) : (
+              <View style={[styles.avatarPlaceholder, { backgroundColor: theme.backgroundTertiary }]}>
+                <Feather name="user" size={18} color={theme.headerIconColor} />
+              </View>
+            )}
+          </View>
+        </Pressable>
       </View>
     </View>
   );
@@ -82,36 +115,56 @@ const styles = StyleSheet.create({
     marginRight: Spacing.sm,
     padding: Spacing.xs,
   },
-  logoContainer: {
+  leftSection: {
     flex: 1,
-    alignItems: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
   },
-  logoWithBack: {
+  leftWithBack: {
     marginLeft: 0,
   },
-  logo: {
-    width: 140,
-    height: 36,
+  logoIcon: {
+    width: 40,
+    height: 40,
+  },
+  titleContainer: {
+    flexDirection: "column",
+  },
+  titleText: {
+    fontSize: 16,
+    fontWeight: "700",
+    letterSpacing: 1,
+  },
+  subtitleText: {
+    fontSize: 10,
+    fontWeight: "500",
+    letterSpacing: 0.5,
+    marginTop: 1,
   },
   rightSection: {
     flexDirection: "row",
     alignItems: "center",
     gap: Spacing.md,
   },
-  userInfo: {
-    alignItems: "flex-end",
+  iconButton: {
+    padding: Spacing.xs,
+    position: "relative",
   },
-  userName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#FFFFFF",
+  iconButtonPressed: {
+    opacity: 0.6,
   },
-  welcomeText: {
-    fontSize: 13,
+  notificationBadge: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   avatarContainer: {
-    width: 48,
-    height: 48,
+    width: 40,
+    height: 40,
     borderRadius: BorderRadius.full,
     borderWidth: 2,
     overflow: "hidden",
@@ -125,6 +178,8 @@ const styles = StyleSheet.create({
     height: "100%",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "rgba(255, 255, 255, 0.2)",
+  },
+  avatarPressed: {
+    opacity: 0.7,
   },
 });

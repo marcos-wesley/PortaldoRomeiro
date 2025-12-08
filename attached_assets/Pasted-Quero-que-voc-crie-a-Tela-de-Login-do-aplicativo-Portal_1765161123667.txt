@@ -1,0 +1,105 @@
+Quero que você crie a Tela de Login do aplicativo Portal do Romeiro, coerente com a tela de cadastro já criada, com:
+	•	Login por redes sociais
+	•	Login tradicional por e-mail e senha
+
+A tela deve seguir o mesmo estilo moderno, limpo e acolhedor das demais telas do app.
+
+⸻
+
+🧱 Estrutura da Tela de Login
+
+1. Header
+	•	Logo ou ícone do Portal do Romeiro no topo
+	•	Título: Entrar
+	•	Subtítulo: Acesse sua conta no Portal do Romeiro
+
+⸻
+
+2. Botões de Login por Redes Sociais
+
+Logo no início, destaque para login rápido:
+	•	Botão: Continuar com Google
+	•	Botão: Continuar com Facebook
+	•	(Opcional) Continuar com Apple, se fizer sentido para o projeto
+
+Cada botão deve ter:
+	•	Ícone da rede social
+	•	Texto claro
+	•	Tamanho grande, quase full-width
+
+Separador visual abaixo, do tipo:
+
+— ou entre com seu e-mail —
+
+⸻
+
+3. Formulário de Login Tradicional
+
+Campos principais:
+	•	E-mail
+	•	Senha
+
+Regras de UX:
+	•	Campo de senha com opção de mostrar/ocultar senha
+	•	Placeholders e labels claros
+	•	Tratamento visual para erros (e-mail inválido, senha incorreta etc. – conceito)
+
+⸻
+
+4. Opções adicionais
+
+Logo abaixo dos campos:
+	•	Checkbox: Lembrar-me neste dispositivo
+	•	Link: Esqueci minha senha
+
+O link “Esqueci minha senha” deve abrir ou levar para uma tela/fluxo de recuperação de senha (já deixar o gancho preparado).
+
+⸻
+
+5. Botão principal
+
+Um botão grande e destacado:
+
+[ Entrar ]
+	•	Estado desabilitado se os campos estiverem vazios (conceito)
+	•	Ao tocar, aciona validação local e segue para a home do app (ou fluxo definido)
+
+⸻
+
+6. Link para criação de conta
+
+Na parte de baixo da tela, adicionar:
+
+Ainda não tem conta? Cadastrar-se
+
+Esse texto deve ser clicável e levar para a Tela de Cadastro do Usuário.
+
+⸻
+
+7. Mensagem de confiança (opcional)
+
+Pequeno texto abaixo:
+
+Seus dados são protegidos e utilizados apenas para sua experiência no Portal do Romeiro.
+
+⸻
+
+📱 UX / Comportamento
+	•	Layout preparado para teclado aberto (sem quebrar a tela).
+	•	Componentes com espaçamento confortável para toque.
+	•	Priorizar os botões de redes sociais no topo para login rápido.
+	•	Visual consistente com a tela de cadastro (mesma tipografia, ícones, estilo de cards e botões).
+
+⸻
+
+✔️ Instrução final
+
+Crie a Tela de Login do app Portal do Romeiro com:
+	•	Login por redes sociais (Google, Facebook e opcionalmente Apple)
+	•	Login tradicional por e-mail e senha
+	•	Opção “Lembrar-me”
+	•	Link “Esqueci minha senha”
+	•	Botão principal “Entrar”
+	•	Link “Ainda não tem conta? Cadastrar-se”
+
+Tudo dentro do mesmo padrão visual moderno já usado nas outras telas do aplicativo.
