@@ -24,6 +24,32 @@ const CARD_WIDTH = (SCREEN_WIDTH - Spacing.lg * 2 - Spacing.md) / 2;
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
+function WelcomeBanner() {
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Animated.View style={animatedStyle}>
+      <ImageBackground
+        source={require("../../assets/images/basilica-hero.jpg")}
+        style={styles.welcomeBanner}
+        imageStyle={styles.welcomeBannerImage}
+      >
+        <LinearGradient
+          colors={["rgba(0,0,0,0.3)", "rgba(0,0,0,0.6)"]}
+          style={styles.welcomeGradient}
+        >
+          <ThemedText style={styles.welcomeTitle}>Hora de conhecer a</ThemedText>
+          <ThemedText style={styles.welcomeHighlight}>capital da Fe!</ThemedText>
+        </LinearGradient>
+      </ImageBackground>
+    </Animated.View>
+  );
+}
+
 function HeroBanner({ news, onPress }: { news: News; onPress: () => void }) {
   const scale = useSharedValue(1);
 
@@ -239,7 +265,11 @@ export default function HomeScreen() {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.content}>
-        <HeroBanner news={featuredNews} onPress={() => handleNewsPress(featuredNews.id)} />
+        <WelcomeBanner />
+
+        <SectionHeader
+          title="Categorias"
+        />
 
         <View style={styles.quickActionsGrid}>
           {quickActions.map((action) => (
@@ -297,6 +327,39 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   content: {
     paddingHorizontal: Spacing.lg,
+  },
+  welcomeBanner: {
+    height: 220,
+    borderRadius: BorderRadius.lg,
+    overflow: "hidden",
+    marginBottom: Spacing.xl,
+  },
+  welcomeBannerImage: {
+    borderRadius: BorderRadius.lg,
+  },
+  welcomeGradient: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: Spacing.xl,
+  },
+  welcomeTitle: {
+    color: "#FFFFFF",
+    fontSize: 22,
+    fontWeight: "600",
+    textAlign: "center",
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  welcomeHighlight: {
+    color: "#FFFFFF",
+    fontSize: 28,
+    fontWeight: "800",
+    textAlign: "center",
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
   },
   heroBanner: {
     height: 180,

@@ -1,6 +1,7 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import MaisScreen from "@/screens/MaisScreen";
+import { HeaderTitle } from "@/components/HeaderTitle";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type MaisStackParamList = {
@@ -18,7 +19,7 @@ export default function MaisStackNavigator() {
         name="Mais"
         component={MaisScreen}
         options={{
-          headerTitle: "Mais",
+          headerTitle: () => <HeaderTitle />,
         }}
       />
     </Stack.Navigator>

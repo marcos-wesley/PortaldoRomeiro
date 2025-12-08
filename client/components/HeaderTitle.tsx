@@ -1,22 +1,21 @@
 import React from "react";
-import { View, StyleSheet, Image } from "react-native";
+import { View, StyleSheet } from "react-native";
+import { Image } from "expo-image";
 
-import { ThemedText } from "@/components/ThemedText";
 import { Spacing } from "@/constants/theme";
 
 interface HeaderTitleProps {
-  title: string;
+  title?: string;
 }
 
 export function HeaderTitle({ title }: HeaderTitleProps) {
   return (
     <View style={styles.container}>
       <Image
-        source={require("../../assets/images/icon.png")}
-        style={styles.icon}
-        resizeMode="contain"
+        source={require("../../assets/images/portal-logo.webp")}
+        style={styles.logo}
+        contentFit="contain"
       />
-      <ThemedText style={styles.title}>{title}</ThemedText>
     </View>
   );
 }
@@ -25,16 +24,10 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "flex-start",
+    justifyContent: "center",
   },
-  icon: {
-    width: 32,
-    height: 32,
-    marginRight: Spacing.sm,
-    borderRadius: 8,
-  },
-  title: {
-    fontSize: 17,
-    fontWeight: "600",
+  logo: {
+    width: 180,
+    height: 44,
   },
 });

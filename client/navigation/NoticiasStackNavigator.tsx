@@ -2,6 +2,7 @@ import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import NoticiasScreen from "@/screens/NoticiasScreen";
 import NoticiaDetailScreen from "@/screens/NoticiaDetailScreen";
+import { HeaderTitle } from "@/components/HeaderTitle";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
 export type NoticiasStackParamList = {
@@ -20,7 +21,7 @@ export default function NoticiasStackNavigator() {
         name="Noticias"
         component={NoticiasScreen}
         options={{
-          headerTitle: "Noticias",
+          headerTitle: () => <HeaderTitle />,
         }}
       />
       <Stack.Screen
