@@ -2,6 +2,8 @@ import { ScrollView, View, StyleSheet, Pressable, Linking, Alert, Platform } fro
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import Animated, {
   useAnimatedStyle,
@@ -13,6 +15,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { useAuth } from "@/contexts/AuthContext";
 import { Spacing, BorderRadius, Colors } from "@/constants/theme";
+import type { MaisStackParamList } from "@/navigation/MaisStackNavigator";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -63,6 +66,7 @@ export default function MaisScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const { theme } = useTheme();
   const { user, logout } = useAuth();
+  const navigation = useNavigation<NativeStackNavigationProp<MaisStackParamList>>();
 
   const handleOpenLink = async (url: string) => {
     try {
@@ -130,6 +134,7 @@ export default function MaisScreen() {
       <MenuItem icon="clock" title="Historico" subtitle="Conteudo visualizado recentemente" onPress={() => {}} />
 
       <SectionTitle title="INFORMACOES" />
+      <MenuItem icon="compass" title="Dicas do Romeiro" subtitle="Orientacoes para sua romaria" onPress={() => navigation.navigate("DicasRomeiro")} />
       <MenuItem icon="phone" title="Contato" subtitle="Fale conosco" onPress={() => {}} />
       <MenuItem icon="map" title="Como Chegar" subtitle="Localizacao e rotas" onPress={() => {}} />
       <MenuItem icon="calendar" title="Agenda" subtitle="Proximos eventos e celebracoes" onPress={() => {}} />
