@@ -327,3 +327,288 @@ export const prayersData: Prayer[] = [
     category: "Oracoes",
   },
 ];
+
+export interface BusinessCategory {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+}
+
+export interface Business {
+  id: string;
+  name: string;
+  category: string;
+  categoryId: string;
+  logoUrl: string;
+  coverUrl?: string;
+  description: string;
+  shortDescription?: string;
+  address: string;
+  neighborhood: string;
+  city: string;
+  phone?: string;
+  whatsapp?: string;
+  website?: string;
+  instagram?: string;
+  facebook?: string;
+  hours?: string;
+  priceRange?: string;
+  rating?: number;
+  reviews?: number;
+  featured: boolean;
+  gallery?: string[];
+  latitude?: number;
+  longitude?: number;
+  delivery?: boolean;
+  deliveryUrl?: string;
+}
+
+export const businessCategories: BusinessCategory[] = [
+  { id: "onde-comer", name: "Onde Comer", icon: "coffee", color: "#F97316" },
+  { id: "onde-ficar", name: "Onde Ficar", icon: "home", color: "#4169E1" },
+  { id: "onde-comprar", name: "Onde Comprar", icon: "shopping-bag", color: "#10B981" },
+  { id: "construcao", name: "Construcao e Reforma", icon: "tool", color: "#8B5CF6" },
+  { id: "diversao", name: "Diversao e Lazer", icon: "smile", color: "#EC4899" },
+  { id: "carro", name: "Para seu Carro", icon: "truck", color: "#06B6D4" },
+  { id: "moto", name: "Para sua Moto", icon: "wind", color: "#EF4444" },
+];
+
+export const businessesData: Business[] = [
+  {
+    id: "1",
+    name: "Restaurante Sabor da Fe",
+    category: "Restaurante",
+    categoryId: "onde-comer",
+    logoUrl: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400",
+    coverUrl: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800",
+    description: "O Restaurante Sabor da Fe oferece a melhor culinaria goiana com ingredientes frescos e receitas tradicionais. Ambiente familiar e acolhedor, perfeito para refeicoes em grupo. Temos opcoes de buffet e pratos a la carte.",
+    shortDescription: "Culinaria goiana tradicional com ambiente familiar",
+    address: "Rua dos Romeiros, 123",
+    neighborhood: "Centro",
+    city: "Trindade",
+    phone: "(62) 3333-1234",
+    whatsapp: "5562999991234",
+    website: "https://sabordafe.com.br",
+    instagram: "@sabordafe",
+    hours: "Seg-Dom: 11h-22h",
+    priceRange: "$$",
+    rating: 4.7,
+    reviews: 234,
+    featured: true,
+    gallery: [
+      "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800",
+      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800",
+      "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800",
+    ],
+    latitude: -16.6499,
+    longitude: -49.4897,
+    delivery: true,
+    deliveryUrl: "https://ifood.com.br/sabordafe",
+  },
+  {
+    id: "2",
+    name: "Pousada Bencao Divina",
+    category: "Pousada",
+    categoryId: "onde-ficar",
+    logoUrl: "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400",
+    coverUrl: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800",
+    description: "Pousada aconchegante a poucos metros do Santuario. Quartos confortaveis com ar condicionado, Wi-Fi, TV e cafe da manha incluso. Ideal para romeiros e turistas.",
+    shortDescription: "Hospedagem proxima ao Santuario",
+    address: "Av. Santuario, 456",
+    neighborhood: "Centro",
+    city: "Trindade",
+    phone: "(62) 3333-5678",
+    whatsapp: "5562999995678",
+    hours: "Recepcao 24h",
+    priceRange: "$$$",
+    rating: 4.8,
+    reviews: 189,
+    featured: true,
+    gallery: [
+      "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=800",
+      "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800",
+    ],
+    latitude: -16.6501,
+    longitude: -49.4889,
+  },
+  {
+    id: "3",
+    name: "Loja Artigos Religiosos Fe Viva",
+    category: "Loja",
+    categoryId: "onde-comprar",
+    logoUrl: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400",
+    description: "A maior variedade de artigos religiosos de Trindade. Tercos, imagens, medalhas, livros e lembrancinhas para levar a bencao do Divino Pai Eterno.",
+    shortDescription: "Artigos religiosos e lembrancinhas",
+    address: "Rua da Basilica, 78",
+    neighborhood: "Centro",
+    city: "Trindade",
+    phone: "(62) 3333-7890",
+    whatsapp: "5562999997890",
+    instagram: "@feviva.artigos",
+    hours: "Seg-Sab: 8h-18h | Dom: 8h-14h",
+    rating: 4.5,
+    reviews: 156,
+    featured: false,
+    latitude: -16.6495,
+    longitude: -49.4901,
+  },
+  {
+    id: "4",
+    name: "Pizzaria Divina Massa",
+    category: "Pizzaria",
+    categoryId: "onde-comer",
+    logoUrl: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400",
+    coverUrl: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=800",
+    description: "As melhores pizzas artesanais de Trindade. Massa fresca, ingredientes selecionados e forno a lenha. Ambiente agradavel para toda familia.",
+    shortDescription: "Pizzas artesanais com forno a lenha",
+    address: "Rua Goias, 234",
+    neighborhood: "Jardim America",
+    city: "Trindade",
+    phone: "(62) 3333-4567",
+    whatsapp: "5562999994567",
+    hours: "Ter-Dom: 18h-23h",
+    priceRange: "$$",
+    rating: 4.6,
+    reviews: 312,
+    featured: true,
+    delivery: true,
+    latitude: -16.6510,
+    longitude: -49.4875,
+  },
+  {
+    id: "5",
+    name: "Auto Center Trindade",
+    category: "Mecanica",
+    categoryId: "carro",
+    logoUrl: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=400",
+    description: "Servicos completos para seu veiculo: mecanica geral, alinhamento, balanceamento, troca de oleo e revisao. Profissionais qualificados e pecas de qualidade.",
+    shortDescription: "Mecanica geral e servicos automotivos",
+    address: "Av. Brasil, 1500",
+    neighborhood: "Setor Industrial",
+    city: "Trindade",
+    phone: "(62) 3333-8901",
+    whatsapp: "5562999998901",
+    hours: "Seg-Sex: 8h-18h | Sab: 8h-12h",
+    rating: 4.4,
+    reviews: 87,
+    featured: false,
+    latitude: -16.6520,
+    longitude: -49.4830,
+  },
+  {
+    id: "6",
+    name: "Casa de Materiais Construir",
+    category: "Material de Construcao",
+    categoryId: "construcao",
+    logoUrl: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=400",
+    description: "Materiais de construcao e acabamento para sua obra. Cimento, tijolos, telhas, tintas, pisos e muito mais. Entrega em toda regiao.",
+    shortDescription: "Materiais de construcao e acabamento",
+    address: "Av. Goias, 2000",
+    neighborhood: "Setor Norte",
+    city: "Trindade",
+    phone: "(62) 3333-2345",
+    whatsapp: "5562999992345",
+    hours: "Seg-Sex: 7h-18h | Sab: 7h-14h",
+    rating: 4.3,
+    reviews: 95,
+    featured: false,
+    latitude: -16.6480,
+    longitude: -49.4920,
+  },
+  {
+    id: "7",
+    name: "Moto Pecas Trindade",
+    category: "Moto Pecas",
+    categoryId: "moto",
+    logoUrl: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400",
+    description: "Pecas e acessorios para motos de todas as marcas. Servicos de manutencao e instalacao. Qualidade e preco justo.",
+    shortDescription: "Pecas e acessorios para motos",
+    address: "Rua das Oficinas, 45",
+    neighborhood: "Centro",
+    city: "Trindade",
+    phone: "(62) 3333-6789",
+    whatsapp: "5562999996789",
+    hours: "Seg-Sex: 8h-18h | Sab: 8h-13h",
+    rating: 4.2,
+    reviews: 64,
+    featured: false,
+    latitude: -16.6505,
+    longitude: -49.4910,
+  },
+  {
+    id: "8",
+    name: "Lanchonete do Romeiro",
+    category: "Lanchonete",
+    categoryId: "onde-comer",
+    logoUrl: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400",
+    description: "Lanches rapidos e saborosos. Sucos naturais, sanduiches, pasteis e acai. Ponto de parada perfeito para os romeiros.",
+    shortDescription: "Lanches rapidos e sucos naturais",
+    address: "Praca do Santuario, 12",
+    neighborhood: "Centro",
+    city: "Trindade",
+    phone: "(62) 3333-1111",
+    whatsapp: "5562999991111",
+    hours: "Todos os dias: 6h-22h",
+    priceRange: "$",
+    rating: 4.4,
+    reviews: 278,
+    featured: false,
+    latitude: -16.6498,
+    longitude: -49.4895,
+  },
+  {
+    id: "9",
+    name: "Hotel Basilica Palace",
+    category: "Hotel",
+    categoryId: "onde-ficar",
+    logoUrl: "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=400",
+    coverUrl: "https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=800",
+    description: "O hotel mais completo de Trindade. Piscina, restaurante, salao de eventos, spa e academia. Quartos luxuosos com vista para o Santuario. Experiencia premium para sua estadia.",
+    shortDescription: "Hotel premium com vista para o Santuario",
+    address: "Av. Santuario, 1000",
+    neighborhood: "Centro",
+    city: "Trindade",
+    phone: "(62) 3333-9999",
+    whatsapp: "5562999999999",
+    website: "https://basilicapalace.com.br",
+    instagram: "@basilicapalace",
+    facebook: "basilicapalacehotel",
+    hours: "Recepcao 24h",
+    priceRange: "$$$$",
+    rating: 4.9,
+    reviews: 456,
+    featured: true,
+    gallery: [
+      "https://images.unsplash.com/photo-1564501049412-61c2a3083791?w=800",
+      "https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=800",
+      "https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800",
+    ],
+    latitude: -16.6502,
+    longitude: -49.4885,
+  },
+  {
+    id: "10",
+    name: "Parque Aquatico Splash",
+    category: "Parque Aquatico",
+    categoryId: "diversao",
+    logoUrl: "https://images.unsplash.com/photo-1582653291997-079a1c04e5a1?w=400",
+    coverUrl: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800",
+    description: "Diversao garantida para toda familia! Toboaguas, piscinas, area infantil e muito mais. Restaurante e lanchonete no local.",
+    shortDescription: "Diversao aquatica para toda familia",
+    address: "Rodovia GO-060, Km 5",
+    neighborhood: "Zona Rural",
+    city: "Trindade",
+    phone: "(62) 3333-5555",
+    whatsapp: "5562999995555",
+    website: "https://splashtrindade.com.br",
+    instagram: "@splashtrindade",
+    hours: "Sab-Dom: 9h-17h | Feriados: 9h-17h",
+    priceRange: "$$",
+    rating: 4.5,
+    reviews: 567,
+    featured: true,
+    latitude: -16.6600,
+    longitude: -49.5000,
+  },
+];
