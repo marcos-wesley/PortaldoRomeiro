@@ -1,4 +1,4 @@
-import { ScrollView, View, StyleSheet, Pressable, ImageBackground, Dimensions } from "react-native";
+import { ScrollView, View, StyleSheet, Pressable, Dimensions, ImageBackground } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
@@ -19,34 +19,36 @@ import { Spacing, BorderRadius, Colors } from "@/constants/theme";
 import { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 import { quickActions, newsData, videosData, News, Video, QuickAction } from "@/lib/data";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const CARD_WIDTH = (SCREEN_WIDTH - Spacing.lg * 2 - Spacing.md) / 2;
+const HERO_HEIGHT = SCREEN_HEIGHT * 0.45;
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-function WelcomeBanner() {
-  const scale = useSharedValue(1);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
+function FullScreenHeroBanner({ headerHeight }: { headerHeight: number }) {
   return (
-    <Animated.View style={animatedStyle}>
-      <ImageBackground
-        source={require("../../assets/images/basilica-hero.jpg")}
-        style={styles.welcomeBanner}
-        imageStyle={styles.welcomeBannerImage}
-      >
-        <LinearGradient
-          colors={["rgba(0,0,0,0.3)", "rgba(0,0,0,0.6)"]}
-          style={styles.welcomeGradient}
-        >
-          <ThemedText style={styles.welcomeTitle}>Hora de conhecer a</ThemedText>
-          <ThemedText style={styles.welcomeHighlight}>capital da Fe!</ThemedText>
-        </LinearGradient>
-      </ImageBackground>
-    </Animated.View>
+    <View style={[styles.fullHeroBanner, { height: HERO_HEIGHT }]}>
+      <Image
+        source={require("../assets/images/home-hero.jpg")}
+        style={styles.fullHeroImage}
+        contentFit="cover"
+        contentPosition="center"
+      />
+      <LinearGradient
+        colors={["transparent", "rgba(255,255,255,0.9)", "#FFFFFF"]}
+        locations={[0.4, 0.85, 1]}
+        style={styles.fullHeroGradient}
+      />
+      <View style={[styles.fullHeroContent, { paddingTop: headerHeight + Spacing.lg }]}>
+        <View style={styles.destaqueBadge}>
+          <ThemedText style={styles.destaqueBadgeText}>DESTAQUE</ThemedText>
+        </View>
+      </View>
+      <View style={styles.fullHeroTextContainer}>
+        <ThemedText style={styles.fullHeroTitle}>Hora de conhecer a</ThemedText>
+        <ThemedText style={styles.fullHeroHighlight}>capital da fe</ThemedText>
+      </View>
+    </View>
   );
 }
 
@@ -258,14 +260,14 @@ export default function HomeScreen() {
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.backgroundRoot }}
       contentContainerStyle={{
-        paddingTop: headerHeight + Spacing.lg,
         paddingBottom: tabBarHeight + Spacing.xl,
       }}
       scrollIndicatorInsets={{ bottom: insets.bottom }}
       showsVerticalScrollIndicator={false}
     >
+      <FullScreenHeroBanner headerHeight={headerHeight} />
+
       <View style={styles.content}>
-        <WelcomeBanner />
 
         <SectionHeader
           title="Categorias"
@@ -328,38 +330,61 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: Spacing.lg,
   },
-  welcomeBanner: {
-    height: 220,
-    borderRadius: BorderRadius.lg,
-    overflow: "hidden",
-    marginBottom: Spacing.xl,
+  fullHeroBanner: {
+    width: "100%",
+    position: "relative",
   },
-  welcomeBannerImage: {
-    borderRadius: BorderRadius.lg,
+  fullHeroImage: {
+    width: "100%",
+    height: "100%",
+    position: "absolute",
+    top: 0,
+    left: 0,
   },
-  welcomeGradient: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: Spacing.xl,
+  fullHeroGradient: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: "60%",
   },
-  welcomeTitle: {
+  fullHeroContent: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: Spacing.lg,
+  },
+  destaqueBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: "#D4A04A",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.sm,
+  },
+  destaqueBadgeText: {
     color: "#FFFFFF",
-    fontSize: 22,
+    fontSize: 12,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+  },
+  fullHeroTextContainer: {
+    position: "absolute",
+    bottom: Spacing.lg,
+    left: Spacing.lg,
+    right: Spacing.lg,
+  },
+  fullHeroTitle: {
+    color: "#1F2937",
+    fontSize: 26,
     fontWeight: "600",
-    textAlign: "center",
-    textShadowColor: "rgba(0,0,0,0.5)",
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    lineHeight: 32,
   },
-  welcomeHighlight: {
-    color: "#FFFFFF",
-    fontSize: 28,
+  fullHeroHighlight: {
+    color: "#1F2937",
+    fontSize: 26,
     fontWeight: "800",
-    textAlign: "center",
-    textShadowColor: "rgba(0,0,0,0.5)",
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
+    lineHeight: 32,
   },
   heroBanner: {
     height: 180,
