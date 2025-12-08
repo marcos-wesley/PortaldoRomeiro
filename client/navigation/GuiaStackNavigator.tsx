@@ -1,23 +1,25 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import MainTabNavigator from "@/navigation/MainTabNavigator";
+import GuiaScreen from "@/screens/GuiaScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
-export type RootStackParamList = {
-  Main: undefined;
+export type GuiaStackParamList = {
+  Guia: undefined;
 };
 
-const Stack = createNativeStackNavigator<RootStackParamList>();
+const Stack = createNativeStackNavigator<GuiaStackParamList>();
 
-export default function RootStackNavigator() {
+export default function GuiaStackNavigator() {
   const screenOptions = useScreenOptions();
 
   return (
     <Stack.Navigator screenOptions={screenOptions}>
       <Stack.Screen
-        name="Main"
-        component={MainTabNavigator}
-        options={{ headerShown: false }}
+        name="Guia"
+        component={GuiaScreen}
+        options={{
+          headerTitle: "Guia do Romeiro",
+        }}
       />
     </Stack.Navigator>
   );

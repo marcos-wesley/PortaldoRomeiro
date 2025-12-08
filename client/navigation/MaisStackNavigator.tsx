@@ -1,25 +1,24 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-
-import ProfileScreen from "@/screens/ProfileScreen";
+import MaisScreen from "@/screens/MaisScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 
-export type ProfileStackParamList = {
-  Profile: undefined;
+export type MaisStackParamList = {
+  Mais: undefined;
 };
 
-const Stack = createNativeStackNavigator<ProfileStackParamList>();
+const Stack = createNativeStackNavigator<MaisStackParamList>();
 
-export default function ProfileStackNavigator() {
+export default function MaisStackNavigator() {
   const screenOptions = useScreenOptions();
 
   return (
     <Stack.Navigator screenOptions={screenOptions}>
       <Stack.Screen
-        name="Profile"
-        component={ProfileScreen}
+        name="Mais"
+        component={MaisScreen}
         options={{
-          title: "Profile",
+          headerTitle: "Mais",
         }}
       />
     </Stack.Navigator>

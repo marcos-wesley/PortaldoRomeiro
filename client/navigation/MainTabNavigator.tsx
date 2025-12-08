@@ -4,12 +4,16 @@ import { Feather } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { Platform, StyleSheet } from "react-native";
 import HomeStackNavigator from "@/navigation/HomeStackNavigator";
-import ProfileStackNavigator from "@/navigation/ProfileStackNavigator";
+import GuiaStackNavigator from "@/navigation/GuiaStackNavigator";
+import NoticiasStackNavigator from "@/navigation/NoticiasStackNavigator";
+import MaisStackNavigator from "@/navigation/MaisStackNavigator";
 import { useTheme } from "@/hooks/useTheme";
 
 export type MainTabParamList = {
   HomeTab: undefined;
-  ProfileTab: undefined;
+  GuiaTab: undefined;
+  NoticiasTab: undefined;
+  MaisTab: undefined;
 };
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -54,12 +58,32 @@ export default function MainTabNavigator() {
         }}
       />
       <Tab.Screen
-        name="ProfileTab"
-        component={ProfileStackNavigator}
+        name="GuiaTab"
+        component={GuiaStackNavigator}
         options={{
-          title: "Profile",
+          title: "Guia",
           tabBarIcon: ({ color, size }) => (
-            <Feather name="user" size={size} color={color} />
+            <Feather name="compass" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="NoticiasTab"
+        component={NoticiasStackNavigator}
+        options={{
+          title: "Noticias",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="file-text" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="MaisTab"
+        component={MaisStackNavigator}
+        options={{
+          title: "Mais",
+          tabBarIcon: ({ color, size }) => (
+            <Feather name="menu" size={size} color={color} />
           ),
         }}
       />
