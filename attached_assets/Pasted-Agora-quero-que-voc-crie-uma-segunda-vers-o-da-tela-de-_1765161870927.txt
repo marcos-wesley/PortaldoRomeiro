@@ -1,0 +1,80 @@
+Agora quero que você crie uma segunda versão da tela de listagem do Guia Comercial, focada em empresas em destaque, com cards mais completos e ricos em informação, inspirados no conceito da página web de “Empresas em destaque”.
+
+🎯 Objetivo
+
+Mostrar algumas empresas com mais evidência, oferecendo mais informações diretamente na listagem, sem precisar abrir o detalhe para tudo.
+
+⸻
+
+🧱 Estrutura da tela
+
+1. Header da tela
+Mesmo padrão:
+	•	Título: Guia Comercial – Destaques
+	•	Subtítulo: ex.: “Empresas em destaque para o romeiro”
+	•	Ícone de busca
+	•	Ícone de filtro
+
+⸻
+
+2. Seção “Empresas em destaque”
+
+Logo após o header, criar uma seção específica com um título:
+	•	“Empresas em destaque”
+
+Dentro dela, exibir cards maiores, com:
+	•	Logo da empresa em evidência
+	•	Foto de capa ou ambiente (opcional)
+	•	Nome da empresa
+	•	Categoria (ex.: Restaurante, Pousada, Padaria, Contabilidade, etc.)
+	•	Breve descrição (1–2 linhas sobre o serviço)
+	•	Informações rápidas:
+	•	Telefone ou WhatsApp
+	•	Localização resumida (Bairro, Cidade)
+	•	Botões de ação:
+	•	WhatsApp (contato direto)
+	•	Como chegar (abre mapa/rota)
+	•	Ver detalhes (leva para tela da empresa)
+
+Layout dos cards:
+	•	Mais altos e mais completos do que os simples
+	•	Podem ser carrossel horizontal (swipe) ou lista vertical com poucos destaques
+	•	Visual de “card premium/PLUS”
+
+⸻
+
+3. Seção “Outras empresas” (opcional, misturando simples + completos)
+
+Abaixo dos destaques, criar uma seção de outras empresas que pode:
+	•	Reutilizar os cards simples (logo + nome + categoria + ação),
+OU
+	•	Mesclar empresas simples e algumas com layout completo (por exemplo, a cada X empresas simples, uma empresa com card mais detalhado).
+
+⸻
+
+4. Área de banner publicitário (opcional, mas recomendado)
+
+Entre a seção de empresas em destaque e as outras empresas, adicionar um espaço para banner:
+	•	Card largo com imagem de anúncio de restaurante, hotel, etc.
+	•	Esse banner pode simular um “patrocinado / anuncie aqui”.
+
+⸻
+
+5. Comportamento
+	•	Touch em qualquer card abre a tela de detalhes da empresa.
+	•	Botões dentro do card podem disparar:
+	•	Abertura do WhatsApp
+	•	Abertura de mapa/rota
+	•	Deve ser fácil distinguir visualmente as empresas comuns das empresas em destaque.
+
+⸻
+
+6. Requisitos gerais
+	•	Manter o visual coerente com o resto do app Portal do Romeiro.
+	•	Priorizar boa legibilidade e organização, mesmo com cards mais ricos.
+	•	Reutilizar o máximo possível de componentes (cards, botões, ícones, chips de categoria).
+
+⸻
+
+Instrução final:
+Crie a tela de listagem do Guia Comercial com empresas em destaque, usando cards mais completos (logo, imagem, descrição, ações como WhatsApp e Como Chegar), além de uma área opcional para outras empresas com cards mais simples, tudo dentro do mesmo tema e linguagem visual moderna do app Portal do Romeiro.

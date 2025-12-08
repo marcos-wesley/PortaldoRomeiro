@@ -1,0 +1,159 @@
+Quero que você crie a tela completa de Detalhes da Empresa para o Guia Comercial do aplicativo Portal do Romeiro.
+Essa tela deve representar a visualização completa de uma empresa cadastrada no guia comercial, com informações detalhadas, fotos, ações rápidas (WhatsApp, como chegar, site), mapa e galeria, seguindo o mesmo estilo moderno do app.
+
+⸻
+
+🧱 ESTRUTURA DA TELA DE DETALHE DA EMPRESA
+
+⸻
+
+1. Header moderno
+	•	Botão de voltar
+	•	Nome abreviado da empresa (ou somente ícone da categoria)
+	•	Ícone de “Salvar” a empresa nos favoritos
+	•	Ícone de compartilhar
+
+⸻
+
+2. Imagem de capa / Carrossel de fotos
+
+Exibir no topo um carrossel moderno de fotos da empresa.
+
+Características:
+	•	Swipe horizontal
+	•	Pontos indicadores (dots)
+	•	Bordas levemente arredondadas
+	•	Deve valorizar a empresa (foto da fachada, ambiente, produtos etc.)
+
+⸻
+
+3. Bloco principal com o nome e categoria
+
+Abaixo da imagem:
+	•	Nome da empresa (grande e destacado)
+	•	Categoria (ex.: Restaurante, Pizzaria, Contabilidade, Hotel etc.)
+	•	Nota (avaliação opcional)
+
+⸻
+
+4. Ações rápidas (CTA Buttons)
+
+Criar uma área com botões grandes e claros:
+	•	WhatsApp (atalho direto para contato)
+	•	Ligar
+	•	Como Chegar (abre mapa com rota)
+	•	Site (abre navegador interno)
+	•	Delivery (se existir – ex.: link iFood ou similar)
+
+Os CTAs devem ser amigáveis ao toque e destacar a identidade visual do app.
+
+⸻
+
+5. Informações gerais
+
+Criar um bloco com ícones, contendo:
+	•	Endereço completo
+	•	Telefone(s)
+	•	Horário de funcionamento
+	•	Faixa de preço (se aplicável)
+	•	Tipo de serviço (restaurante, loja, contabilidade etc.)
+
+Formato de listagem:
+	•	Ícone + título + informação
+	•	Estilo minimalista e limpo
+
+⸻
+
+6. Sobre Nós / Descrição
+
+Adicionar um bloco para o texto de descrição institucional da empresa:
+
+Título: Sobre Nós
+
+Texto:
+	•	Parágrafos curtos
+	•	Fácil leitura
+	•	Sem poluição visual
+
+Esse é o texto que aparece normalmente nos cadastros da empresa.
+
+⸻
+
+7. Redes sociais
+
+Criar uma área com botões/ícones:
+	•	Facebook
+	•	Instagram
+	•	YouTube
+	•	TikTok
+	•	WhatsApp
+
+Deve permitir abertura interna no navegador nativo.
+
+⸻
+
+8. Galeria de fotos adicional
+
+Além da imagem de capa, criar uma galeria horizontal:
+	•	Miniaturas em grade ou carrossel
+	•	Toque abre visualização em tela cheia
+
+⸻
+
+9. Mapa integrado
+
+Adicionar um bloco com mapa mostrando a localização da empresa.
+	•	Mini mapa embutido
+	•	Ao tocar, abrir versão ampliada
+	•	Pin marcando a empresa
+	•	Botão: “Ver rota”
+
+⸻
+
+10. Formulário de contato (opcional, mas recomendado)
+
+Adicionar seção:
+	•	Nome
+	•	E-mail
+	•	Celular
+	•	Mensagem
+	•	Botão para enviar formulário
+	•	Botão alternativo: Enviar via WhatsApp
+
+O formulário deve ser simples e moderno.
+
+⸻
+
+11. Empresas relacionadas (opcional)
+
+No final da tela:
+
+Título: Você também pode gostar de
+
+Carrossel horizontal com outras empresas da mesma categoria.
+
+⸻
+
+12. Espaço para anúncio
+
+Criar um bloco opcional no final:
+	•	Banner patrocinado
+	•	“Anuncie aqui”
+	•	Card chamativo integrado ao design
+
+⸻
+
+📱 Comportamento e UX da tela
+
+A tela deve:
+	•	Ser totalmente rolável (scroll vertical)
+	•	Usar blocos bem separados visualmente
+	•	Manter botões principais sempre acessíveis
+	•	Priorizar fotos e informações de contato
+	•	Manter consistência com o design global do app
+
+⸻
+
+✔️ INSTRUÇÃO FINAL
+
+Crie a tela de detalhes da empresa do Guia Comercial do app Portal do Romeiro contendo carrossel de fotos, ações rápidas (WhatsApp, telefone, site, como chegar), descrição completa, dados de contato, galeria adicional, mapa integrado, redes sociais e empresas relacionadas — tudo dentro do estilo moderno que você já está usando nas demais telas do aplicativo.

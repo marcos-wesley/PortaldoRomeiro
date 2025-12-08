@@ -2,6 +2,8 @@ import { ScrollView, View, StyleSheet, Pressable, Linking } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import Animated, {
   useAnimatedStyle,
@@ -12,6 +14,7 @@ import Animated, {
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Colors } from "@/constants/theme";
+import { RootStackParamList } from "@/navigation/RootStackNavigator";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -56,7 +59,10 @@ function SectionTitle({ title }: { title: string }) {
   return <ThemedText type="small" secondary style={styles.sectionTitle}>{title}</ThemedText>;
 }
 
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 export default function MaisScreen() {
+  const navigation = useNavigation<NavigationProp>();
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
@@ -81,15 +87,19 @@ export default function MaisScreen() {
       scrollIndicatorInsets={{ bottom: insets.bottom }}
       showsVerticalScrollIndicator={false}
     >
-      <View style={[styles.profileCard, { backgroundColor: theme.backgroundDefault }]}>
+      <Pressable 
+        onPress={() => navigation.navigate("Register")}
+        style={[styles.profileCard, { backgroundColor: theme.backgroundDefault }]}
+      >
         <View style={styles.avatarPlaceholder}>
           <Feather name="user" size={32} color={theme.textSecondary} />
         </View>
         <View style={styles.profileInfo}>
           <ThemedText type="h4">Bem-vindo, Romeiro!</ThemedText>
-          <ThemedText type="caption" secondary>Faca login para salvar seus favoritos</ThemedText>
+          <ThemedText type="caption" secondary>Toque para criar sua conta</ThemedText>
         </View>
-      </View>
+        <Feather name="chevron-right" size={20} color={theme.textSecondary} />
+      </Pressable>
 
       <SectionTitle title="CONTEUDO" />
       <MenuItem icon="bookmark" title="Favoritos" subtitle="Suas noticias e videos salvos" onPress={() => {}} />

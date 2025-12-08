@@ -1,0 +1,64 @@
+Quero que você crie uma tela de listagem do Guia Comercial para o aplicativo Portal do Romeiro, focada em cartões simples de empresas, ideal para exibir muitas empresas de forma leve.
+
+🎯 Objetivo
+
+Apresentar várias empresas em uma mesma tela, com layout limpo e moderno, mostrando logo + nome + categoria + ação rápida, sem muitos detalhes.
+
+⸻
+
+🧱 Estrutura da tela
+
+1. Header da tela
+	•	Título: Guia Comercial
+	•	Subtítulo: algo como “Encontre serviços na Capital da Fé”
+	•	Ícone de busca (para pesquisar por nome ou segmento)
+	•	Ícone de filtro (para filtrar por categoria)
+
+⸻
+
+2. Área de filtros rápidos
+Logo abaixo do header, criar um carrossel ou linha de chips com filtros, por exemplo:
+	•	Onde Comer
+	•	Onde Ficar
+	•	Onde Comprar
+	•	Construção e Reforma
+	•	Diversão e Lazer
+	•	Para seu carro
+	•	Para sua moto
+
+Os filtros devem mudar o conteúdo da lista abaixo.
+
+⸻
+
+3. Lista de empresas – cartões simples
+
+Cada item da lista deve ser um card compacto, com:
+	•	Logo da empresa (em destaque, centralizado ou à esquerda)
+	•	Nome da empresa
+	•	Categoria (ex.: Restaurante, Hotel, Contabilidade, Lanchonete, Loja, etc.)
+	•	Cidade/Bairro (linha opcional)
+	•	Botão ou ícone para abrir o detalhe da empresa
+
+Layout:
+	•	Ideal para scroll longo
+	•	Pode ser lista em coluna única ou grid simples (2 colunas), desde que mantenha leitura confortável
+	•	Visual moderno, com sombra leve e bordas levemente arredondadas
+
+⸻
+
+4. Comportamento
+	•	Ao tocar em um cartão simples, abrir a tela de detalhe da empresa (que você já está criando ou vai criar em outra tela).
+	•	A busca deve filtrar os cards em tempo real (conceito de UX, mesmo que não implemente agora).
+	•	Os filtros rápidos devem realçar quais empresas pertencem à categoria selecionada.
+
+⸻
+
+5. Requisitos gerais
+	•	Seguir o mesmo tema/estilo visual que você já está usando no app Portal do Romeiro.
+	•	Reaproveitar componentes como cards, chips, botões e tipografia.
+	•	Otimizar para uso com uma mão (toque confortável e espaçamento adequado).
+
+⸻
+
+Instrução final:
+Crie a tela de listagem do Guia Comercial com cartões simples de empresas, mostrando logo, nome, categoria e ação rápida, com filtros por categoria e campo de busca, tudo no mesmo padrão visual moderno do app que você já está desenvolvendo.
