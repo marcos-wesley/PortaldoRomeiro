@@ -1,0 +1,116 @@
+Quero que você crie a Tela de Cadastro do Usuário do aplicativo Portal do Romeiro, com:
+	•	Cadastro tradicional (e-mail + senha + dados básicos)
+	•	Opção de cadastro/login rápido usando redes sociais
+
+A tela deve seguir o mesmo estilo moderno e limpo das outras telas do app.
+
+⸻
+
+🧱 Estrutura da Tela de Cadastro
+
+1. Header
+	•	Logo ou ícone do Portal do Romeiro
+	•	Título: Criar sua conta
+	•	Subtítulo: Para aproveitar ao máximo o Portal do Romeiro
+
+⸻
+
+2. Botões de Cadastro por Redes Sociais (no topo)
+
+Criar uma área de destaque para cadastro rápido:
+	•	Botão: Continuar com Google
+	•	Botão: Continuar com Facebook
+	•	(Opcional) Botão: Continuar com Apple (em dispositivos compatíveis)
+
+Cada botão deve ter:
+	•	Ícone da rede social
+	•	Texto claro
+	•	Largura quase total (botão grande, fácil de tocar)
+
+Separador visual com texto do tipo:
+
+— ou cadastre-se com seu e-mail —
+
+⸻
+
+3. Formulário de Cadastro Tradicional
+
+Criar um formulário simples com os campos:
+	•	Nome completo
+	•	E-mail
+	•	Celular (com máscara de telefone)
+	•	Senha
+	•	Confirmar senha
+
+Regras de UX:
+	•	Mostrar erro de validação (e-mail inválido, senhas diferentes etc.)
+	•	Ícone de “mostrar/ocultar senha” nos campos de senha
+	•	Layout limpo, com labels claros e placeholders objetivos
+
+⸻
+
+4. Campos opcionais (se desejar)
+
+Pode existir também:
+	•	Cidade / Estado
+	•	Deseja receber novidades? (checkbox)
+
+⸻
+
+5. Checkbox de Termos e Política
+
+Adicionar um checkbox obrigatório:
+
+☐ Li e concordo com os Termos de Uso e a Política de Privacidade
+
+Os textos “Termos de Uso” e “Política de Privacidade” devem ser clicáveis.
+
+Se o usuário tentar prosseguir sem marcar, mostrar mensagem de aviso.
+
+⸻
+
+6. Botão principal de ação
+
+Um botão grande e destacado:
+
+[ Criar conta ]
+	•	Desativado enquanto campos obrigatórios não forem preenchidos corretamente
+	•	Ao tocar, realizar validações locais (conceito)
+
+⸻
+
+7. Link para quem já tem conta
+
+Logo abaixo do botão, uma linha:
+
+Já tem uma conta? Entrar
+
+Esse texto deve ser clicável e levar para a tela de login.
+
+⸻
+
+8. Mensagem de segurança (opcional)
+
+Adicionar uma pequena mensagem de confiança:
+
+Seus dados são utilizados apenas para sua experiência no Portal do Romeiro.
+
+⸻
+
+📱 Comportamento e UX
+	•	Tela rolável caso o teclado ocupe espaço (mobile first).
+	•	Componentes bem espaçados, fáceis de tocar.
+	•	Botões de redes sociais no topo para incentivar cadastro rápido.
+	•	Reutilizar o estilo visual do app (tipografia, bordas, sombras etc.).
+
+⸻
+
+✔️ Instrução final
+
+Crie a Tela de Cadastro do Usuário do app Portal do Romeiro, com:
+	•	Botões de cadastro por redes sociais (Google, Facebook e opcionalmente Apple)
+	•	Formulário tradicional com nome, e-mail, celular, senha e confirmação
+	•	Checkbox de aceitação de termos
+	•	Botão principal “Criar conta”
+	•	Link “Já tem uma conta? Entrar”
+	•	Layout moderno, amigável, coerente com as demais telas do aplicativo.
