@@ -1,0 +1,183 @@
+Quero que você crie a tela completa de “Dicas do Romeiro” para o aplicativo Portal do Romeiro.
+Essa tela deve orientar os peregrinos com informações práticas, úteis e espirituais, seguindo um layout moderno, organizado e adaptado ao estilo das outras telas já desenvolvidas no app.
+
+⸻
+
+🧱 ESTRUTURA DA TELA “DICAS DO ROMEIRO”
+
+⸻
+
+1. Header
+	•	Botão de voltar
+	•	Título: Dicas do Romeiro
+	•	Ícone de ajuda ou informação (opcional)
+
+⸻
+
+2. Banner inspirador
+
+Criar um banner no topo com:
+	•	Imagem de romeiros caminhando ou da Basílica
+	•	Título sobreposto como:
+“Tudo o que você precisa saber para viver a Romaria com segurança e fé.”
+
+⸻
+
+3. Seção de Destaques (Cards grandes)
+
+Criar 4 a 6 cards principais que representem as categorias de dicas:
+
+Exemplos de categorias:
+	•	Segurança
+	•	Saúde e Bem-estar
+	•	Trânsito e Mobilidade
+	•	Hidratação e Alimentação
+	•	Dicas de Oração e Espiritualidade
+	•	Onde Descansar
+	•	Preparação para a Caminhada
+
+Cada card deve ter:
+	•	Ícone grande
+	•	Título
+	•	Ação ao toque → abre a dica detalhada
+
+Cards podem ser exibidos em grid ou carrossel horizontal.
+
+⸻
+
+4. Seção “Dicas Essenciais para o Romeiro”
+
+Lista de dicas práticas, cada uma em formato de card simples:
+
+Exemplos:
+	•	Use roupas leves e confortáveis
+	•	Hidrate-se antes, durante e depois da caminhada
+	•	Evite caminhar sozinho durante a madrugada
+	•	Utilize protetor solar e cobertura para cabeça
+	•	Caminhe sempre pelo acostamento ou áreas sinalizadas
+	•	Mantenha documentos pessoais em local seguro
+
+Cada dica deve ter:
+	•	Ícone
+	•	Título
+	•	Texto curto explicativo
+
+⸻
+
+5. Bloco “Dicas de Segurança”
+
+Criar uma seção especial com:
+	•	Título: Segurança do Romeiro
+	•	Cards com itens como:
+	•	Evite portar grandes quantias de dinheiro
+	•	Fique atento aos seus pertences
+	•	Prefira andar em grupos
+	•	Use locais oficiais para apoio
+	•	Em caso de emergência, ligue imediatamente para os números oficiais
+
+O card final pode ter um botão:
+“Telefones de Emergência”
+→ linkando para a tela de Telefones Úteis.
+
+⸻
+
+6. Seção “Dicas de Saúde e Bem-estar”
+
+Criar blocos com:
+	•	Alimentação ideal
+	•	Hidratação
+	•	Cuidados com o sol
+	•	Alongamentos antes e depois da caminhada
+	•	Sinais de alerta (tontura, dores, câimbras)
+
+Cada dica pode ser um card horizontal ou uma lista moderna.
+
+⸻
+
+7. Seção “Dicas de Espiritualidade”
+
+Um bloco mais acolhedor, contendo:
+	•	Título: Para fortalecer sua fé
+	•	Dicas como:
+	•	Reze durante o caminho
+	•	Dedique intenções
+	•	Aproveite momentos de silêncio
+	•	A Romaria é também gesto de gratidão
+	•	Respeite o ritmo do seu corpo e o momento de cada peregrino
+
+Adicionar um pequeno ícone religioso minimalista.
+
+⸻
+
+8. Seção “Checklist do Romeiro”
+
+Criar um checklist pronto, com caixas de seleção:
+
+Itens importantes:
+	•	Água
+	•	Protetor solar
+	•	Boné/Chapéu
+	•	Documentos
+	•	Medicamentos pessoais
+	•	Mochila leve
+	•	Tênis confortável
+	•	Dinheiro trocado
+	•	Lanterna (para caminhada noturna)
+
+⸻
+
+9. Carrossel de Imagens / Ilustrações
+
+Um carrossel mostrando:
+	•	Romeiros caminhando
+	•	Romeirinho (mascote) dando dicas
+	•	Paisagens do percurso
+	•	Pontos importantes da rota
+
+⸻
+
+10. Bloco de “Informações de Trânsito na Romaria”
+
+Adicionar uma seção com aviso:
+	•	Horários de maior fluxo
+	•	Trechos interditados
+	•	Rotas alternativas
+	•	Botão: “Ver mapa das rotas”
+
+⸻
+
+11. Espaço para patrocinadores / apoio
+
+Criar um card para:
+	•	Serviços de apoio na Romaria
+	•	Empresas que patrocinam água, alimentação, transporte, etc.
+
+(Opcional, mas importante para monetização)
+
+⸻
+
+12. Rodapé
+
+Adicionar:
+	•	Link para “Telefones Úteis”
+	•	Link para “Serviços da Cidade”
+	•	Link para “História da Romaria”
+	•	Redes sociais
+
+⸻
+
+📱 Requisitos de UX
+
+A tela deve:
+	•	Ser motivadora e acolhedora
+	•	Usar ícones grandes e claros
+	•	Organizar tudo em blocos temáticos
+	•	Dar destaque às dicas essenciais
+	•	Ser fácil de navegar com uma mão
+	•	Reaproveitar componentes já usados no app
+
+⸻
+
+✔️ INSTRUÇÃO FINAL
+
+Crie a Tela de Dicas do Romeiro no estilo moderno do app Portal do Romeiro, com cards de categorias, dicas essenciais, segurança, saúde, espiritualidade, checklist, carrossel de imagens e atalhos úteis — tudo organizado em blocos claros e fáceis de navegar.

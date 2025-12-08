@@ -612,3 +612,97 @@ export const businessesData: Business[] = [
     longitude: -49.5000,
   },
 ];
+
+// Dicas do Romeiro Data
+
+export interface TipCategory {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  description: string;
+}
+
+export interface Tip {
+  id: string;
+  categoryId: string;
+  title: string;
+  description: string;
+  icon: string;
+}
+
+export interface ChecklistItem {
+  id: string;
+  label: string;
+  icon: string;
+}
+
+export interface EmergencyPhone {
+  id: string;
+  name: string;
+  phone: string;
+  icon: string;
+}
+
+export const tipCategories: TipCategory[] = [
+  { id: "seguranca", name: "Seguranca", icon: "shield", color: "#EF4444", description: "Dicas para sua protecao" },
+  { id: "saude", name: "Saude e Bem-estar", icon: "heart", color: "#10B981", description: "Cuide do seu corpo" },
+  { id: "transito", name: "Transito e Mobilidade", icon: "navigation", color: "#F97316", description: "Como se locomover" },
+  { id: "hidratacao", name: "Hidratacao e Alimentacao", icon: "droplet", color: "#06B6D4", description: "Mantenha-se nutrido" },
+  { id: "espiritualidade", name: "Espiritualidade", icon: "sun", color: "#8B5CF6", description: "Fortaleça sua fe" },
+  { id: "descanso", name: "Onde Descansar", icon: "moon", color: "#4169E1", description: "Pontos de apoio" },
+];
+
+export const essentialTips: Tip[] = [
+  { id: "1", categoryId: "geral", title: "Use roupas leves e confortaveis", description: "Prefira tecidos que permitam a transpiracao e roupas claras para evitar o calor excessivo.", icon: "sun" },
+  { id: "2", categoryId: "hidratacao", title: "Hidrate-se constantemente", description: "Beba agua antes, durante e depois da caminhada. Leve uma garrafa reutilizavel.", icon: "droplet" },
+  { id: "3", categoryId: "seguranca", title: "Evite caminhar sozinho a noite", description: "Durante a madrugada, prefira andar em grupos e use locais bem iluminados.", icon: "moon" },
+  { id: "4", categoryId: "saude", title: "Use protetor solar", description: "Aplique protetor solar a cada 2 horas e use bone ou chapeu para proteger a cabeca.", icon: "sun" },
+  { id: "5", categoryId: "transito", title: "Caminhe pelo acostamento", description: "Sempre caminhe pelo acostamento ou areas sinalizadas para romeiros.", icon: "alert-triangle" },
+  { id: "6", categoryId: "seguranca", title: "Guarde documentos em local seguro", description: "Mantenha seus documentos pessoais em bolsos internos ou pochetes.", icon: "folder" },
+];
+
+export const safetyTips: Tip[] = [
+  { id: "s1", categoryId: "seguranca", title: "Evite portar grandes quantias", description: "Leve apenas o dinheiro necessario para gastos basicos.", icon: "dollar-sign" },
+  { id: "s2", categoryId: "seguranca", title: "Fique atento aos pertences", description: "Mantenha bolsas e mochilas sempre a vista e fechadas.", icon: "eye" },
+  { id: "s3", categoryId: "seguranca", title: "Prefira andar em grupos", description: "Ha mais seguranca e ajuda mutua quando caminhamos juntos.", icon: "users" },
+  { id: "s4", categoryId: "seguranca", title: "Use locais oficiais de apoio", description: "Procure os pontos de apoio oficiais da Romaria.", icon: "home" },
+  { id: "s5", categoryId: "seguranca", title: "Telefones de emergencia", description: "Em caso de emergencia, ligue para os numeros oficiais.", icon: "phone" },
+];
+
+export const healthTips: Tip[] = [
+  { id: "h1", categoryId: "saude", title: "Alimentacao leve", description: "Prefira frutas, sucos e alimentos de facil digestao antes da caminhada.", icon: "apple" },
+  { id: "h2", categoryId: "saude", title: "Hidratacao constante", description: "Beba pelo menos 2 litros de agua por dia durante a romaria.", icon: "droplet" },
+  { id: "h3", categoryId: "saude", title: "Cuidados com o sol", description: "Use protetor solar, bone e evite exposicao entre 10h e 16h.", icon: "sun" },
+  { id: "h4", categoryId: "saude", title: "Alongue-se", description: "Faca alongamentos antes e depois da caminhada para evitar lesoes.", icon: "activity" },
+  { id: "h5", categoryId: "saude", title: "Sinais de alerta", description: "Atencao a tontura, dores, caimbras. Pare e procure ajuda medica.", icon: "alert-circle" },
+];
+
+export const spiritualTips: Tip[] = [
+  { id: "sp1", categoryId: "espiritualidade", title: "Reze durante o caminho", description: "Aproveite a caminhada para momentos de oracao e meditacao.", icon: "book" },
+  { id: "sp2", categoryId: "espiritualidade", title: "Dedique intencoes", description: "Ofereca sua peregrinacao por intencoes especiais.", icon: "heart" },
+  { id: "sp3", categoryId: "espiritualidade", title: "Momentos de silencio", description: "Aproveite trechos em silencio para reflexao interior.", icon: "volume-x" },
+  { id: "sp4", categoryId: "espiritualidade", title: "Gesto de gratidao", description: "A Romaria e tambem um momento de agradecer as gracas recebidas.", icon: "gift" },
+  { id: "sp5", categoryId: "espiritualidade", title: "Respeite seu ritmo", description: "Respeite o ritmo do seu corpo e o momento de cada peregrino.", icon: "clock" },
+];
+
+export const pilgrimChecklist: ChecklistItem[] = [
+  { id: "c1", label: "Agua", icon: "droplet" },
+  { id: "c2", label: "Protetor solar", icon: "sun" },
+  { id: "c3", label: "Bone ou chapeu", icon: "umbrella" },
+  { id: "c4", label: "Documentos", icon: "credit-card" },
+  { id: "c5", label: "Medicamentos pessoais", icon: "plus-circle" },
+  { id: "c6", label: "Mochila leve", icon: "package" },
+  { id: "c7", label: "Tenis confortavel", icon: "target" },
+  { id: "c8", label: "Dinheiro trocado", icon: "dollar-sign" },
+  { id: "c9", label: "Lanterna", icon: "flashlight" },
+  { id: "c10", label: "Lanche leve", icon: "coffee" },
+];
+
+export const emergencyPhones: EmergencyPhone[] = [
+  { id: "e1", name: "SAMU", phone: "192", icon: "activity" },
+  { id: "e2", name: "Bombeiros", phone: "193", icon: "alert-triangle" },
+  { id: "e3", name: "Policia Militar", phone: "190", icon: "shield" },
+  { id: "e4", name: "Defesa Civil", phone: "199", icon: "alert-circle" },
+  { id: "e5", name: "Central de Apoio ao Romeiro", phone: "(62) 3505-1000", icon: "phone" },
+];
