@@ -281,3 +281,49 @@ export const guideCategories = [
   { id: "5", title: "Liturgia", icon: "bookmark", count: 12 },
   { id: "6", title: "Reflexoes", icon: "sun", count: 18 },
 ];
+
+export interface Prayer {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+}
+
+export const prayersData: Prayer[] = [
+  {
+    id: "1",
+    title: "Oracao ao Divino Pai Eterno",
+    content: "Pai Eterno, eu vos adoro e vos amo. Guardai-me sob vossa protecao. Derramai sobre mim as vossas bencaos. Dai-me a graca de amar-Vos cada dia mais. Amem.",
+    category: "Oracoes",
+  },
+  {
+    id: "2",
+    title: "Ave Maria",
+    content: "Ave Maria, cheia de graca, o Senhor e convosco. Bendita sois vos entre as mulheres e bendito e o fruto do vosso ventre, Jesus. Santa Maria, Mae de Deus, rogai por nos, pecadores, agora e na hora de nossa morte. Amem.",
+    category: "Oracoes",
+  },
+  {
+    id: "3",
+    title: "Pai Nosso",
+    content: "Pai nosso que estais no ceu, santificado seja o Vosso nome, venha a nos o Vosso reino, seja feita a Vossa vontade assim na terra como no ceu. O pao nosso de cada dia nos dai hoje, perdoai-nos as nossas ofensas assim como nos perdoamos a quem nos tem ofendido. E nao nos deixeis cair em tentacao, mas livrai-nos do mal. Amem.",
+    category: "Oracoes",
+  },
+  {
+    id: "4",
+    title: "Novena ao Divino Pai Eterno - Dia 1",
+    content: "Primeiro dia da novena. Pai Eterno, vos sois infinitamente bom e misericordioso. Fazei-nos dignos de vossas gracas e bencaos. Amem.",
+    category: "Novenas",
+  },
+  {
+    id: "5",
+    title: "Oracao da Manha",
+    content: "Senhor, no silencio deste dia que amanhece, venho pedir-Vos paz, sabedoria e forca. Quero olhar o mundo com olhos cheios de amor. Amem.",
+    category: "Oracoes",
+  },
+  {
+    id: "6",
+    title: "Oracao da Noite",
+    content: "Obrigado, Senhor, por este dia que passou. Perdoai as minhas falhas e dai-me um sono tranquilo. Protegei a minha familia. Amem.",
+    category: "Oracoes",
+  },
+];
