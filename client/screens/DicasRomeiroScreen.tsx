@@ -257,7 +257,7 @@ export default function DicasRomeiroScreen() {
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.backgroundRoot }}
       contentContainerStyle={{
-        paddingTop: headerHeight + Spacing.lg,
+        paddingTop: headerHeight,
         paddingBottom: tabBarHeight + Spacing.xl,
       }}
       scrollIndicatorInsets={{ bottom: insets.bottom }}

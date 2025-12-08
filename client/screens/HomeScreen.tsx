@@ -39,7 +39,7 @@ function FullScreenHeroBanner({ headerHeight }: { headerHeight: number }) {
         locations={[0.4, 0.85, 1]}
         style={styles.fullHeroGradient}
       />
-      <View style={[styles.fullHeroContent, { paddingTop: headerHeight + Spacing.lg }]}>
+      <View style={[styles.fullHeroContent, { paddingTop: headerHeight }]}>
         <View style={styles.destaqueBadge}>
           <ThemedText style={styles.destaqueBadgeText}>DESTAQUE</ThemedText>
         </View>

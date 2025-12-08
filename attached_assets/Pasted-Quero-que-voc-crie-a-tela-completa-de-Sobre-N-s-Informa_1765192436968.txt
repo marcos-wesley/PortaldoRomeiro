@@ -1,0 +1,176 @@
+Quero que você crie a tela completa de “Sobre Nós” (Informações Institucionais) para o aplicativo Portal do Romeiro, baseada na estrutura do site mas totalmente adaptada ao formato mobile, moderna, leve e visual.
+
+Esta tela deve reforçar a identidade do Portal do Romeiro como fonte de fé, devoção e informação para os peregrinos.
+
+🧱 ESTRUTURA DA TELA “SOBRE NÓS”
+1. Header institucional
+
+Botão de voltar
+
+Título: Sobre Nós
+
+Ícone de informações ou ajuda (opcional)
+
+2. Banner inicial
+
+Exibir um banner hero no topo, em proporção mobile, com:
+
+Foto aérea de Trindade ou da Basílica
+
+Sobreposição leve em degradê para dar contraste
+
+Título grande no centro ou abaixo: Portal do Romeiro
+
+Subtítulo pequeno: Fé, devoção e informação na Capital da Fé
+
+3. Seção “Nossa História”
+
+Criar um bloco com:
+
+Título: Nossa História
+
+Parágrafo introdutório explicando como nasceu o Portal do Romeiro
+
+Imagem ilustrativa ao lado ou acima (alternância estilo card moderno)
+
+O texto deve falar sobre:
+
+Propósito do portal
+
+O papel de apoiar romeiros e moradores
+
+A missão de conectar informações sobre cultura, fé e turismo
+
+4. Seção “Quem Somos”
+
+Criar um cartão informativo:
+
+Pequena imagem de grupo / equipe / peregrinos
+
+Título: Quem Somos
+
+Texto resumido sobre:
+
+Ser um guia virtual para peregrinos
+
+Compromisso com informação confiável
+
+Conexão com a tradição religiosa e cultural de Trindade
+
+5. Cards de Missão, Visão e Valores
+
+Criar três cartões modernos, cada um com:
+
+Card 1 — Nossa Missão
+
+Ícone representativo
+
+Texto curto explicando que a missão é orientar e guiar peregrinos com segurança, devoção e acolhimento.
+
+Card 2 — Nossa Visão
+
+Ícone representativo
+
+Texto curto explicando que a visão é ser a principal fonte de informação sobre Trindade e a Romaria, elevando a experiência do visitante.
+
+Card 3 — Nossos Valores
+
+Lista de valores como:
+
+Fé e Respeito
+
+Hospitalidade
+
+Inovação
+
+Conexão humana
+
+Cultura e História
+
+Os cartões devem ser exibidos em carrossel horizontal quando necessário.
+
+6. Seção “O que Oferecemos”
+
+Criar blocos ou ícones explicando os principais recursos do Portal:
+
+Informações da Romaria
+
+Notícias e atualizações
+
+Pontos turísticos
+
+Hospedagem e gastronomia
+
+Guia comercial completo
+
+Dicas da cidade
+
+Cultura e história
+
+Cada item deve ser um mini card com ícone + texto.
+
+7. Seção “Conheça o Romeirinho”
+
+Criar uma seção divertida apresentando o mascote Romeirinho:
+
+Imagem grande do Romeirinho
+
+Título: Conheça o Romeirinho
+
+Texto explicando quem é ele, seu propósito, seu papel no portal e a simbologia (orientação ao peregrino, amizade, fé, cultura e história)
+
+Depois, criar dois blocos menores:
+
+• Quem é o Romeirinho?
+
+Descrição do personagem como guia virtual do portal.
+
+• História do Romeirinho
+
+Uma narrativa resumida sobre como ele surgiu e seu vínculo com Trindade.
+
+8. Imagens extras
+
+Seção opcional com:
+
+Carrossel de imagens
+
+Fotos da cidade, dos peregrinos, da Basílica, da equipe etc.
+
+9. Call to Action opcional
+
+Criar um bloco com CTA:
+
+Conheça nossos serviços
+
+Acompanhe as novidades
+
+Siga-nos nas redes sociais
+
+10. Rodapé informativo
+
+Adicionar:
+
+Links de redes sociais
+
+Link para política de privacidade
+
+Pequeno texto institucional
+
+📱 Requisitos de UX e Layout
+
+A tela deve ser totalmente rolável, dividida em blocos visuais bem definidos.
+
+Tipografia confortável para leitura no mobile.
+
+Imagens com bordas arredondadas.
+
+Componentes seguindo o mesmo padrão do resto do app.
+
+Estilo moderno, clean e acolhedor.
+
+Deve transmitir espiritualidade, leveza e acolhimento (sem exagerar em elementos).
+
+✔️ INSTRUÇÃO FINAL
+
+Crie a Tela de Sobre Nós / Institucional do Portal do Romeiro, com todas as seções descritas acima, adaptada para o design moderno do app, utilizando carrosséis, cartões, blocos informativos e narrativa visual clara para representar a história, missão, visão, valores e o mascote Romeirinho.
