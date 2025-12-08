@@ -1,0 +1,151 @@
+Quero que você crie a tela completa de Telefones Úteis para o aplicativo Portal do Romeiro, seguindo o mesmo estilo visual moderno, limpo e organizado das demais telas do app.
+
+Essa tela deve funcionar como um diretório rápido e acessível, permitindo que romeiros encontrem contatos importantes da cidade de forma imediata.
+
+🧱 ESTRUTURA DA TELA “TELEFONES ÚTEIS”
+1. Header da tela
+
+Botão de voltar
+
+Título: Telefones Úteis
+
+Ícone de busca para filtrar contatos
+
+2. Campo de busca
+
+Adicionar uma barra de pesquisa no topo, permitindo buscar por nome, categoria ou palavra-chave.
+
+Exemplos de buscas:
+
+“Hospital”
+
+“Delegacia”
+
+“Taxi”
+
+“Santuário”
+
+A busca deve filtrar a lista em tempo real (conceito UX – mesmo que não implemente ainda).
+
+3. Lista em categorias
+
+Organizar os telefones em blocos por categoria, cada um com título:
+
+Exemplos de categorias típicas:
+
+Emergência
+
+Saúde
+
+Segurança Pública
+
+Transporte
+
+Serviços Municipais
+
+Santuário / Igreja
+
+Guia ao Romeiro
+
+Hospitais / Clínicas
+
+Farmácias
+
+Serviços 24h
+
+Cada categoria deve ter um título destacado e um espaço bem delimitado.
+
+4. Cards de contato
+
+Cada telefone deve ser exibido como um card moderno, contendo:
+
+Ícone representativo (hospital, polícia, ambulância, ônibus etc.)
+
+Nome da instituição
+
+Descrição curta (opcional)
+
+Telefone principal
+
+Ação rápida: botão Ligar (ícone de telefone)
+
+Modelo de card:
+
+[Ícone]  Hospital Municipal
+        Atendimento 24h
+        (62) XXXX-XXXX     [Botão Ligar]
+
+
+O botão “Ligar” deve ser fixo ao lado ou abaixo das informações.
+
+5. Destaques (opcional)
+
+Adicionar uma seção no topo chamada:
+
+Contatos Mais Importantes
+
+Ex.:
+
+SAMU
+
+Bombeiros
+
+Polícia Militar
+
+Santuário Basílica
+
+UPA Municipal
+
+Com cards ligeiramente diferenciados dos demais (maior destaque visual).
+
+6. Separadores visuais
+
+Criar divisores bons para:
+
+Categorias
+
+Listas extensas
+
+Itens repetidos
+
+Sem deixar a tela ocupar espaço excessivo.
+
+7. Acessibilidade rápida
+
+Garantir:
+
+Botões grandes
+
+Textos claros
+
+Ícones intuitivos
+
+O usuário deve conseguir fazer uma ligação com 1 ou 2 toques.
+
+8. Rodapé opcional
+
+Adicionar:
+
+Texto institucional curto
+
+Link para “Mais serviços do Portal do Romeiro”
+
+Redes sociais (apenas ícones pequenos)
+
+📱 Comportamento e UX
+
+A tela deve:
+
+Ser rolável
+
+Organizar informações em blocos
+
+Usar hierarquia visual clara
+
+Facilitar ações rápidas
+
+Evitar poluição visual
+
+✔️ INSTRUÇÃO FINAL
+
+Crie a Tela de Telefones Úteis do aplicativo Portal do Romeiro, com categorias organizadas, cards de contato com botão Ligar, busca, destaques e layout moderno, seguindo o mesmo padrão visual das telas anteriores do app.

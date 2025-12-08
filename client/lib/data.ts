@@ -706,3 +706,53 @@ export const emergencyPhones: EmergencyPhone[] = [
   { id: "e4", name: "Defesa Civil", phone: "199", icon: "alert-circle" },
   { id: "e5", name: "Central de Apoio ao Romeiro", phone: "(62) 3505-1000", icon: "phone" },
 ];
+
+// Telefones Uteis Data
+
+export interface PhoneCategory {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+}
+
+export interface PhoneContact {
+  id: string;
+  categoryId: string;
+  name: string;
+  description?: string;
+  phone: string;
+  icon: string;
+  isEmergency?: boolean;
+}
+
+export const phoneCategories: PhoneCategory[] = [
+  { id: "emergencia", name: "Emergencia", icon: "alert-circle", color: "#EF4444" },
+  { id: "saude", name: "Saude", icon: "heart", color: "#10B981" },
+  { id: "seguranca", name: "Seguranca Publica", icon: "shield", color: "#3B82F6" },
+  { id: "transporte", name: "Transporte", icon: "truck", color: "#F97316" },
+  { id: "municipal", name: "Servicos Municipais", icon: "home", color: "#8B5CF6" },
+  { id: "santuario", name: "Santuario / Igreja", icon: "sun", color: "#4169E1" },
+  { id: "apoio", name: "Apoio ao Romeiro", icon: "users", color: "#06B6D4" },
+];
+
+export const phoneContacts: PhoneContact[] = [
+  { id: "p1", categoryId: "emergencia", name: "SAMU", description: "Servico de Atendimento Movel de Urgencia", phone: "192", icon: "activity", isEmergency: true },
+  { id: "p2", categoryId: "emergencia", name: "Bombeiros", description: "Corpo de Bombeiros Militar", phone: "193", icon: "alert-triangle", isEmergency: true },
+  { id: "p3", categoryId: "emergencia", name: "Policia Militar", description: "Emergencias policiais", phone: "190", icon: "shield", isEmergency: true },
+  { id: "p4", categoryId: "emergencia", name: "Defesa Civil", description: "Desastres e emergencias", phone: "199", icon: "alert-circle", isEmergency: true },
+  { id: "p5", categoryId: "saude", name: "UPA Municipal", description: "Unidade de Pronto Atendimento", phone: "(62) 3505-1234", icon: "plus-circle", isEmergency: true },
+  { id: "p6", categoryId: "saude", name: "Hospital Municipal", description: "Atendimento 24h", phone: "(62) 3505-2000", icon: "plus-square" },
+  { id: "p7", categoryId: "saude", name: "Farmacia Central", description: "Plantao 24h", phone: "(62) 3505-3000", icon: "package" },
+  { id: "p8", categoryId: "seguranca", name: "Delegacia de Policia", description: "Policia Civil", phone: "(62) 3505-4000", icon: "briefcase" },
+  { id: "p9", categoryId: "seguranca", name: "Guarda Municipal", description: "Seguranca publica local", phone: "(62) 3505-4500", icon: "user" },
+  { id: "p10", categoryId: "transporte", name: "Rodoviaria", description: "Terminal rodoviario", phone: "(62) 3505-5000", icon: "map-pin" },
+  { id: "p11", categoryId: "transporte", name: "Taxi Trindade", description: "Ponto de taxi central", phone: "(62) 3505-5500", icon: "navigation" },
+  { id: "p12", categoryId: "municipal", name: "Prefeitura", description: "Atendimento ao cidadao", phone: "(62) 3505-6000", icon: "home" },
+  { id: "p13", categoryId: "municipal", name: "SANEAGO", description: "Agua e saneamento", phone: "0800 645 0115", icon: "droplet" },
+  { id: "p14", categoryId: "municipal", name: "CELG", description: "Energia eletrica", phone: "0800 062 0196", icon: "zap" },
+  { id: "p15", categoryId: "santuario", name: "Santuario Basilica", description: "Informacoes e missas", phone: "(62) 3505-1000", icon: "sun", isEmergency: true },
+  { id: "p16", categoryId: "santuario", name: "Secretaria Paroquial", description: "Documentos e certidoes", phone: "(62) 3505-1100", icon: "file-text" },
+  { id: "p17", categoryId: "apoio", name: "Central de Apoio ao Romeiro", description: "Suporte aos peregrinos", phone: "(62) 3505-7000", icon: "phone" },
+  { id: "p18", categoryId: "apoio", name: "Ponto de Apoio 1", description: "Entrada da cidade", phone: "(62) 3505-7100", icon: "flag" },
+];

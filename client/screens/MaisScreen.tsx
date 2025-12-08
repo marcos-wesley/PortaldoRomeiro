@@ -135,7 +135,7 @@ export default function MaisScreen() {
 
       <SectionTitle title="INFORMACOES" />
       <MenuItem icon="compass" title="Dicas do Romeiro" subtitle="Orientacoes para sua romaria" onPress={() => navigation.navigate("DicasRomeiro")} />
-      <MenuItem icon="phone" title="Contato" subtitle="Fale conosco" onPress={() => {}} />
+      <MenuItem icon="phone" title="Telefones Uteis" subtitle="Numeros importantes e emergencia" onPress={() => navigation.navigate("TelefonesUteis")} />
       <MenuItem icon="map" title="Como Chegar" subtitle="Localizacao e rotas" onPress={() => {}} />
       <MenuItem icon="calendar" title="Agenda" subtitle="Proximos eventos e celebracoes" onPress={() => {}} />
 

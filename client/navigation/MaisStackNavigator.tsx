@@ -2,12 +2,14 @@ import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import MaisScreen from "@/screens/MaisScreen";
 import DicasRomeiroScreen from "@/screens/DicasRomeiroScreen";
+import TelefonesUteisScreen from "@/screens/TelefonesUteisScreen";
 import { AppHeader } from "@/components/AppHeader";
 import { useTheme } from "@/hooks/useTheme";
 
 export type MaisStackParamList = {
   Mais: undefined;
   DicasRomeiro: undefined;
+  TelefonesUteis: undefined;
 };
 
 const Stack = createNativeStackNavigator<MaisStackParamList>();
@@ -36,6 +38,13 @@ export default function MaisStackNavigator() {
         component={DicasRomeiroScreen}
         options={{
           headerTitle: "Dicas do Romeiro",
+        }}
+      />
+      <Stack.Screen
+        name="TelefonesUteis"
+        component={TelefonesUteisScreen}
+        options={{
+          headerTitle: "Telefones Uteis",
         }}
       />
     </Stack.Navigator>
