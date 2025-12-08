@@ -107,7 +107,7 @@ export default function InfoScreen() {
       contentContainerStyle={{ paddingBottom: insets.bottom + Spacing.xl }}
       showsVerticalScrollIndicator={false}
     >
-      <View style={[styles.heroBanner, { marginTop: headerHeight }]}>
+      <View style={styles.heroBanner}>
         <Image
           source={{ uri: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200" }}
           style={styles.heroImage}

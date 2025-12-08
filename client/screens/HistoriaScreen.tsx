@@ -346,7 +346,6 @@ export default function HistoriaScreen() {
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.backgroundRoot }}
       contentContainerStyle={{
-        paddingTop: headerHeight,
         paddingBottom: insets.bottom + Spacing.xl,
       }}
       showsVerticalScrollIndicator={false}
