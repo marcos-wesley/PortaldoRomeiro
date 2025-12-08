@@ -6,7 +6,6 @@ import {
   Pressable,
   Platform,
   ActivityIndicator,
-  Alert,
 } from "react-native";
 import { Image } from "expo-image";
 import { Feather } from "@expo/vector-icons";
@@ -14,79 +13,60 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
 import { Button } from "@/components/Button";
 import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 import { useTheme } from "@/hooks/useTheme";
+import { useAuth } from "@/contexts/AuthContext";
 import { Spacing, BorderRadius, Colors } from "@/constants/theme";
 import { apiRequest } from "@/lib/query-client";
+import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
 interface FormData {
-  name: string;
   email: string;
-  phone: string;
   password: string;
-  confirmPassword: string;
-  city: string;
-  state: string;
-  receiveNews: boolean;
-  acceptedTerms: boolean;
+  rememberMe: boolean;
 }
 
 interface FormErrors {
-  name?: string;
   email?: string;
-  phone?: string;
   password?: string;
-  confirmPassword?: string;
-  acceptedTerms?: string;
   general?: string;
 }
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-export default function RegisterScreen() {
+export default function LoginScreen() {
   const navigation = useNavigation<NavigationProp>();
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
+  const { login } = useAuth();
 
   const [formData, setFormData] = useState<FormData>({
-    name: "",
     email: "",
-    phone: "",
     password: "",
-    confirmPassword: "",
-    city: "",
-    state: "",
-    receiveNews: false,
-    acceptedTerms: false,
+    rememberMe: false,
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const registerMutation = useMutation({
-    mutationFn: async (data: FormData) => {
-      const response = await apiRequest("POST", "/api/auth/register", data);
+  const loginMutation = useMutation({
+    mutationFn: async (data: { email: string; password: string }) => {
+      const response = await apiRequest("POST", "/api/auth/login", data);
       return response.json();
     },
-    onSuccess: () => {
-      Alert.alert(
-        "Conta criada!",
-        "Sua conta foi criada com sucesso. Agora faca login para acessar o Portal do Romeiro!",
-        [{ text: "OK", onPress: () => navigation.navigate("Login") }]
-      );
+    onSuccess: async (data) => {
+      await login(data.user, formData.rememberMe);
     },
     onError: (error: Error) => {
-      const errorMessage = error.message.includes("409")
-        ? "Este e-mail já está cadastrado"
+      const errorMessage = error.message.includes("401")
+        ? "E-mail ou senha incorretos"
         : error.message.includes("400")
         ? "Por favor, verifique os dados informados"
-        : "Erro ao criar conta. Tente novamente.";
+        : "Erro ao fazer login. Tente novamente.";
       setErrors({ general: errorMessage });
     },
   });
@@ -94,25 +74,13 @@ export default function RegisterScreen() {
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    if (!formData.name || formData.name.length < 2) {
-      newErrors.name = "Nome deve ter pelo menos 2 caracteres";
-    }
-
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email || !emailRegex.test(formData.email)) {
       newErrors.email = "E-mail inválido";
     }
 
-    if (!formData.password || formData.password.length < 6) {
-      newErrors.password = "Senha deve ter pelo menos 6 caracteres";
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "As senhas não coincidem";
-    }
-
-    if (!formData.acceptedTerms) {
-      newErrors.acceptedTerms = "Você deve aceitar os termos de uso";
+    if (!formData.password) {
+      newErrors.password = "Senha é obrigatória";
     }
 
     setErrors(newErrors);
@@ -121,7 +89,10 @@ export default function RegisterScreen() {
 
   const handleSubmit = () => {
     if (validateForm()) {
-      registerMutation.mutate(formData);
+      loginMutation.mutate({
+        email: formData.email.toLowerCase(),
+        password: formData.password,
+      });
     }
   };
 
@@ -130,25 +101,12 @@ export default function RegisterScreen() {
     if (errors[field as keyof FormErrors]) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
+    if (errors.general) {
+      setErrors((prev) => ({ ...prev, general: undefined }));
+    }
   };
 
-  const formatPhone = (text: string) => {
-    const cleaned = text.replace(/\D/g, "").slice(0, 11);
-    if (cleaned.length <= 2) return cleaned;
-    if (cleaned.length <= 7) return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2)}`;
-    return `(${cleaned.slice(0, 2)}) ${cleaned.slice(2, 7)}-${cleaned.slice(7)}`;
-  };
-
-  const handlePhoneChange = (text: string) => {
-    updateField("phone", formatPhone(text));
-  };
-
-  const isFormValid =
-    formData.name.length >= 2 &&
-    formData.email.includes("@") &&
-    formData.password.length >= 6 &&
-    formData.password === formData.confirmPassword &&
-    formData.acceptedTerms;
+  const isFormValid = formData.email.includes("@") && formData.password.length > 0;
 
   const inputStyle = [
     styles.input,
@@ -175,10 +133,10 @@ export default function RegisterScreen() {
             contentFit="contain"
           />
           <ThemedText type="h2" style={styles.title}>
-            Criar sua conta
+            Entrar
           </ThemedText>
           <ThemedText type="small" secondary style={styles.subtitle}>
-            Junte-se aos milhares de romeiros
+            Acesse sua conta no Portal do Romeiro
           </ThemedText>
         </View>
 
@@ -190,7 +148,7 @@ export default function RegisterScreen() {
               <Feather name="mail" size={18} color="#FFFFFF" />
             </View>
             <ThemedText type="small" style={styles.socialText}>
-              Google
+              Continuar com Google
             </ThemedText>
           </Pressable>
 
@@ -201,7 +159,7 @@ export default function RegisterScreen() {
               <Feather name="facebook" size={18} color="#FFFFFF" />
             </View>
             <ThemedText type="small" style={styles.socialText}>
-              Facebook
+              Continuar com Facebook
             </ThemedText>
           </Pressable>
 
@@ -213,7 +171,7 @@ export default function RegisterScreen() {
                 <Feather name="smartphone" size={18} color="#FFFFFF" />
               </View>
               <ThemedText type="small" style={styles.socialText}>
-                Apple
+                Continuar com Apple
               </ThemedText>
             </Pressable>
           ) : null}
@@ -222,7 +180,7 @@ export default function RegisterScreen() {
         <View style={styles.dividerContainer}>
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
           <ThemedText type="caption" secondary style={styles.dividerText}>
-            ou cadastre com e-mail
+            ou entre com seu e-mail
           </ThemedText>
           <View style={[styles.divider, { backgroundColor: theme.border }]} />
         </View>
@@ -239,26 +197,7 @@ export default function RegisterScreen() {
         <View style={styles.formContainer}>
           <View style={styles.inputGroup}>
             <ThemedText type="small" style={styles.label}>
-              Nome completo *
-            </ThemedText>
-            <TextInput
-              style={inputStyle}
-              value={formData.name}
-              onChangeText={(text) => updateField("name", text)}
-              placeholder="Seu nome"
-              placeholderTextColor={theme.textSecondary}
-              autoCapitalize="words"
-            />
-            {errors.name ? (
-              <ThemedText type="caption" style={{ color: Colors.light.error }}>
-                {errors.name}
-              </ThemedText>
-            ) : null}
-          </View>
-
-          <View style={styles.inputGroup}>
-            <ThemedText type="small" style={styles.label}>
-              E-mail *
+              E-mail
             </ThemedText>
             <TextInput
               style={inputStyle}
@@ -279,28 +218,14 @@ export default function RegisterScreen() {
 
           <View style={styles.inputGroup}>
             <ThemedText type="small" style={styles.label}>
-              Telefone
-            </ThemedText>
-            <TextInput
-              style={inputStyle}
-              value={formData.phone}
-              onChangeText={handlePhoneChange}
-              placeholder="(00) 00000-0000"
-              placeholderTextColor={theme.textSecondary}
-              keyboardType="phone-pad"
-            />
-          </View>
-
-          <View style={styles.inputGroup}>
-            <ThemedText type="small" style={styles.label}>
-              Senha *
+              Senha
             </ThemedText>
             <View style={styles.passwordContainer}>
               <TextInput
                 style={[inputStyle, styles.passwordInput]}
                 value={formData.password}
                 onChangeText={(text) => updateField("password", text)}
-                placeholder="Mínimo 6 caracteres"
+                placeholder="Digite sua senha"
                 placeholderTextColor={theme.textSecondary}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
@@ -323,146 +248,62 @@ export default function RegisterScreen() {
             ) : null}
           </View>
 
-          <View style={styles.inputGroup}>
-            <ThemedText type="small" style={styles.label}>
-              Confirmar senha *
-            </ThemedText>
-            <View style={styles.passwordContainer}>
-              <TextInput
-                style={[inputStyle, styles.passwordInput]}
-                value={formData.confirmPassword}
-                onChangeText={(text) => updateField("confirmPassword", text)}
-                placeholder="Digite a senha novamente"
-                placeholderTextColor={theme.textSecondary}
-                secureTextEntry={!showConfirmPassword}
-                autoCapitalize="none"
-              />
-              <Pressable
-                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                style={styles.eyeButton}
+          <View style={styles.optionsRow}>
+            <Pressable
+              style={styles.checkboxRow}
+              onPress={() => updateField("rememberMe", !formData.rememberMe)}
+            >
+              <View
+                style={[
+                  styles.checkbox,
+                  {
+                    backgroundColor: formData.rememberMe ? theme.primary : "transparent",
+                    borderColor: formData.rememberMe ? theme.primary : theme.border,
+                  },
+                ]}
               >
-                <Feather
-                  name={showConfirmPassword ? "eye-off" : "eye"}
-                  size={20}
-                  color={theme.textSecondary}
-                />
-              </Pressable>
-            </View>
-            {errors.confirmPassword ? (
-              <ThemedText type="caption" style={{ color: Colors.light.error }}>
-                {errors.confirmPassword}
+                {formData.rememberMe ? (
+                  <Feather name="check" size={14} color="#FFFFFF" />
+                ) : null}
+              </View>
+              <ThemedText type="small" style={styles.checkboxLabel}>
+                Lembrar-me
               </ThemedText>
-            ) : null}
+            </Pressable>
+
+            <Pressable onPress={() => navigation.navigate("ForgotPassword" as never)}>
+              <ThemedText type="link">Esqueci minha senha</ThemedText>
+            </Pressable>
           </View>
-
-          <View style={styles.rowInputs}>
-            <View style={[styles.inputGroup, { flex: 1 }]}>
-              <ThemedText type="small" style={styles.label}>
-                Cidade
-              </ThemedText>
-              <TextInput
-                style={inputStyle}
-                value={formData.city}
-                onChangeText={(text) => updateField("city", text)}
-                placeholder="Sua cidade"
-                placeholderTextColor={theme.textSecondary}
-              />
-            </View>
-            <View style={{ width: Spacing.md }} />
-            <View style={[styles.inputGroup, { flex: 1 }]}>
-              <ThemedText type="small" style={styles.label}>
-                Estado
-              </ThemedText>
-              <TextInput
-                style={inputStyle}
-                value={formData.state}
-                onChangeText={(text) => updateField("state", text.toUpperCase().slice(0, 2))}
-                placeholder="UF"
-                placeholderTextColor={theme.textSecondary}
-                maxLength={2}
-                autoCapitalize="characters"
-              />
-            </View>
-          </View>
-
-          <Pressable
-            style={styles.checkboxRow}
-            onPress={() => updateField("receiveNews", !formData.receiveNews)}
-          >
-            <View
-              style={[
-                styles.checkbox,
-                {
-                  backgroundColor: formData.receiveNews ? theme.primary : "transparent",
-                  borderColor: formData.receiveNews ? theme.primary : theme.border,
-                },
-              ]}
-            >
-              {formData.receiveNews ? (
-                <Feather name="check" size={14} color="#FFFFFF" />
-              ) : null}
-            </View>
-            <ThemedText type="small" style={styles.checkboxLabel}>
-              Desejo receber novidades e atualizações
-            </ThemedText>
-          </Pressable>
-
-          <Pressable
-            style={styles.checkboxRow}
-            onPress={() => updateField("acceptedTerms", !formData.acceptedTerms)}
-          >
-            <View
-              style={[
-                styles.checkbox,
-                {
-                  backgroundColor: formData.acceptedTerms ? theme.primary : "transparent",
-                  borderColor: errors.acceptedTerms
-                    ? Colors.light.error
-                    : formData.acceptedTerms
-                    ? theme.primary
-                    : theme.border,
-                },
-              ]}
-            >
-              {formData.acceptedTerms ? (
-                <Feather name="check" size={14} color="#FFFFFF" />
-              ) : null}
-            </View>
-            <ThemedText type="small" style={styles.checkboxLabel}>
-              Li e aceito os{" "}
-              <ThemedText type="link">Termos de Uso</ThemedText>
-              {" "}e a{" "}
-              <ThemedText type="link">Política de Privacidade</ThemedText>
-              {" "}*
-            </ThemedText>
-          </Pressable>
-          {errors.acceptedTerms ? (
-            <ThemedText type="caption" style={{ color: Colors.light.error, marginLeft: Spacing["3xl"] }}>
-              {errors.acceptedTerms}
-            </ThemedText>
-          ) : null}
         </View>
 
         <View style={styles.buttonContainer}>
           <Button
             onPress={handleSubmit}
-            disabled={!isFormValid || registerMutation.isPending}
+            disabled={!isFormValid || loginMutation.isPending}
           >
-            {registerMutation.isPending ? (
+            {loginMutation.isPending ? (
               <ActivityIndicator color="#FFFFFF" size="small" />
             ) : (
-              "Criar conta"
+              "Entrar"
             )}
           </Button>
         </View>
 
         <View style={styles.footer}>
           <ThemedText type="small" secondary>
-            Ja tem uma conta?{" "}
+            Ainda nao tem conta?{" "}
           </ThemedText>
-          <Pressable onPress={() => navigation.navigate("Login")}>
-            <ThemedText type="link">Entrar</ThemedText>
+          <Pressable onPress={() => navigation.navigate("Register")}>
+            <ThemedText type="link">Cadastrar-se</ThemedText>
           </Pressable>
+        </View>
+
+        <View style={styles.trustMessage}>
+          <Feather name="shield" size={14} color={theme.textSecondary} />
+          <ThemedText type="caption" secondary style={styles.trustText}>
+            Seus dados sao protegidos e utilizados apenas para sua experiencia no Portal do Romeiro.
+          </ThemedText>
         </View>
       </KeyboardAwareScrollViewCompat>
     </ThemedView>
@@ -481,8 +322,8 @@ const styles = StyleSheet.create({
     marginBottom: Spacing["2xl"],
   },
   logo: {
-    width: 72,
-    height: 72,
+    width: 80,
+    height: 80,
     marginBottom: Spacing.lg,
   },
   title: {
@@ -492,18 +333,16 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   socialContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: Spacing.md,
+    gap: Spacing.sm,
     marginBottom: Spacing.xl,
   },
   socialButton: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
     borderRadius: BorderRadius.md,
-    gap: Spacing.sm,
+    gap: Spacing.md,
   },
   socialIconContainer: {
     width: 28,
@@ -514,6 +353,7 @@ const styles = StyleSheet.create({
   },
   socialText: {
     fontWeight: "500",
+    flex: 1,
   },
   dividerContainer: {
     flexDirection: "row",
@@ -564,13 +404,15 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: "center",
   },
-  rowInputs: {
+  optionsRow: {
     flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: Spacing.sm,
   },
   checkboxRow: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    marginBottom: Spacing.md,
+    alignItems: "center",
   },
   checkbox: {
     width: 22,
@@ -580,10 +422,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginRight: Spacing.sm,
-    marginTop: 1,
   },
   checkboxLabel: {
-    flex: 1,
     lineHeight: 20,
   },
   buttonContainer: {
@@ -593,5 +433,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
+    marginBottom: Spacing.xl,
+  },
+  trustMessage: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "center",
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.sm,
+  },
+  trustText: {
+    flex: 1,
+    textAlign: "center",
+    lineHeight: 18,
   },
 });

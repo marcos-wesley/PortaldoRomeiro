@@ -1,9 +1,7 @@
-import { ScrollView, View, StyleSheet, Pressable, Linking } from "react-native";
+import { ScrollView, View, StyleSheet, Pressable, Linking, Alert, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { useNavigation } from "@react-navigation/native";
-import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import Animated, {
   useAnimatedStyle,
@@ -13,8 +11,8 @@ import Animated, {
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
+import { useAuth } from "@/contexts/AuthContext";
 import { Spacing, BorderRadius, Colors } from "@/constants/theme";
-import { RootStackParamList } from "@/navigation/RootStackNavigator";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -59,14 +57,12 @@ function SectionTitle({ title }: { title: string }) {
   return <ThemedText type="small" secondary style={styles.sectionTitle}>{title}</ThemedText>;
 }
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-
 export default function MaisScreen() {
-  const navigation = useNavigation<NavigationProp>();
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
   const { theme } = useTheme();
+  const { user, logout } = useAuth();
 
   const handleOpenLink = async (url: string) => {
     try {
@@ -74,6 +70,33 @@ export default function MaisScreen() {
     } catch (error) {
       // Handle error silently
     }
+  };
+
+  const handleLogout = async () => {
+    if (Platform.OS === "web") {
+      await logout();
+    } else {
+      Alert.alert(
+        "Sair da conta",
+        "Tem certeza que deseja sair?",
+        [
+          { text: "Cancelar", style: "cancel" },
+          { text: "Sair", style: "destructive", onPress: () => logout() },
+        ]
+      );
+    }
+  };
+
+  const getFirstName = (fullName: string): string => {
+    return fullName.split(" ")[0] || fullName;
+  };
+
+  const getInitials = (name: string): string => {
+    const names = name.split(" ");
+    if (names.length >= 2) {
+      return (names[0][0] + names[names.length - 1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
   };
 
   return (
@@ -87,19 +110,19 @@ export default function MaisScreen() {
       scrollIndicatorInsets={{ bottom: insets.bottom }}
       showsVerticalScrollIndicator={false}
     >
-      <Pressable 
-        onPress={() => navigation.navigate("Register")}
-        style={[styles.profileCard, { backgroundColor: theme.backgroundDefault }]}
-      >
-        <View style={styles.avatarPlaceholder}>
-          <Feather name="user" size={32} color={theme.textSecondary} />
+      <View style={[styles.profileCard, { backgroundColor: theme.backgroundDefault }]}>
+        <View style={[styles.avatarPlaceholder, { backgroundColor: Colors.light.primary }]}>
+          <ThemedText style={styles.avatarText}>
+            {user ? getInitials(user.name) : "?"}
+          </ThemedText>
         </View>
         <View style={styles.profileInfo}>
-          <ThemedText type="h4">Bem-vindo, Romeiro!</ThemedText>
-          <ThemedText type="caption" secondary>Toque para criar sua conta</ThemedText>
+          <ThemedText type="h4">
+            Ola, {user ? getFirstName(user.name) : "Romeiro"}!
+          </ThemedText>
+          <ThemedText type="caption" secondary>{user?.email}</ThemedText>
         </View>
-        <Feather name="chevron-right" size={20} color={theme.textSecondary} />
-      </Pressable>
+      </View>
 
       <SectionTitle title="CONTEUDO" />
       <MenuItem icon="bookmark" title="Favoritos" subtitle="Suas noticias e videos salvos" onPress={() => {}} />
@@ -120,6 +143,9 @@ export default function MaisScreen() {
       <MenuItem icon="bell" title="Notificacoes" subtitle="Gerencie seus alertas" onPress={() => {}} />
       <MenuItem icon="settings" title="Preferencias" subtitle="Tema e configuracoes" onPress={() => {}} />
       <MenuItem icon="info" title="Sobre o App" subtitle="Versao 1.0.0" onPress={() => {}} />
+
+      <SectionTitle title="CONTA" />
+      <MenuItem icon="log-out" title="Sair" subtitle="Encerrar sessao" onPress={handleLogout} />
 
       <View style={styles.footer}>
         <ThemedText type="caption" secondary style={styles.footerText}>
@@ -149,6 +175,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginRight: Spacing.lg,
+  },
+  avatarText: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#FFFFFF",
   },
   profileInfo: {
     flex: 1,
