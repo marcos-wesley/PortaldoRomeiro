@@ -57,18 +57,6 @@ function OfferingCard({ icon, title, color }: { icon: string; title: string; col
   );
 }
 
-function MissionCard({ icon, title, description, color }: { icon: string; title: string; description: string; color: string }) {
-  const { theme } = useTheme();
-  return (
-    <View style={[styles.missionCard, { backgroundColor: theme.backgroundDefault }]}>
-      <View style={[styles.missionIcon, { backgroundColor: color + "20" }]}>
-        <Feather name={icon as any} size={24} color={color} />
-      </View>
-      <ThemedText type="h4" style={styles.missionTitle}>{title}</ThemedText>
-      <ThemedText type="small" secondary style={styles.missionDescription}>{description}</ThemedText>
-    </View>
-  );
-}
 
 function SocialButton({ icon, onPress }: { icon: string; onPress: () => void }) {
   const { theme } = useTheme();
@@ -152,18 +140,27 @@ export default function InfoScreen() {
           </View>
         </View>
 
-        <View style={styles.missionRow}>
-          <MissionCard
-            icon="compass"
-            title="Nossa Missao"
-            description="Orientar e guiar peregrinos com seguranca, devocao e acolhimento, proporcionando a melhor experiencia de fe."
-            color={VibrantColors.blue}
-          />
-          <MissionCard
-            icon="eye"
-            title="Nossa Visao"
-            description="Ser a principal fonte de informacao sobre Trindade e a Romaria, elevando a experiencia de cada visitante."
-            color={VibrantColors.teal}
+        <View style={styles.section}>
+          <ThemedText type="h3" style={styles.sectionTitle}>Nossos Pilares</ThemedText>
+          <FlatList
+            horizontal
+            data={[
+              { id: "1", icon: "compass", title: "Nossa Missao", description: "Orientar e guiar peregrinos com seguranca, devocao e acolhimento, proporcionando a melhor experiencia de fe.", color: VibrantColors.blue },
+              { id: "2", icon: "eye", title: "Nossa Visao", description: "Ser a principal fonte de informacao sobre Trindade e a Romaria, elevando a experiencia de cada visitante.", color: VibrantColors.teal },
+              { id: "3", icon: "heart", title: "Nossos Valores", description: "Fe, acolhimento, respeito, transparencia e compromisso com o bem-estar de cada romeiro que nos visita.", color: VibrantColors.pink },
+            ]}
+            keyExtractor={(item) => item.id}
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.missionCarousel}
+            renderItem={({ item }) => (
+              <View style={[styles.missionCard, { backgroundColor: theme.backgroundDefault }]}>
+                <View style={[styles.missionIcon, { backgroundColor: item.color + "20" }]}>
+                  <Feather name={item.icon as any} size={28} color={item.color} />
+                </View>
+                <ThemedText type="h4" style={styles.missionTitle}>{item.title}</ThemedText>
+                <ThemedText type="body" secondary style={styles.missionDescription}>{item.description}</ThemedText>
+              </View>
+            )}
           />
         </View>
 
@@ -310,32 +307,32 @@ const styles = StyleSheet.create({
     marginTop: Spacing.sm,
     lineHeight: 22,
   },
-  missionRow: {
-    flexDirection: "row",
+  missionCarousel: {
+    paddingRight: Spacing.lg,
     gap: Spacing.md,
-    marginBottom: Spacing.xl,
   },
   missionCard: {
-    flex: 1,
+    width: SCREEN_WIDTH * 0.75,
     borderRadius: BorderRadius.lg,
-    padding: Spacing.lg,
+    padding: Spacing.xl,
     alignItems: "center",
   },
   missionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   missionTitle: {
-    marginBottom: Spacing.xs,
+    marginBottom: Spacing.sm,
     textAlign: "center",
+    fontSize: 18,
   },
   missionDescription: {
     textAlign: "center",
-    lineHeight: 20,
+    lineHeight: 24,
   },
   offeringsGrid: {
     flexDirection: "row",
