@@ -117,8 +117,8 @@ const styles = StyleSheet.create({
     marginLeft: 0,
   },
   logoImage: {
-    width: 180,
-    height: 36,
+    width: 200,
+    height: 44,
   },
   rightSection: {
     flexDirection: "row",
