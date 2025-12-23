@@ -48,17 +48,9 @@ export function AppHeader({
       <View style={[styles.leftSection, showBackButton && styles.leftWithBack]}>
         <Image
           source={require("../../assets/images/portal-logo.webp")}
-          style={styles.logoIcon}
+          style={styles.logoImage}
           contentFit="contain"
         />
-        <View style={styles.titleContainer}>
-          <Text style={[styles.titleText, { color: theme.headerTitleText }]}>
-            PORTAL DO ROMEIRO
-          </Text>
-          <Text style={[styles.subtitleText, { color: theme.headerSubtitleText }]}>
-            FÉ, DEVOÇÃO E INFORMAÇÃO
-          </Text>
-        </View>
       </View>
 
       <View style={styles.rightSection}>
@@ -124,23 +116,9 @@ const styles = StyleSheet.create({
   leftWithBack: {
     marginLeft: 0,
   },
-  logoIcon: {
-    width: 40,
-    height: 40,
-  },
-  titleContainer: {
-    flexDirection: "column",
-  },
-  titleText: {
-    fontSize: 16,
-    fontWeight: "700",
-    letterSpacing: 1,
-  },
-  subtitleText: {
-    fontSize: 10,
-    fontWeight: "500",
-    letterSpacing: 0.5,
-    marginTop: 1,
+  logoImage: {
+    width: 180,
+    height: 36,
   },
   rightSection: {
     flexDirection: "row",
