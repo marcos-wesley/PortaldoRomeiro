@@ -1,13 +1,11 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
-import { BlurView } from "expo-blur";
-import { Platform, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import HomeStackNavigator from "@/navigation/HomeStackNavigator";
 import GuiaStackNavigator from "@/navigation/GuiaStackNavigator";
 import NoticiasStackNavigator from "@/navigation/NoticiasStackNavigator";
 import MaisStackNavigator from "@/navigation/MaisStackNavigator";
-import { useTheme } from "@/hooks/useTheme";
 
 export type MainTabParamList = {
   HomeTab: undefined;
@@ -18,32 +16,24 @@ export type MainTabParamList = {
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-export default function MainTabNavigator() {
-  const { theme, isDark } = useTheme();
+const TAB_BAR_RED = "#b22226";
 
+export default function MainTabNavigator() {
   return (
     <Tab.Navigator
       initialRouteName="HomeTab"
       screenOptions={{
-        tabBarActiveTintColor: theme.tabIconSelected,
-        tabBarInactiveTintColor: theme.tabIconDefault,
+        tabBarActiveTintColor: "#FFFFFF",
+        tabBarInactiveTintColor: "rgba(255, 255, 255, 0.7)",
         tabBarStyle: {
           position: "absolute",
-          backgroundColor: Platform.select({
-            ios: "transparent",
-            android: theme.backgroundRoot,
-          }),
+          backgroundColor: TAB_BAR_RED,
           borderTopWidth: 0,
           elevation: 0,
         },
-        tabBarBackground: () =>
-          Platform.OS === "ios" ? (
-            <BlurView
-              intensity={100}
-              tint={isDark ? "dark" : "light"}
-              style={StyleSheet.absoluteFill}
-            />
-          ) : null,
+        tabBarBackground: () => (
+          <View style={[StyleSheet.absoluteFill, { backgroundColor: TAB_BAR_RED }]} />
+        ),
         headerShown: false,
       }}
     >
@@ -52,8 +42,8 @@ export default function MainTabNavigator() {
         component={HomeStackNavigator}
         options={{
           title: "Home",
-          tabBarIcon: ({ color, size, focused }) => (
-            <Feather name={focused ? "home" : "home"} size={24} color={color} />
+          tabBarIcon: ({ color }) => (
+            <Feather name="home" size={24} color={color} />
           ),
         }}
       />
@@ -62,8 +52,8 @@ export default function MainTabNavigator() {
         component={GuiaStackNavigator}
         options={{
           title: "Guia",
-          tabBarIcon: ({ color, size, focused }) => (
-            <Feather name="compass" size={24} color={color} />
+          tabBarIcon: ({ color }) => (
+            <Feather name="clipboard" size={24} color={color} />
           ),
         }}
       />
@@ -72,7 +62,7 @@ export default function MainTabNavigator() {
         component={NoticiasStackNavigator}
         options={{
           title: "Noticias",
-          tabBarIcon: ({ color, size, focused }) => (
+          tabBarIcon: ({ color }) => (
             <Feather name="file-text" size={24} color={color} />
           ),
         }}
@@ -82,7 +72,7 @@ export default function MainTabNavigator() {
         component={MaisStackNavigator}
         options={{
           title: "Mais",
-          tabBarIcon: ({ color, size, focused }) => (
+          tabBarIcon: ({ color }) => (
             <Feather name="menu" size={24} color={color} />
           ),
         }}
