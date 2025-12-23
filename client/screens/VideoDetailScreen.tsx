@@ -1,11 +1,12 @@
-import { ScrollView, View, StyleSheet, Pressable, ActivityIndicator, Linking, Platform } from "react-native";
+import { useState } from "react";
+import { ScrollView, View, StyleSheet, Pressable, ActivityIndicator, Linking, Platform, Dimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRoute, RouteProp, useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useQuery } from "@tanstack/react-query";
-import * as WebBrowser from "expo-web-browser";
+import { WebView } from "react-native-webview";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -36,6 +37,7 @@ interface VideoItem {
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+const { width: screenWidth } = Dimensions.get("window");
 
 function getFullImageUrl(imageUrl: string | null): string | null {
   if (!imageUrl) return null;
@@ -76,6 +78,52 @@ function formatDate(dateString: string | null): string {
   });
 }
 
+function YouTubePlayer({ videoId }: { videoId: string }) {
+  const [isLoading, setIsLoading] = useState(true);
+  const playerHeight = (screenWidth * 9) / 16;
+
+  const embedHtml = `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <style>
+          * { margin: 0; padding: 0; box-sizing: border-box; }
+          html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
+          iframe { width: 100%; height: 100%; border: none; }
+        </style>
+      </head>
+      <body>
+        <iframe
+          src="https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1&autoplay=0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen
+        ></iframe>
+      </body>
+    </html>
+  `;
+
+  return (
+    <View style={[styles.playerContainer, { height: playerHeight }]}>
+      {isLoading ? (
+        <View style={styles.playerLoading}>
+          <ActivityIndicator size="large" color="#FFFFFF" />
+        </View>
+      ) : null}
+      <WebView
+        source={{ html: embedHtml }}
+        style={[styles.webview, { opacity: isLoading ? 0 : 1 }]}
+        allowsFullscreenVideo
+        allowsInlineMediaPlayback
+        mediaPlaybackRequiresUserAction={false}
+        javaScriptEnabled
+        onLoadEnd={() => setIsLoading(false)}
+        scrollEnabled={false}
+      />
+    </View>
+  );
+}
+
 function RelatedVideoCard({ video, onPress }: { video: VideoItem; onPress: () => void }) {
   const { theme } = useTheme();
   const scale = useSharedValue(1);
@@ -96,9 +144,6 @@ function RelatedVideoCard({ video, onPress }: { video: VideoItem; onPress: () =>
         <Image source={{ uri: thumbnailUrl }} style={styles.relatedThumbnail} contentFit="cover" />
         <View style={styles.playButtonSmall}>
           <Feather name="play" size={14} color="#FFFFFF" />
-        </View>
-        <View style={styles.durationBadge}>
-          <ThemedText style={styles.durationText}>YouTube</ThemedText>
         </View>
       </View>
       <View style={styles.relatedContent}>
@@ -126,31 +171,7 @@ export default function VideoDetailScreen() {
   const video = videoData?.video;
   const relatedVideos = (allVideosData?.videos || []).filter((v) => v.id !== route.params.id).slice(0, 5);
 
-  const handlePlayVideo = async () => {
-    if (!video) return;
-    
-    const ytId = extractYouTubeId(video.youtubeUrl);
-    if (ytId) {
-      const youtubeAppUrl = `youtube://watch?v=${ytId}`;
-      const youtubeWebUrl = `https://www.youtube.com/watch?v=${ytId}`;
-      
-      if (Platform.OS !== "web") {
-        try {
-          const canOpen = await Linking.canOpenURL(youtubeAppUrl);
-          if (canOpen) {
-            await Linking.openURL(youtubeAppUrl);
-            return;
-          }
-        } catch (e) {
-          // Fall through to web browser
-        }
-      }
-      
-      await WebBrowser.openBrowserAsync(youtubeWebUrl);
-    } else {
-      await WebBrowser.openBrowserAsync(video.youtubeUrl);
-    }
-  };
+  const youtubeId = video ? extractYouTubeId(video.youtubeUrl) : null;
 
   const handleShareVideo = async () => {
     if (!video) return;
@@ -195,8 +216,6 @@ export default function VideoDetailScreen() {
     );
   }
 
-  const thumbnailUrl = getVideoThumbnail(video);
-
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.backgroundRoot }}
@@ -205,18 +224,16 @@ export default function VideoDetailScreen() {
       }}
       showsVerticalScrollIndicator={false}
     >
-      <Pressable onPress={handlePlayVideo} style={styles.playerContainer}>
-        <Image source={{ uri: thumbnailUrl }} style={styles.playerImage} contentFit="cover" />
-        <View style={styles.playerOverlay}>
-          <View style={styles.playButtonLarge}>
-            <Feather name="play" size={36} color="#FFFFFF" />
-          </View>
+      {youtubeId ? (
+        <YouTubePlayer videoId={youtubeId} />
+      ) : (
+        <View style={styles.noVideoContainer}>
+          <Feather name="video-off" size={48} color={theme.textSecondary} />
+          <ThemedText type="body" secondary style={{ marginTop: Spacing.md }}>
+            Video nao disponivel
+          </ThemedText>
         </View>
-        <View style={styles.youtubeLabel}>
-          <Feather name="youtube" size={16} color="#FFFFFF" />
-          <ThemedText style={styles.youtubeLabelText}>Assistir no YouTube</ThemedText>
-        </View>
-      </Pressable>
+      )}
 
       <View style={styles.content}>
         <ThemedText type="h3" style={styles.title}>{video.title}</ThemedText>
@@ -226,10 +243,6 @@ export default function VideoDetailScreen() {
         </ThemedText>
 
         <View style={styles.actionsRow}>
-          <Pressable style={styles.actionButton} onPress={handlePlayVideo}>
-            <Feather name="play-circle" size={20} color={Colors.light.primary} />
-            <ThemedText type="small" style={[styles.actionText, { color: Colors.light.primary }]}>Assistir</ThemedText>
-          </Pressable>
           <Pressable style={styles.actionButton} onPress={handleShareVideo}>
             <Feather name="share-2" size={20} color={theme.textSecondary} />
             <ThemedText type="small" secondary style={styles.actionText}>Compartilhar</ThemedText>
@@ -237,6 +250,10 @@ export default function VideoDetailScreen() {
           <Pressable style={styles.actionButton}>
             <Feather name="bookmark" size={20} color={theme.textSecondary} />
             <ThemedText type="small" secondary style={styles.actionText}>Salvar</ThemedText>
+          </Pressable>
+          <Pressable style={styles.actionButton}>
+            <Feather name="heart" size={20} color={theme.textSecondary} />
+            <ThemedText type="small" secondary style={styles.actionText}>Curtir</ThemedText>
           </Pressable>
         </View>
 
@@ -286,43 +303,25 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   playerContainer: {
-    position: "relative",
-    height: 240,
-  },
-  playerImage: {
     width: "100%",
-    height: "100%",
+    backgroundColor: "#000",
   },
-  playerOverlay: {
+  playerLoading: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.3)",
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#000",
+    zIndex: 1,
   },
-  playButtonLarge: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: "rgba(255,0,0,0.9)",
-    alignItems: "center",
+  webview: {
+    flex: 1,
+    backgroundColor: "#000",
+  },
+  noVideoContainer: {
+    height: 200,
     justifyContent: "center",
-  },
-  youtubeLabel: {
-    position: "absolute",
-    bottom: Spacing.md,
-    right: Spacing.md,
-    backgroundColor: "rgba(255,0,0,0.9)",
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    borderRadius: BorderRadius.sm,
-    flexDirection: "row",
     alignItems: "center",
-    gap: Spacing.xs,
-  },
-  youtubeLabelText: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "600",
+    backgroundColor: "#1a1a1a",
   },
   content: {
     padding: Spacing.lg,
@@ -410,20 +409,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.5)",
     alignItems: "center",
     justifyContent: "center",
-  },
-  durationBadge: {
-    position: "absolute",
-    bottom: Spacing.xs,
-    right: Spacing.xs,
-    backgroundColor: "rgba(0,0,0,0.7)",
-    paddingHorizontal: Spacing.xs,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.xs,
-  },
-  durationText: {
-    color: "#FFFFFF",
-    fontSize: 10,
-    fontWeight: "500",
   },
   relatedContent: {
     flex: 1,
