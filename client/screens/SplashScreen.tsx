@@ -70,10 +70,9 @@ export default function SplashScreen({ onFinish }: SplashScreenProps) {
           <Animated.View style={[styles.glowEffect, glowAnimatedStyle]} />
           <Animated.View style={iconAnimatedStyle}>
             <Image
-              source={require("../../assets/images/splash-icon.png")}
+              source={require("../../assets/images/splash-logo.png")}
               style={styles.icon}
               contentFit="contain"
-              tintColor="#FFFFFF"
             />
           </Animated.View>
         </View>
