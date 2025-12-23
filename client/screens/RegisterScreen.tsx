@@ -175,7 +175,7 @@ export default function RegisterScreen() {
       >
         <View style={styles.header}>
           <Image
-            source={require("../../assets/images/icon.png")}
+            source={require("../../assets/images/portal-logo-full.webp")}
             style={styles.logo}
             contentFit="contain"
           />
@@ -486,8 +486,8 @@ const styles = StyleSheet.create({
     marginBottom: Spacing["2xl"],
   },
   logo: {
-    width: 72,
-    height: 72,
+    width: 260,
+    height: 70,
     marginBottom: Spacing.lg,
   },
   title: {
