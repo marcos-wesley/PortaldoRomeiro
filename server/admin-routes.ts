@@ -3,6 +3,8 @@ import { randomBytes, pbkdf2Sync, timingSafeEqual } from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { storage } from "./storage";
+import { createNewsSchema, updateNewsSchema } from "@shared/schema";
+import { fromError } from "zod-validation-error";
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
@@ -157,16 +159,101 @@ export function registerAdminRoutes(app: Express) {
   app.get("/admin/api/stats", requireAuth, async (req, res) => {
     try {
       const usersCount = await storage.getUsersCount();
+      const newsCount = await storage.getNewsCount();
       
       return res.json({
         users: usersCount,
-        news: 0,
+        news: newsCount,
         hotels: 0,
         events: 0,
       });
     } catch (error) {
       console.error("Stats error:", error);
       return res.status(500).json({ error: "Erro ao carregar estatisticas" });
+    }
+  });
+
+  // News CRUD API
+  app.get("/admin/api/news", requireAuth, async (req, res) => {
+    try {
+      const allNews = await storage.getAllNews(false);
+      return res.json({ news: allNews });
+    } catch (error) {
+      console.error("Admin get news error:", error);
+      return res.status(500).json({ error: "Erro ao buscar noticias" });
+    }
+  });
+
+  app.get("/admin/api/news/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const newsItem = await storage.getNewsById(id);
+      
+      if (!newsItem) {
+        return res.status(404).json({ error: "Noticia nao encontrada" });
+      }
+
+      return res.json({ news: newsItem });
+    } catch (error) {
+      console.error("Admin get news item error:", error);
+      return res.status(500).json({ error: "Erro ao buscar noticia" });
+    }
+  });
+
+  app.post("/admin/api/news", requireAuth, async (req, res) => {
+    try {
+      const validationResult = createNewsSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+
+      const newsData = validationResult.data;
+      const created = await storage.createNews(newsData);
+      
+      return res.status(201).json({ news: created, message: "Noticia criada com sucesso!" });
+    } catch (error) {
+      console.error("Admin create news error:", error);
+      return res.status(500).json({ error: "Erro ao criar noticia" });
+    }
+  });
+
+  app.put("/admin/api/news/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validationResult = updateNewsSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+
+      const newsData = validationResult.data;
+      const updated = await storage.updateNews(id, newsData);
+      
+      if (!updated) {
+        return res.status(404).json({ error: "Noticia nao encontrada" });
+      }
+
+      return res.json({ news: updated, message: "Noticia atualizada com sucesso!" });
+    } catch (error) {
+      console.error("Admin update news error:", error);
+      return res.status(500).json({ error: "Erro ao atualizar noticia" });
+    }
+  });
+
+  app.delete("/admin/api/news/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteNews(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ error: "Noticia nao encontrada" });
+      }
+
+      return res.json({ message: "Noticia excluida com sucesso!" });
+    } catch (error) {
+      console.error("Admin delete news error:", error);
+      return res.status(500).json({ error: "Erro ao excluir noticia" });
     }
   });
 }

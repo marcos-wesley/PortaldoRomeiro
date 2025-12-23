@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "node:http";
 import { randomBytes, pbkdf2Sync, timingSafeEqual } from "node:crypto";
-import { registerUserSchema, loginUserSchema, updateProfileSchema } from "@shared/schema";
+import { registerUserSchema, loginUserSchema, updateProfileSchema, createNewsSchema, updateNewsSchema } from "@shared/schema";
 import { storage } from "./storage";
 import { fromError } from "zod-validation-error";
 import * as fs from "node:fs";
@@ -221,6 +221,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Upload avatar error:", error);
       return res.status(500).json({ error: "Erro ao atualizar foto. Tente novamente." });
+    }
+  });
+
+  // News Routes (Public API)
+  app.get("/api/news", async (req, res) => {
+    try {
+      const publishedOnly = req.query.published !== "false";
+      const allNews = await storage.getAllNews(publishedOnly);
+      return res.json({ news: allNews });
+    } catch (error) {
+      console.error("Get news error:", error);
+      return res.status(500).json({ error: "Erro ao buscar noticias" });
+    }
+  });
+
+  app.get("/api/news/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const newsItem = await storage.getNewsById(id);
+      
+      if (!newsItem) {
+        return res.status(404).json({ error: "Noticia nao encontrada" });
+      }
+
+      // Increment views
+      await storage.incrementNewsViews(id);
+
+      return res.json({ news: newsItem });
+    } catch (error) {
+      console.error("Get news item error:", error);
+      return res.status(500).json({ error: "Erro ao buscar noticia" });
+    }
+  });
+
+  // Upload image for news
+  app.post("/api/upload/image", async (req, res) => {
+    try {
+      const { imageData } = req.body;
+      if (!imageData) {
+        return res.status(400).json({ error: "Dados da imagem sao obrigatorios" });
+      }
+
+      const matches = imageData.match(/^data:image\/(png|jpeg|jpg|gif|webp);base64,(.+)$/);
+      if (!matches) {
+        return res.status(400).json({ error: "Formato de imagem invalido" });
+      }
+
+      const extension = matches[1];
+      const base64Data = matches[2];
+      
+      const uploadsDir = path.join(process.cwd(), "uploads", "images");
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+
+      const filename = `${Date.now()}-${randomBytes(8).toString("hex")}.${extension}`;
+      const filepath = path.join(uploadsDir, filename);
+
+      const buffer = Buffer.from(base64Data, "base64");
+      
+      if (buffer.length > 10 * 1024 * 1024) {
+        return res.status(400).json({ error: "Imagem muito grande. Maximo 10MB." });
+      }
+
+      fs.writeFileSync(filepath, buffer);
+
+      const imageUrl = `/uploads/images/${filename}`;
+      return res.json({ url: imageUrl });
+    } catch (error) {
+      console.error("Upload image error:", error);
+      return res.status(500).json({ error: "Erro ao enviar imagem" });
     }
   });
 
