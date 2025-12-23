@@ -1,4 +1,4 @@
-import { ScrollView, View, StyleSheet, Pressable, Dimensions, ImageBackground, ActivityIndicator } from "react-native";
+import { ScrollView, View, StyleSheet, Pressable, Dimensions, ImageBackground, ActivityIndicator, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
@@ -7,7 +7,8 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState, useCallback } from "react";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -346,6 +347,8 @@ export default function HomeScreen() {
   const tabBarHeight = useBottomTabBarHeight();
   const { theme } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
+  const queryClient = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
 
   const { data: newsData, isLoading: newsLoading } = useQuery<{ news: NewsItem[] }>({
     queryKey: ["/api/news"],
@@ -354,6 +357,13 @@ export default function HomeScreen() {
   const { data: videosData, isLoading: videosLoading } = useQuery<{ videos: VideoItem[] }>({
     queryKey: ["/api/videos"],
   });
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await queryClient.invalidateQueries({ queryKey: ["/api/news"] });
+    await queryClient.invalidateQueries({ queryKey: ["/api/videos"] });
+    setRefreshing(false);
+  }, [queryClient]);
 
   const allNews = newsData?.news || [];
   const featuredNews = allNews.find((n) => n.featured) || allNews[0];
@@ -390,6 +400,14 @@ export default function HomeScreen() {
       }}
       scrollIndicatorInsets={{ bottom: insets.bottom }}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={Colors.light.primary}
+          colors={[Colors.light.primary]}
+        />
+      }
     >
       <FullScreenHeroBanner headerHeight={headerHeight} />
 

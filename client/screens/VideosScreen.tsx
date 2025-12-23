@@ -1,11 +1,12 @@
-import { FlatList, View, StyleSheet, Pressable, ActivityIndicator } from "react-native";
+import { FlatList, View, StyleSheet, Pressable, ActivityIndicator, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState, useCallback } from "react";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -178,10 +179,18 @@ export default function VideosScreen() {
   const headerHeight = useHeaderHeight();
   const { theme } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
+  const queryClient = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
 
   const { data, isLoading, error } = useQuery<{ videos: VideoItem[] }>({
     queryKey: ["/api/videos"],
   });
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await queryClient.invalidateQueries({ queryKey: ["/api/videos"] });
+    setRefreshing(false);
+  }, [queryClient]);
 
   const videosList = data?.videos || [];
   const featuredVideo = videosList.find((v) => v.featured) || videosList[0];
@@ -236,6 +245,15 @@ export default function VideosScreen() {
         <VideoCard video={item} onPress={() => handleVideoPress(item.id)} />
       )}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={Colors.light.primary}
+          colors={[Colors.light.primary]}
+          progressViewOffset={headerHeight}
+        />
+      }
     />
   );
 }
