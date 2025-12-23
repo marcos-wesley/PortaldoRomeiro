@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Novo Ponto Turistico - Admin Portal do Romeiro</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8f9fa;
+      min-height: 100vh;
+      display: flex;
+    }
+    .sidebar {
+      width: 260px;
+      background: #1a1a2e;
+      color: white;
+      padding: 24px;
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .sidebar h1 { color: #b22226; font-size: 18px; margin-bottom: 4px; }
+    .sidebar > p { color: #9ca3af; font-size: 12px; margin-bottom: 32px; }
+    .nav-item {
+      display: block;
+      padding: 12px 16px;
+      color: #9ca3af;
+      text-decoration: none;
+      border-radius: 8px;
+      margin-bottom: 4px;
+    }
+    .nav-item:hover { background: #16213e; color: white; }
+    .nav-item.active { background: #b22226; color: white; }
+    .main {
+      flex: 1;
+      margin-left: 260px;
+      padding: 32px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .header h2 { font-size: 24px; color: #1f2937; }
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary { background: #b22226; color: white; }
+    .btn-primary:hover { background: #8b1a1d; }
+    .btn-primary:disabled { background: #ccc; cursor: not-allowed; }
+    .btn-secondary { background: #e5e7eb; color: #374151; }
+    .btn-secondary:hover { background: #d1d5db; }
+    .btn-success { background: #059669; color: white; }
+    .btn-success:hover { background: #047857; }
+    .btn-location { background: #3b82f6; color: white; }
+    .btn-location:hover { background: #2563eb; }
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #b22226;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .form-row-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+    }
+    .cover-preview {
+      width: 100%;
+      max-width: 400px;
+      height: 200px;
+      border: 2px dashed #d1d5db;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #9ca3af;
+      cursor: pointer;
+      overflow: hidden;
+      position: relative;
+      margin-top: 8px;
+    }
+    .cover-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .cover-preview:hover { border-color: #b22226; }
+    .cover-preview input {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .checkbox-group input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+    }
+    .actions-bar {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      padding-top: 20px;
+      border-top: 1px solid #e5e7eb;
+    }
+    .alert {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+    .alert-error { background: #fee2e2; color: #991b1b; }
+    .alert-success { background: #d1fae5; color: #065f46; }
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255,255,255,0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .loading-overlay.active { display: flex; }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #e5e7eb;
+      border-top-color: #b22226;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #map {
+      height: 300px;
+      border-radius: 8px;
+      margin-top: 8px;
+    }
+    .location-info {
+      display: flex;
+      gap: 16px;
+      margin-top: 12px;
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 8px;
+    }
+    .location-info input {
+      flex: 1;
+    }
+    .amenities-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .dynamic-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .dynamic-list-item {
+      display: flex;
+      gap: 8px;
+    }
+    .dynamic-list-item input {
+      flex: 1;
+    }
+    .dynamic-list-item button {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      background: #ef4444;
+      color: white;
+    }
+    .add-item-btn {
+      padding: 8px 16px;
+      border: 1px dashed #d1d5db;
+      border-radius: 8px;
+      background: transparent;
+      color: #6b7280;
+      cursor: pointer;
+      width: fit-content;
+    }
+    .add-item-btn:hover {
+      border-color: #b22226;
+      color: #b22226;
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <h1>Portal do Romeiro</h1>
+    <p>Painel Administrativo</p>
+    <a href="/admin/dashboard" class="nav-item">Dashboard</a>
+    <a href="/admin/noticias" class="nav-item">Noticias</a>
+    <a href="/admin/videos" class="nav-item">Videos</a>
+    <a href="/admin/hospedagens" class="nav-item">Hospedagens</a>
+    <a href="/admin/eventos" class="nav-item">Eventos</a>
+    <a href="/admin/oracoes" class="nav-item">Oracoes</a>
+    <a href="/admin/pontos-turisticos" class="nav-item active">Pontos Turisticos</a>
+    <a href="/admin/usuarios" class="nav-item">Usuarios</a>
+    <a href="/admin/configuracoes" class="nav-item">Configuracoes</a>
+  </aside>
+
+  <main class="main">
+    <div class="header">
+      <h2 id="page-title">Novo Ponto Turistico</h2>
+      <a href="/admin/pontos-turisticos" class="btn btn-secondary">Voltar</a>
+    </div>
+
+    <div id="alert" class="alert" style="display: none;"></div>
+
+    <form id="attraction-form">
+      <div class="card">
+        <div class="card-title">Informacoes Basicas</div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="name">Nome *</label>
+            <input type="text" id="name" name="name" required placeholder="Ex: Basilica do Divino Pai Eterno">
+          </div>
+          <div class="form-group">
+            <label for="category">Categoria *</label>
+            <select id="category" name="category" required>
+              <option value="">Selecione...</option>
+              <option value="Igrejas">Igrejas</option>
+              <option value="Monumentos">Monumentos</option>
+              <option value="Pracas">Pracas</option>
+              <option value="Museus">Museus</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Descricao</label>
+          <textarea id="description" name="description" rows="4" placeholder="Descreva o ponto turistico..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Imagem de Capa</label>
+          <div class="cover-preview" id="cover-preview">
+            <input type="file" id="cover-input" accept="image/*">
+            <span id="cover-placeholder">Clique para selecionar imagem</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Localizacao</div>
+        
+        <div class="form-group">
+          <label for="address">Endereco</label>
+          <input type="text" id="address" name="address" placeholder="Ex: Rua Coronel Anacleto, 1 - Centro, Trindade - GO">
+        </div>
+
+        <div class="form-group">
+          <label>Mapa - Clique para marcar a localizacao ou use o botao abaixo</label>
+          <button type="button" class="btn btn-location" onclick="getMyLocation()" style="margin-bottom: 8px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <circle cx="12" cy="12" r="3"></circle>
+            </svg>
+            Usar Minha Localizacao
+          </button>
+          <div id="map"></div>
+          <div class="location-info">
+            <div class="form-group" style="margin: 0; flex: 1;">
+              <label for="latitude" style="font-size: 12px;">Latitude</label>
+              <input type="text" id="latitude" name="latitude" placeholder="-16.123456" readonly>
+            </div>
+            <div class="form-group" style="margin: 0; flex: 1;">
+              <label for="longitude" style="font-size: 12px;">Longitude</label>
+              <input type="text" id="longitude" name="longitude" placeholder="-49.123456" readonly>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Contato</div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="phone">Telefone</label>
+            <input type="text" id="phone" name="phone" placeholder="(62) 3506-1234">
+          </div>
+          <div class="form-group">
+            <label for="website">Site</label>
+            <input type="url" id="website" name="website" placeholder="https://www.exemplo.com.br">
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Horarios de Funcionamento</div>
+        
+        <div class="form-row-3">
+          <div class="form-group">
+            <label for="scheduleWeekdays">Segunda a Sexta</label>
+            <input type="text" id="scheduleWeekdays" name="scheduleWeekdays" placeholder="06:00 - 20:00">
+          </div>
+          <div class="form-group">
+            <label for="scheduleSaturday">Sabado</label>
+            <input type="text" id="scheduleSaturday" name="scheduleSaturday" placeholder="06:00 - 22:00">
+          </div>
+          <div class="form-group">
+            <label for="scheduleSunday">Domingo</label>
+            <input type="text" id="scheduleSunday" name="scheduleSunday" placeholder="06:00 - 22:00">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Horarios de Missas (um por linha)</label>
+          <div id="mass-schedule-list" class="dynamic-list"></div>
+          <button type="button" class="add-item-btn" onclick="addMassSchedule()">+ Adicionar Horario de Missa</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Comodidades</div>
+        
+        <div class="amenities-grid">
+          <div class="checkbox-group">
+            <input type="checkbox" id="amenity-acessivel" value="Acessivel">
+            <label for="amenity-acessivel" style="margin: 0;">Acessivel</label>
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="amenity-lanchonete" value="Lanchonete">
+            <label for="amenity-lanchonete" style="margin: 0;">Lanchonete</label>
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="amenity-estacionamento" value="Estacionamento">
+            <label for="amenity-estacionamento" style="margin: 0;">Estacionamento</label>
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="amenity-loja" value="Loja Oficial">
+            <label for="amenity-loja" style="margin: 0;">Loja Oficial</label>
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="amenity-banheiro" value="Banheiro">
+            <label for="amenity-banheiro" style="margin: 0;">Banheiro</label>
+          </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="amenity-wifi" value="Wi-Fi">
+            <label for="amenity-wifi" style="margin: 0;">Wi-Fi</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Dicas do Romeiro</div>
+        
+        <div class="form-group">
+          <label>Dicas para os visitantes</label>
+          <div id="tips-list" class="dynamic-list"></div>
+          <button type="button" class="add-item-btn" onclick="addTip()">+ Adicionar Dica</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Configuracoes</div>
+        
+        <div class="form-group">
+          <div class="checkbox-group">
+            <input type="checkbox" id="featured" name="featured">
+            <label for="featured" style="margin: 0;">Marcar como Destaque</label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="checkbox-group">
+            <input type="checkbox" id="published" name="published" checked>
+            <label for="published" style="margin: 0;">Publicar ponto turistico</label>
+          </div>
+        </div>
+
+        <div class="actions-bar">
+          <button type="button" class="btn btn-secondary" onclick="window.location.href='/admin/pontos-turisticos'">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="submit-btn">Salvar Ponto Turistico</button>
+        </div>
+      </div>
+    </form>
+  </main>
+
+  <div class="loading-overlay" id="loading">
+    <div class="spinner"></div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    let map;
+    let marker;
+    let attractionId = null;
+    let coverImageUrl = null;
+    let massScheduleItems = [];
+    let tipItems = [];
+
+    document.addEventListener('DOMContentLoaded', function() {
+      initMap();
+      
+      const path = window.location.pathname;
+      const editMatch = path.match(/\/admin\/pontos-turisticos\/editar\/(.+)/);
+      if (editMatch) {
+        attractionId = editMatch[1];
+        document.getElementById('page-title').textContent = 'Editar Ponto Turistico';
+        loadAttraction(attractionId);
+      }
+    });
+
+    function initMap() {
+      map = L.map('map').setView([-16.2510, -49.4963], 14);
+      
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      map.on('click', function(e) {
+        setMarker(e.latlng.lat, e.latlng.lng);
+      });
+    }
+
+    function setMarker(lat, lng) {
+      if (marker) {
+        marker.setLatLng([lat, lng]);
+      } else {
+        marker = L.marker([lat, lng], { draggable: true }).addTo(map);
+        marker.on('dragend', function(e) {
+          const pos = e.target.getLatLng();
+          document.getElementById('latitude').value = pos.lat.toFixed(6);
+          document.getElementById('longitude').value = pos.lng.toFixed(6);
+        });
+      }
+      document.getElementById('latitude').value = lat.toFixed(6);
+      document.getElementById('longitude').value = lng.toFixed(6);
+      map.setView([lat, lng], 16);
+    }
+
+    function getMyLocation() {
+      if (!navigator.geolocation) {
+        showAlert('Seu navegador nao suporta geolocalizacao', 'error');
+        return;
+      }
+
+      showLoading(true);
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          showLoading(false);
+          setMarker(position.coords.latitude, position.coords.longitude);
+          showAlert('Localizacao obtida com sucesso!', 'success');
+        },
+        function(error) {
+          showLoading(false);
+          let msg = 'Erro ao obter localizacao';
+          if (error.code === 1) msg = 'Permissao de localizacao negada';
+          else if (error.code === 2) msg = 'Localizacao indisponivel';
+          else if (error.code === 3) msg = 'Tempo esgotado ao obter localizacao';
+          showAlert(msg, 'error');
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+
+    async function uploadImage(file) {
+      showLoading(true);
+      try {
+        const reader = new FileReader();
+        return new Promise((resolve, reject) => {
+          reader.onload = async () => {
+            try {
+              const response = await fetch('/api/upload/image', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imageData: reader.result })
+              });
+              const data = await response.json();
+              if (data.url) {
+                resolve(data.url);
+              } else {
+                throw new Error(data.error || 'Erro ao enviar imagem');
+              }
+            } catch (error) {
+              showAlert('Erro ao enviar imagem: ' + error.message, 'error');
+              reject(error);
+            } finally {
+              showLoading(false);
+            }
+          };
+          reader.onerror = () => {
+            showLoading(false);
+            reject(new Error('Erro ao ler arquivo'));
+          };
+          reader.readAsDataURL(file);
+        });
+      } catch (error) {
+        showLoading(false);
+        throw error;
+      }
+    }
+
+    document.getElementById('cover-input').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const url = await uploadImage(file);
+        if (url) {
+          coverImageUrl = url;
+          const preview = document.getElementById('cover-preview');
+          const placeholder = document.getElementById('cover-placeholder');
+          placeholder.style.display = 'none';
+          
+          let img = preview.querySelector('img');
+          if (!img) {
+            img = document.createElement('img');
+            preview.appendChild(img);
+          }
+          img.src = url;
+        }
+      }
+    });
+
+    function addMassSchedule(value = '') {
+      const list = document.getElementById('mass-schedule-list');
+      const index = massScheduleItems.length;
+      massScheduleItems.push(value);
+      
+      const div = document.createElement('div');
+      div.className = 'dynamic-list-item';
+      div.innerHTML = `
+        <input type="text" value="${escapeHtml(value)}" placeholder="Ex: Domingo 07:00, 09:00, 11:00" onchange="massScheduleItems[${index}] = this.value">
+        <button type="button" onclick="removeMassSchedule(${index}, this)">X</button>
+      `;
+      list.appendChild(div);
+    }
+
+    function removeMassSchedule(index, btn) {
+      massScheduleItems.splice(index, 1);
+      btn.parentElement.remove();
+      refreshMassScheduleIndexes();
+    }
+
+    function refreshMassScheduleIndexes() {
+      const items = document.querySelectorAll('#mass-schedule-list .dynamic-list-item');
+      massScheduleItems = [];
+      items.forEach((item, i) => {
+        const input = item.querySelector('input');
+        massScheduleItems.push(input.value);
+        input.setAttribute('onchange', `massScheduleItems[${i}] = this.value`);
+        const btn = item.querySelector('button');
+        btn.setAttribute('onclick', `removeMassSchedule(${i}, this)`);
+      });
+    }
+
+    function addTip(value = '') {
+      const list = document.getElementById('tips-list');
+      const index = tipItems.length;
+      tipItems.push(value);
+      
+      const div = document.createElement('div');
+      div.className = 'dynamic-list-item';
+      div.innerHTML = `
+        <input type="text" value="${escapeHtml(value)}" placeholder="Ex: Chegue cedo para evitar filas" onchange="tipItems[${index}] = this.value">
+        <button type="button" onclick="removeTip(${index}, this)">X</button>
+      `;
+      list.appendChild(div);
+    }
+
+    function removeTip(index, btn) {
+      tipItems.splice(index, 1);
+      btn.parentElement.remove();
+      refreshTipIndexes();
+    }
+
+    function refreshTipIndexes() {
+      const items = document.querySelectorAll('#tips-list .dynamic-list-item');
+      tipItems = [];
+      items.forEach((item, i) => {
+        const input = item.querySelector('input');
+        tipItems.push(input.value);
+        input.setAttribute('onchange', `tipItems[${i}] = this.value`);
+        const btn = item.querySelector('button');
+        btn.setAttribute('onclick', `removeTip(${i}, this)`);
+      });
+    }
+
+    async function loadAttraction(id) {
+      showLoading(true);
+      try {
+        const response = await fetch(`/admin/api/attractions/${id}`);
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Ponto turistico nao encontrado');
+        }
+        
+        const attraction = data.attraction;
+        document.getElementById('name').value = attraction.name || '';
+        document.getElementById('category').value = attraction.category || '';
+        document.getElementById('description').value = attraction.description || '';
+        document.getElementById('address').value = attraction.address || '';
+        document.getElementById('phone').value = attraction.phone || '';
+        document.getElementById('website').value = attraction.website || '';
+        document.getElementById('scheduleWeekdays').value = attraction.scheduleWeekdays || '';
+        document.getElementById('scheduleSaturday').value = attraction.scheduleSaturday || '';
+        document.getElementById('scheduleSunday').value = attraction.scheduleSunday || '';
+        document.getElementById('featured').checked = attraction.featured;
+        document.getElementById('published').checked = attraction.published;
+        
+        if (attraction.latitude && attraction.longitude) {
+          const lat = parseFloat(attraction.latitude);
+          const lng = parseFloat(attraction.longitude);
+          setMarker(lat, lng);
+        }
+        
+        if (attraction.imageUrl) {
+          coverImageUrl = attraction.imageUrl;
+          const preview = document.getElementById('cover-preview');
+          const placeholder = document.getElementById('cover-placeholder');
+          placeholder.style.display = 'none';
+          
+          const img = document.createElement('img');
+          img.src = attraction.imageUrl;
+          preview.appendChild(img);
+        }
+
+        if (attraction.amenities) {
+          const amenities = attraction.amenities.split(',').map(a => a.trim());
+          amenities.forEach(amenity => {
+            const checkbox = document.querySelector(`input[value="${amenity}"]`);
+            if (checkbox) checkbox.checked = true;
+          });
+        }
+
+        if (attraction.massSchedule) {
+          const schedules = attraction.massSchedule.split('|').filter(s => s.trim());
+          schedules.forEach(schedule => addMassSchedule(schedule.trim()));
+        }
+
+        if (attraction.tips) {
+          const tips = attraction.tips.split('|').filter(t => t.trim());
+          tips.forEach(tip => addTip(tip.trim()));
+        }
+      } catch (error) {
+        showAlert('Erro ao carregar ponto turistico: ' + error.message, 'error');
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    document.getElementById('attraction-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      await saveAttraction();
+    });
+
+    async function saveAttraction() {
+      const name = document.getElementById('name').value.trim();
+      const category = document.getElementById('category').value;
+      
+      if (!name || !category) {
+        showAlert('Preencha todos os campos obrigatorios', 'error');
+        return;
+      }
+
+      showLoading(true);
+      try {
+        const amenities = [];
+        document.querySelectorAll('.amenities-grid input:checked').forEach(cb => {
+          amenities.push(cb.value);
+        });
+
+        const payload = {
+          name,
+          category,
+          description: document.getElementById('description').value.trim() || null,
+          imageUrl: coverImageUrl,
+          address: document.getElementById('address').value.trim() || null,
+          phone: document.getElementById('phone').value.trim() || null,
+          website: document.getElementById('website').value.trim() || null,
+          latitude: document.getElementById('latitude').value || null,
+          longitude: document.getElementById('longitude').value || null,
+          scheduleWeekdays: document.getElementById('scheduleWeekdays').value.trim() || null,
+          scheduleSaturday: document.getElementById('scheduleSaturday').value.trim() || null,
+          scheduleSunday: document.getElementById('scheduleSunday').value.trim() || null,
+          massSchedule: massScheduleItems.filter(m => m.trim()).join('|') || null,
+          amenities: amenities.join(',') || null,
+          tips: tipItems.filter(t => t.trim()).join('|') || null,
+          featured: document.getElementById('featured').checked,
+          published: document.getElementById('published').checked,
+        };
+
+        const url = attractionId ? `/admin/api/attractions/${attractionId}` : '/admin/api/attractions';
+        const method = attractionId ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Erro ao salvar ponto turistico');
+        }
+
+        showAlert(data.message || 'Ponto turistico salvo com sucesso!', 'success');
+        
+        if (!attractionId && data.attraction) {
+          attractionId = data.attraction.id;
+          history.replaceState(null, '', `/admin/pontos-turisticos/editar/${attractionId}`);
+          document.getElementById('page-title').textContent = 'Editar Ponto Turistico';
+        }
+        
+        setTimeout(() => {
+          window.location.href = '/admin/pontos-turisticos';
+        }, 1500);
+      } catch (error) {
+        showAlert('Erro ao salvar: ' + error.message, 'error');
+      } finally {
+        showLoading(false);
+      }
+    }
+
+    function showLoading(show) {
+      document.getElementById('loading').classList.toggle('active', show);
+    }
+
+    function showAlert(message, type) {
+      const alert = document.getElementById('alert');
+      alert.textContent = message;
+      alert.className = 'alert alert-' + type;
+      alert.style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      if (type === 'success') {
+        setTimeout(() => { alert.style.display = 'none'; }, 3000);
+      }
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text || '';
+      return div.innerHTML;
+    }
+  </script>
+</body>
+</html>

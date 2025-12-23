@@ -3,7 +3,7 @@ import { randomBytes, pbkdf2Sync, timingSafeEqual } from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { storage } from "./storage";
-import { createNewsSchema, updateNewsSchema, createVideoSchema, updateVideoSchema } from "@shared/schema";
+import { createNewsSchema, updateNewsSchema, createVideoSchema, updateVideoSchema, createAttractionSchema, updateAttractionSchema } from "@shared/schema";
 import { fromError } from "zod-validation-error";
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
@@ -130,7 +130,18 @@ export function registerAdminRoutes(app: Express) {
   });
 
   app.get("/admin/pontos-turisticos", requireAuth, (req, res) => {
-    res.send(getPlaceholderPage("Pontos Turisticos", "Gerencie os pontos turisticos"));
+    const filePath = path.join(__dirname, "admin", "pontos-turisticos.html");
+    res.sendFile(filePath);
+  });
+
+  app.get("/admin/pontos-turisticos/novo", requireAuth, (req, res) => {
+    const formPath = path.join(__dirname, "admin", "pontos-turisticos-form.html");
+    res.sendFile(formPath);
+  });
+
+  app.get("/admin/pontos-turisticos/editar/:id", requireAuth, (req, res) => {
+    const formPath = path.join(__dirname, "admin", "pontos-turisticos-form.html");
+    res.sendFile(formPath);
   });
 
   app.get("/admin/usuarios", requireAuth, (req, res) => {
@@ -366,6 +377,90 @@ export function registerAdminRoutes(app: Express) {
     } catch (error) {
       console.error("Admin delete video error:", error);
       return res.status(500).json({ error: "Erro ao excluir video" });
+    }
+  });
+
+  // Attractions CRUD API
+  app.get("/admin/api/attractions", requireAuth, async (req, res) => {
+    try {
+      const allAttractions = await storage.getAllAttractions(false);
+      return res.json({ attractions: allAttractions });
+    } catch (error) {
+      console.error("Admin get attractions error:", error);
+      return res.status(500).json({ error: "Erro ao buscar pontos turisticos" });
+    }
+  });
+
+  app.get("/admin/api/attractions/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const attraction = await storage.getAttractionById(id);
+      
+      if (!attraction) {
+        return res.status(404).json({ error: "Ponto turistico nao encontrado" });
+      }
+
+      return res.json({ attraction });
+    } catch (error) {
+      console.error("Admin get attraction error:", error);
+      return res.status(500).json({ error: "Erro ao buscar ponto turistico" });
+    }
+  });
+
+  app.post("/admin/api/attractions", requireAuth, async (req, res) => {
+    try {
+      const validationResult = createAttractionSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+
+      const attractionData = validationResult.data;
+      const created = await storage.createAttraction(attractionData);
+      
+      return res.status(201).json({ attraction: created, message: "Ponto turistico criado com sucesso!" });
+    } catch (error) {
+      console.error("Admin create attraction error:", error);
+      return res.status(500).json({ error: "Erro ao criar ponto turistico" });
+    }
+  });
+
+  app.put("/admin/api/attractions/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validationResult = updateAttractionSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+
+      const attractionData = validationResult.data;
+      const updated = await storage.updateAttraction(id, attractionData);
+      
+      if (!updated) {
+        return res.status(404).json({ error: "Ponto turistico nao encontrado" });
+      }
+
+      return res.json({ attraction: updated, message: "Ponto turistico atualizado com sucesso!" });
+    } catch (error) {
+      console.error("Admin update attraction error:", error);
+      return res.status(500).json({ error: "Erro ao atualizar ponto turistico" });
+    }
+  });
+
+  app.delete("/admin/api/attractions/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteAttraction(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ error: "Ponto turistico nao encontrado" });
+      }
+
+      return res.json({ message: "Ponto turistico excluido com sucesso!" });
+    } catch (error) {
+      console.error("Admin delete attraction error:", error);
+      return res.status(500).json({ error: "Erro ao excluir ponto turistico" });
     }
   });
 }
