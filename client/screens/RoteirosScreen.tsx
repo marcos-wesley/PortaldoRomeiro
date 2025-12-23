@@ -18,6 +18,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Colors } from "@/constants/theme";
 import type { MaisStackParamList } from "@/navigation/MaisStackNavigator";
+import { getApiUrl } from "@/lib/query-client";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -69,12 +70,22 @@ interface Attraction {
   related: string[];
 }
 
+function getFullImageUrl(imageUrl: string | null): string {
+  if (!imageUrl) {
+    return "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?w=800";
+  }
+  if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+    return imageUrl;
+  }
+  return `${getApiUrl()}${imageUrl}`;
+}
+
 function transformAttraction(item: AttractionFromAPI): Attraction {
   return {
     id: item.id,
     name: item.name,
     category: (item.category as Category) || "Igrejas",
-    imageUrl: item.imageUrl || "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?w=800",
+    imageUrl: getFullImageUrl(item.imageUrl),
     distance: "",
     address: item.address || "",
     phone: item.phone || "",
