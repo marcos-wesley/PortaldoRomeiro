@@ -49,3 +49,9 @@ args = "npm run all:dev"
 waitForPort = 8081
 ensurePreviewReachable = "/status"
 
+[userenv]
+
+[userenv.shared]
+ADMIN_EMAIL = "admin@portaldoromeiro.com"
+ADMIN_PASSWORD = "admin123"
+

@@ -4,8 +4,11 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { storage } from "./storage";
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "admin@portaldoromeiro.com";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+
+const isProduction = process.env.NODE_ENV === "production";
+const isAdminConfigured = ADMIN_EMAIL && ADMIN_PASSWORD;
 
 const adminSessions: Map<string, { email: string; expiresAt: Date }> = new Map();
 
@@ -16,6 +19,7 @@ function hashPassword(password: string): string {
 }
 
 function verifyAdminPassword(password: string): boolean {
+  if (!ADMIN_PASSWORD) return false;
   const expectedHash = hashPassword(ADMIN_PASSWORD);
   const providedHash = hashPassword(password);
   try {
@@ -111,13 +115,17 @@ export function registerAdminRoutes(app: Express) {
 
   app.post("/admin/api/login", async (req, res) => {
     try {
+      if (!isAdminConfigured) {
+        return res.status(503).json({ error: "Painel administrativo nao configurado. Configure ADMIN_EMAIL e ADMIN_PASSWORD nas variaveis de ambiente." });
+      }
+
       const { email, password } = req.body;
       
       if (!email || !password) {
         return res.status(400).json({ error: "E-mail e senha sao obrigatorios" });
       }
       
-      if (email.toLowerCase() !== ADMIN_EMAIL || !verifyAdminPassword(password)) {
+      if (email.toLowerCase() !== ADMIN_EMAIL!.toLowerCase() || !verifyAdminPassword(password)) {
         return res.status(401).json({ error: "Credenciais invalidas" });
       }
       
@@ -126,7 +134,8 @@ export function registerAdminRoutes(app: Express) {
       
       adminSessions.set(sessionToken, { email, expiresAt });
       
-      res.setHeader("Set-Cookie", `admin_session=${sessionToken}; Path=/admin; HttpOnly; SameSite=Strict; Max-Age=86400`);
+      const secureCookie = isProduction ? "; Secure" : "";
+      res.setHeader("Set-Cookie", `admin_session=${sessionToken}; Path=/admin; HttpOnly; SameSite=Strict${secureCookie}; Max-Age=86400`);
       
       return res.json({ success: true, message: "Login realizado com sucesso" });
     } catch (error) {
@@ -140,7 +149,8 @@ export function registerAdminRoutes(app: Express) {
     if (sessionToken) {
       adminSessions.delete(sessionToken);
     }
-    res.setHeader("Set-Cookie", "admin_session=; Path=/admin; HttpOnly; Max-Age=0");
+    const secureCookie = isProduction ? "; Secure" : "";
+    res.setHeader("Set-Cookie", `admin_session=; Path=/admin; HttpOnly${secureCookie}; Max-Age=0`);
     return res.json({ success: true });
   });
 
