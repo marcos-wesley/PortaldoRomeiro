@@ -1,5 +1,5 @@
-import { ScrollView, View, StyleSheet, Pressable, TextInput, ImageBackground, Platform, Linking, RefreshControl, ActivityIndicator } from "react-native";
-import { useState, useCallback, useMemo } from "react";
+import { ScrollView, View, StyleSheet, Pressable, TextInput, ImageBackground, Platform, Linking, RefreshControl, ActivityIndicator, Modal, Alert, Share } from "react-native";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useNavigation } from "@react-navigation/native";
@@ -13,6 +13,9 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import * as Location from "expo-location";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import MapView, { Marker } from "react-native-maps";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
@@ -80,6 +83,26 @@ function getFullImageUrl(imageUrl: string | null): string {
   return `${getApiUrl()}${imageUrl}`;
 }
 
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+}
+
+function formatDistance(km: number): string {
+  if (km < 1) {
+    return `${Math.round(km * 1000)} m`;
+  }
+  return `${km.toFixed(1)} km`;
+}
+
+const FAVORITES_KEY = "@attractions_favorites";
+
 function transformAttraction(item: AttractionFromAPI): Attraction {
   return {
     id: item.id,
@@ -143,10 +166,12 @@ function CategoryChip({
 
 function AttractionCard({ 
   attraction, 
-  onPress 
+  onPress,
+  userLocation,
 }: { 
   attraction: Attraction; 
   onPress: () => void;
+  userLocation: { latitude: number; longitude: number } | null;
 }) {
   const { theme } = useTheme();
   const scale = useSharedValue(1);
@@ -154,6 +179,17 @@ function AttractionCard({
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
+
+  const distanceText = useMemo(() => {
+    if (!userLocation || !attraction.latitude || !attraction.longitude) {
+      return null;
+    }
+    const lat = parseFloat(attraction.latitude);
+    const lon = parseFloat(attraction.longitude);
+    if (isNaN(lat) || isNaN(lon)) return null;
+    const dist = calculateDistance(userLocation.latitude, userLocation.longitude, lat, lon);
+    return formatDistance(dist);
+  }, [userLocation, attraction.latitude, attraction.longitude]);
 
   return (
     <AnimatedPressable
@@ -179,10 +215,12 @@ function AttractionCard({
             <ThemedText style={styles.attractionName} numberOfLines={2}>
               {attraction.name}
             </ThemedText>
-            <View style={styles.distanceRow}>
-              <Feather name="map-pin" size={12} color="rgba(255,255,255,0.8)" />
-              <ThemedText style={styles.distanceText}>{attraction.distance}</ThemedText>
-            </View>
+            {distanceText ? (
+              <View style={styles.distanceRow}>
+                <Feather name="map-pin" size={12} color="rgba(255,255,255,0.8)" />
+                <ThemedText style={styles.distanceText}>{distanceText}</ThemedText>
+              </View>
+            ) : null}
           </View>
 
           <Pressable 
@@ -203,23 +241,68 @@ function AttractionCard({
 function AttractionDetailModal({ 
   attraction, 
   allAttractions,
-  onClose 
+  onClose,
+  userLocation,
+  isFavorite,
+  onToggleFavorite,
 }: { 
   attraction: Attraction; 
   allAttractions: Attraction[];
   onClose: () => void;
+  userLocation: { latitude: number; longitude: number } | null;
+  isFavorite: boolean;
+  onToggleFavorite: () => void;
 }) {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
+  const [showMapModal, setShowMapModal] = useState(false);
 
-  const handleOpenMaps = useCallback(() => {
-    const url = Platform.select({
-      ios: `maps://app?q=${encodeURIComponent(attraction.address)}`,
-      android: `geo:0,0?q=${encodeURIComponent(attraction.address)}`,
-      default: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(attraction.address)}`,
+  const distanceText = useMemo(() => {
+    if (!userLocation || !attraction.latitude || !attraction.longitude) {
+      return null;
+    }
+    const lat = parseFloat(attraction.latitude);
+    const lon = parseFloat(attraction.longitude);
+    if (isNaN(lat) || isNaN(lon)) return null;
+    const dist = calculateDistance(userLocation.latitude, userLocation.longitude, lat, lon);
+    return formatDistance(dist);
+  }, [userLocation, attraction.latitude, attraction.longitude]);
+
+  const hasCoordinates = attraction.latitude && attraction.longitude && 
+    !isNaN(parseFloat(attraction.latitude)) && !isNaN(parseFloat(attraction.longitude));
+
+  const handleDirections = useCallback(() => {
+    let url: string;
+    if (hasCoordinates) {
+      const lat = parseFloat(attraction.latitude!);
+      const lon = parseFloat(attraction.longitude!);
+      url = Platform.select({
+        ios: `maps://app?daddr=${lat},${lon}&dirflg=d`,
+        android: `google.navigation:q=${lat},${lon}`,
+        default: `https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}`,
+      }) as string;
+    } else if (attraction.address) {
+      url = Platform.select({
+        ios: `maps://app?daddr=${encodeURIComponent(attraction.address)}`,
+        android: `geo:0,0?q=${encodeURIComponent(attraction.address)}`,
+        default: `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(attraction.address)}`,
+      }) as string;
+    } else {
+      Alert.alert("Erro", "Localizacao nao disponivel para esta atracao.");
+      return;
+    }
+    Linking.openURL(url).catch(() => {
+      Alert.alert("Erro", "Nao foi possivel abrir o mapa.");
     });
-    Linking.openURL(url);
-  }, [attraction.address]);
+  }, [attraction, hasCoordinates]);
+
+  const handleViewOnMap = useCallback(() => {
+    if (!hasCoordinates) {
+      Alert.alert("Erro", "Coordenadas nao disponiveis para esta atracao.");
+      return;
+    }
+    setShowMapModal(true);
+  }, [hasCoordinates]);
 
   const handleCall = useCallback(() => {
     if (attraction.phone) {
@@ -229,9 +312,26 @@ function AttractionDetailModal({
 
   const handleOpenWebsite = useCallback(() => {
     if (attraction.website) {
-      Linking.openURL(`https://${attraction.website}`);
+      const url = attraction.website.startsWith("http") ? attraction.website : `https://${attraction.website}`;
+      Linking.openURL(url);
     }
   }, [attraction.website]);
+
+  const handleShare = useCallback(async () => {
+    try {
+      await Share.share({
+        message: `Confira ${attraction.name} no Portal do Romeiro! ${attraction.address || ""}`,
+        title: attraction.name,
+      });
+    } catch (error) {
+      console.log("Share error:", error);
+    }
+  }, [attraction]);
+
+  const hasAddress = attraction.address && attraction.address.trim().length > 0;
+  const hasSchedule = attraction.schedule.weekdays || attraction.schedule.saturday || attraction.schedule.sunday;
+  const hasMassSchedule = attraction.massSchedule && attraction.massSchedule.length > 0;
+  const hasScheduleSection = hasSchedule || hasMassSchedule;
 
   return (
     <View style={[styles.modalOverlay, { backgroundColor: theme.backgroundRoot }]}>
@@ -245,10 +345,10 @@ function AttractionDetailModal({
           style={styles.modalHeroImage}
         >
           <LinearGradient
-            colors={["rgba(0,0,0,0.3)", "transparent", "rgba(0,0,0,0.5)"]}
+            colors={["rgba(0,0,0,0.4)", "transparent", "rgba(0,0,0,0.6)"]}
             style={styles.modalHeroGradient}
           >
-            <View style={[styles.modalHeader, { paddingTop: insets.top + Spacing.md }]}>
+            <View style={[styles.modalHeader, { paddingTop: insets.top + Spacing.sm }]}>
               <Pressable 
                 onPress={onClose}
                 style={[styles.modalBackButton, { backgroundColor: "rgba(255,255,255,0.9)" }]}
@@ -256,11 +356,22 @@ function AttractionDetailModal({
                 <Feather name="arrow-left" size={20} color={theme.text} />
               </Pressable>
               <View style={styles.modalHeaderActions}>
-                <Pressable style={[styles.modalActionButton, { backgroundColor: "rgba(255,255,255,0.9)" }]}>
+                <Pressable 
+                  onPress={handleShare}
+                  style={[styles.modalActionButton, { backgroundColor: "rgba(255,255,255,0.9)" }]}
+                >
                   <Feather name="share-2" size={18} color={theme.text} />
                 </Pressable>
-                <Pressable style={[styles.modalActionButton, { backgroundColor: "rgba(255,255,255,0.9)" }]}>
-                  <Feather name="heart" size={18} color={theme.text} />
+                <Pressable 
+                  onPress={onToggleFavorite}
+                  style={[styles.modalActionButton, { backgroundColor: "rgba(255,255,255,0.9)" }]}
+                >
+                  <Feather 
+                    name={isFavorite ? "heart" : "heart"} 
+                    size={18} 
+                    color={isFavorite ? Colors.light.primary : theme.text}
+                    style={isFavorite ? { opacity: 1 } : { opacity: 0.7 }}
+                  />
                 </Pressable>
               </View>
             </View>
@@ -269,12 +380,14 @@ function AttractionDetailModal({
               <View style={[styles.categoryBadge, { backgroundColor: Colors.light.primary }]}>
                 <ThemedText style={styles.categoryBadgeText}>{attraction.category}</ThemedText>
               </View>
-              <View style={styles.distanceRow}>
-                <Feather name="map-pin" size={14} color="#FFFFFF" />
-                <ThemedText style={[styles.distanceText, { marginLeft: 4 }]}>
-                  {attraction.distance} de voce
-                </ThemedText>
-              </View>
+              {distanceText ? (
+                <View style={styles.distanceRow}>
+                  <Feather name="map-pin" size={14} color="#FFFFFF" />
+                  <ThemedText style={[styles.distanceText, { marginLeft: 4 }]}>
+                    {distanceText} de voce
+                  </ThemedText>
+                </View>
+              ) : null}
             </View>
           </LinearGradient>
         </ImageBackground>
@@ -284,15 +397,15 @@ function AttractionDetailModal({
 
           <View style={styles.actionButtonsRow}>
             <Pressable 
-              onPress={handleOpenMaps}
+              onPress={handleDirections}
               style={[styles.primaryActionButton, { backgroundColor: Colors.light.primary }]}
             >
               <Feather name="navigation" size={18} color="#FFFFFF" />
               <ThemedText style={styles.primaryActionButtonText}>Como Chegar</ThemedText>
             </Pressable>
             <Pressable 
-              onPress={handleOpenMaps}
-              style={[styles.secondaryActionButton, { borderColor: Colors.light.primary }]}
+              onPress={handleViewOnMap}
+              style={[styles.secondaryActionButton, { borderColor: Colors.light.primary, opacity: hasCoordinates ? 1 : 0.5 }]}
             >
               <Feather name="map" size={18} color={Colors.light.primary} />
               <ThemedText style={[styles.secondaryActionButtonText, { color: Colors.light.primary }]}>
@@ -301,86 +414,102 @@ function AttractionDetailModal({
             </Pressable>
           </View>
 
-          <View style={[styles.sectionCard, { backgroundColor: theme.backgroundDefault }]}>
-            <ThemedText type="h4" style={styles.sectionTitle}>Sobre a atracao</ThemedText>
-            <ThemedText type="body" style={styles.descriptionText}>
-              {attraction.description}
-            </ThemedText>
-          </View>
-
-          <View style={[styles.sectionCard, { backgroundColor: theme.backgroundDefault }]}>
-            <View style={styles.contactRow}>
-              <Feather name="map-pin" size={18} color={Colors.light.primary} />
-              <View style={styles.contactInfo}>
-                <ThemedText type="small" style={{ fontWeight: "600" }}>Endereco</ThemedText>
-                <ThemedText type="caption" secondary>{attraction.address}</ThemedText>
-              </View>
-            </View>
-
-            {attraction.phone ? (
-              <Pressable onPress={handleCall} style={styles.contactRow}>
-                <Feather name="phone" size={18} color={Colors.light.primary} />
-                <View style={styles.contactInfo}>
-                  <ThemedText type="small" style={{ fontWeight: "600" }}>Telefone</ThemedText>
-                  <ThemedText type="caption" style={{ color: Colors.light.primary }}>
-                    {attraction.phone}
-                  </ThemedText>
-                </View>
-              </Pressable>
-            ) : null}
-
-            {attraction.website ? (
-              <Pressable onPress={handleOpenWebsite} style={styles.contactRow}>
-                <Feather name="globe" size={18} color={Colors.light.primary} />
-                <View style={styles.contactInfo}>
-                  <ThemedText type="small" style={{ fontWeight: "600" }}>Site Oficial</ThemedText>
-                  <ThemedText type="caption" style={{ color: Colors.light.primary }}>
-                    {attraction.website}
-                  </ThemedText>
-                </View>
-              </Pressable>
-            ) : null}
-          </View>
-
-          <View style={[styles.sectionCard, { backgroundColor: theme.backgroundDefault }]}>
-            <View style={styles.scheduleHeader}>
-              <Feather name="clock" size={18} color={Colors.light.primary} />
-              <ThemedText type="h4" style={[styles.sectionTitle, { marginLeft: Spacing.sm, marginBottom: 0 }]}>
-                Horarios e Missas
+          {attraction.description ? (
+            <View style={[styles.sectionCard, { backgroundColor: theme.backgroundDefault }]}>
+              <ThemedText type="h4" style={styles.sectionTitle}>Sobre a atracao</ThemedText>
+              <ThemedText type="body" style={styles.descriptionText}>
+                {attraction.description}
               </ThemedText>
             </View>
+          ) : null}
 
-            <View style={styles.scheduleSection}>
-              <ThemedText type="small" style={{ fontWeight: "600", marginBottom: Spacing.sm }}>
-                Funcionamento
-              </ThemedText>
-              <View style={styles.scheduleRow}>
-                <ThemedText type="caption">Secretaria</ThemedText>
-                <ThemedText type="caption" secondary>Seg a Sex: {attraction.schedule.weekdays}</ThemedText>
-              </View>
-              <View style={styles.scheduleRow}>
-                <ThemedText type="caption">Sabado</ThemedText>
-                <ThemedText type="caption" secondary>{attraction.schedule.saturday}</ThemedText>
-              </View>
-              <View style={styles.scheduleRow}>
-                <ThemedText type="caption">Domingo</ThemedText>
-                <ThemedText type="caption" secondary>{attraction.schedule.sunday}</ThemedText>
-              </View>
+          {(hasAddress || attraction.phone || attraction.website) ? (
+            <View style={[styles.sectionCard, { backgroundColor: theme.backgroundDefault }]}>
+              {hasAddress ? (
+                <View style={styles.contactRow}>
+                  <Feather name="map-pin" size={18} color={Colors.light.primary} />
+                  <View style={styles.contactInfo}>
+                    <ThemedText type="small" style={{ fontWeight: "600" }}>Endereco</ThemedText>
+                    <ThemedText type="caption" secondary>{attraction.address}</ThemedText>
+                  </View>
+                </View>
+              ) : null}
+
+              {attraction.phone ? (
+                <Pressable onPress={handleCall} style={styles.contactRow}>
+                  <Feather name="phone" size={18} color={Colors.light.primary} />
+                  <View style={styles.contactInfo}>
+                    <ThemedText type="small" style={{ fontWeight: "600" }}>Telefone</ThemedText>
+                    <ThemedText type="caption" style={{ color: Colors.light.primary }}>
+                      {attraction.phone}
+                    </ThemedText>
+                  </View>
+                </Pressable>
+              ) : null}
+
+              {attraction.website ? (
+                <Pressable onPress={handleOpenWebsite} style={styles.contactRow}>
+                  <Feather name="globe" size={18} color={Colors.light.primary} />
+                  <View style={styles.contactInfo}>
+                    <ThemedText type="small" style={{ fontWeight: "600" }}>Site Oficial</ThemedText>
+                    <ThemedText type="caption" style={{ color: Colors.light.primary }}>
+                      {attraction.website}
+                    </ThemedText>
+                  </View>
+                </Pressable>
+              ) : null}
             </View>
+          ) : null}
 
-            {attraction.massSchedule && attraction.massSchedule.length > 0 ? (
-              <View style={[styles.massScheduleCard, { backgroundColor: Colors.light.primary + "10" }]}>
-                <ThemedText type="small" style={{ fontWeight: "600", color: Colors.light.primary, marginBottom: Spacing.sm }}>
-                  Horarios de Missa
+          {hasScheduleSection ? (
+            <View style={[styles.sectionCard, { backgroundColor: theme.backgroundDefault }]}>
+              <View style={styles.scheduleHeader}>
+                <Feather name="clock" size={18} color={Colors.light.primary} />
+                <ThemedText type="h4" style={[styles.sectionTitle, { marginLeft: Spacing.sm, marginBottom: 0 }]}>
+                  Horarios {hasMassSchedule ? "e Missas" : ""}
                 </ThemedText>
-                {attraction.massSchedule.map((schedule, index) => (
-                  <ThemedText key={index} type="caption" style={{ marginBottom: 2 }}>
-                    {schedule}
-                  </ThemedText>
-                ))}
               </View>
-            ) : null}
-          </View>
+
+              {hasSchedule ? (
+                <View style={styles.scheduleSection}>
+                  <ThemedText type="small" style={{ fontWeight: "600", marginBottom: Spacing.sm }}>
+                    Funcionamento
+                  </ThemedText>
+                  {attraction.schedule.weekdays ? (
+                    <View style={styles.scheduleRow}>
+                      <ThemedText type="caption">Seg a Sex</ThemedText>
+                      <ThemedText type="caption" secondary>{attraction.schedule.weekdays}</ThemedText>
+                    </View>
+                  ) : null}
+                  {attraction.schedule.saturday ? (
+                    <View style={styles.scheduleRow}>
+                      <ThemedText type="caption">Sabado</ThemedText>
+                      <ThemedText type="caption" secondary>{attraction.schedule.saturday}</ThemedText>
+                    </View>
+                  ) : null}
+                  {attraction.schedule.sunday ? (
+                    <View style={styles.scheduleRow}>
+                      <ThemedText type="caption">Domingo</ThemedText>
+                      <ThemedText type="caption" secondary>{attraction.schedule.sunday}</ThemedText>
+                    </View>
+                  ) : null}
+                </View>
+              ) : null}
+
+              {hasMassSchedule ? (
+                <View style={[styles.massScheduleCard, { backgroundColor: Colors.light.primary + "10" }]}>
+                  <ThemedText type="small" style={{ fontWeight: "600", color: Colors.light.primary, marginBottom: Spacing.sm }}>
+                    Horarios de Missa
+                  </ThemedText>
+                  {attraction.massSchedule!.map((schedule, index) => (
+                    <ThemedText key={index} type="caption" style={{ marginBottom: 2 }}>
+                      {schedule}
+                    </ThemedText>
+                  ))}
+                </View>
+              ) : null}
+            </View>
+          ) : null}
 
           {attraction.amenities.length > 0 ? (
             <View style={[styles.sectionCard, { backgroundColor: theme.backgroundDefault }]}>
@@ -449,6 +578,64 @@ function AttractionDetailModal({
           ) : null}
         </View>
       </ScrollView>
+
+      <Modal
+        visible={showMapModal}
+        animationType="slide"
+        onRequestClose={() => setShowMapModal(false)}
+      >
+        <View style={[styles.mapModalContainer, { backgroundColor: theme.backgroundRoot }]}>
+          <View style={[styles.mapModalHeader, { paddingTop: insets.top + Spacing.sm }]}>
+            <Pressable 
+              onPress={() => setShowMapModal(false)}
+              style={[styles.modalBackButton, { backgroundColor: theme.backgroundDefault }]}
+            >
+              <Feather name="x" size={20} color={theme.text} />
+            </Pressable>
+            <ThemedText type="h4" style={{ flex: 1, textAlign: "center", marginRight: 40 }}>
+              {attraction.name}
+            </ThemedText>
+          </View>
+          {hasCoordinates ? (
+            <MapView
+              style={styles.mapView}
+              initialRegion={{
+                latitude: parseFloat(attraction.latitude!),
+                longitude: parseFloat(attraction.longitude!),
+                latitudeDelta: 0.01,
+                longitudeDelta: 0.01,
+              }}
+              showsUserLocation={true}
+              showsMyLocationButton={true}
+            >
+              <Marker
+                coordinate={{
+                  latitude: parseFloat(attraction.latitude!),
+                  longitude: parseFloat(attraction.longitude!),
+                }}
+                title={attraction.name}
+                description={attraction.address || undefined}
+              />
+            </MapView>
+          ) : (
+            <View style={styles.mapErrorContainer}>
+              <Feather name="map-pin" size={48} color={theme.textSecondary} />
+              <ThemedText type="body" secondary style={{ marginTop: Spacing.md, textAlign: "center" }}>
+                Coordenadas nao disponiveis
+              </ThemedText>
+            </View>
+          )}
+          <View style={[styles.mapModalFooter, { paddingBottom: insets.bottom + Spacing.md }]}>
+            <Pressable 
+              onPress={handleDirections}
+              style={[styles.primaryActionButton, { backgroundColor: Colors.light.primary, flex: 1 }]}
+            >
+              <Feather name="navigation" size={18} color="#FFFFFF" />
+              <ThemedText style={styles.primaryActionButtonText}>Tracar Rota</ThemedText>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -462,6 +649,81 @@ export default function RoteirosScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAttraction, setSelectedAttraction] = useState<Attraction | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [locationPermission, setLocationPermission] = useState<Location.PermissionStatus | null>(null);
+
+  useEffect(() => {
+    loadFavorites();
+    requestLocationPermission();
+  }, []);
+
+  const loadFavorites = async () => {
+    try {
+      const stored = await AsyncStorage.getItem(FAVORITES_KEY);
+      if (stored) {
+        setFavorites(new Set(JSON.parse(stored)));
+      }
+    } catch (error) {
+      console.log("Error loading favorites:", error);
+    }
+  };
+
+  const saveFavorites = async (newFavorites: Set<string>) => {
+    try {
+      await AsyncStorage.setItem(FAVORITES_KEY, JSON.stringify([...newFavorites]));
+    } catch (error) {
+      console.log("Error saving favorites:", error);
+    }
+  };
+
+  const toggleFavorite = useCallback((attractionId: string) => {
+    setFavorites(prev => {
+      const newFavorites = new Set(prev);
+      if (newFavorites.has(attractionId)) {
+        newFavorites.delete(attractionId);
+      } else {
+        newFavorites.add(attractionId);
+      }
+      saveFavorites(newFavorites);
+      return newFavorites;
+    });
+  }, []);
+
+  const requestLocationPermission = async () => {
+    if (Platform.OS === "web") {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        setLocationPermission(status);
+        if (status === "granted") {
+          getCurrentLocation();
+        }
+      } catch (error) {
+        console.log("Location permission error on web:", error);
+      }
+      return;
+    }
+    
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    setLocationPermission(status);
+    if (status === "granted") {
+      getCurrentLocation();
+    }
+  };
+
+  const getCurrentLocation = async () => {
+    try {
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+      setUserLocation({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+    } catch (error) {
+      console.log("Error getting location:", error);
+    }
+  };
 
   const { data, isLoading, error } = useQuery<{ attractions: AttractionFromAPI[] }>({
     queryKey: ["/api/attractions"],
@@ -486,6 +748,7 @@ export default function RoteirosScreen() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await queryClient.invalidateQueries({ queryKey: ["/api/attractions"] });
+    getCurrentLocation();
     setRefreshing(false);
   }, [queryClient]);
 
@@ -494,7 +757,10 @@ export default function RoteirosScreen() {
       <AttractionDetailModal 
         attraction={selectedAttraction} 
         allAttractions={attractions}
-        onClose={() => setSelectedAttraction(null)} 
+        onClose={() => setSelectedAttraction(null)}
+        userLocation={userLocation}
+        isFavorite={favorites.has(selectedAttraction.id)}
+        onToggleFavorite={() => toggleFavorite(selectedAttraction.id)}
       />
     );
   }
@@ -523,8 +789,11 @@ export default function RoteirosScreen() {
         </ThemedText>
         <View style={styles.headerTitleRow}>
           <ThemedText type="h1" style={styles.headerTitle}>Atracoes Turisticas</ThemedText>
-          <Pressable style={styles.locationButton}>
-            <Feather name="crosshair" size={20} color={Colors.light.primary} />
+          <Pressable 
+            style={styles.locationButton}
+            onPress={getCurrentLocation}
+          >
+            <Feather name="crosshair" size={20} color={userLocation ? Colors.light.primary : theme.textSecondary} />
           </Pressable>
         </View>
       </View>
@@ -578,6 +847,7 @@ export default function RoteirosScreen() {
               key={attraction.id}
               attraction={attraction}
               onPress={() => setSelectedAttraction(attraction)}
+              userLocation={userLocation}
             />
           ))}
         </View>
@@ -905,5 +1175,26 @@ const styles = StyleSheet.create({
   relatedName: {
     fontSize: 12,
     textAlign: "center",
+  },
+  mapModalContainer: {
+    flex: 1,
+  },
+  mapModalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.lg,
+    paddingBottom: Spacing.md,
+  },
+  mapView: {
+    flex: 1,
+  },
+  mapErrorContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  mapModalFooter: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.md,
   },
 });
