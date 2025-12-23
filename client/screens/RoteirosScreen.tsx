@@ -1,5 +1,5 @@
-import { ScrollView, View, StyleSheet, Pressable, TextInput, ImageBackground, Platform, Linking } from "react-native";
-import { useState, useCallback } from "react";
+import { ScrollView, View, StyleSheet, Pressable, TextInput, ImageBackground, Platform, Linking, RefreshControl, ActivityIndicator } from "react-native";
+import { useState, useCallback, useMemo } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useNavigation } from "@react-navigation/native";
@@ -12,6 +12,7 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
@@ -21,6 +22,29 @@ import type { MaisStackParamList } from "@/navigation/MaisStackNavigator";
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 type Category = "Todas" | "Igrejas" | "Monumentos" | "Pracas" | "Museus";
+
+interface AttractionFromAPI {
+  id: string;
+  name: string;
+  category: string;
+  imageUrl: string | null;
+  description: string | null;
+  address: string | null;
+  phone: string | null;
+  website: string | null;
+  latitude: string | null;
+  longitude: string | null;
+  scheduleWeekdays: string | null;
+  scheduleSaturday: string | null;
+  scheduleSunday: string | null;
+  massSchedule: string | null;
+  amenities: string | null;
+  tips: string | null;
+  relatedAttractions: string | null;
+  featured: boolean;
+  published: boolean;
+  views: number;
+}
 
 interface Attraction {
   id: string;
@@ -32,6 +56,8 @@ interface Attraction {
   phone: string;
   website: string;
   description: string;
+  latitude: string | null;
+  longitude: string | null;
   schedule: {
     weekdays: string;
     saturday: string;
@@ -43,147 +69,31 @@ interface Attraction {
   related: string[];
 }
 
-const attractions: Attraction[] = [
-  {
-    id: "1",
-    name: "Santuario Basilica do Divino Pai Eterno",
-    category: "Igrejas",
-    imageUrl: "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?w=800",
-    distance: "0m",
-    address: "Praca do Santuario, 238 - Vila Pai Eterno, Trindade - GO, 75380-000",
-    phone: "(62) 3505-1780",
-    website: "paieterno.com.br",
-    description: "O Santuario Basilica do Divino Pai Eterno e um templo catolico brasileiro localizado no municipio de Trindade, em Goias. E o unico santuario do mundo dedicado ao Divino Pai Eterno.\n\nA devocao ao Divino Pai Eterno em Trindade teve inicio por volta de 1840, quando o casal Constantino e Ana Rosa Xavier encontrou um medalhao de barro com a imagem da Santissima Trindade coroando a Virgem Maria.",
+function transformAttraction(item: AttractionFromAPI): Attraction {
+  return {
+    id: item.id,
+    name: item.name,
+    category: (item.category as Category) || "Igrejas",
+    imageUrl: item.imageUrl || "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?w=800",
+    distance: "",
+    address: item.address || "",
+    phone: item.phone || "",
+    website: item.website || "",
+    description: item.description || "",
+    latitude: item.latitude,
+    longitude: item.longitude,
     schedule: {
-      weekdays: "07h as 18h",
-      saturday: "07h as 17h",
-      sunday: "07h as 12h",
+      weekdays: item.scheduleWeekdays || "",
+      saturday: item.scheduleSaturday || "",
+      sunday: item.scheduleSunday || "",
     },
-    massSchedule: [
-      "Seg a Sex: 07h, 19h30",
-      "Sabado: 07h, 10h, 15h, 17h30",
-      "Domingo: 05h45, 08h, 10h, 12h, 15h, 17h30",
-    ],
-    amenities: ["Acessivel", "Lanchonete", "Estacionamento", "Loja Oficial"],
-    tips: [
-      "Chegue cedo para as missas de domingo, pois costumam lotar.",
-      "Visite a Sala dos Milagres no subsolo.",
-      "Use roupas adequadas para entrar no templo.",
-      "Beba bastante agua, o clima pode ser seco.",
-    ],
-    related: ["Igreja Matriz", "Portal da Fe", "Via Sacra"],
-  },
-  {
-    id: "2",
-    name: "Igreja Matriz",
-    category: "Igrejas",
-    imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800",
-    distance: "800m",
-    address: "Praca da Matriz, Centro - Trindade, GO",
-    phone: "(62) 3505-1200",
-    website: "",
-    description: "A Igreja Matriz de Trindade e um dos templos mais antigos da cidade, com arquitetura historica que remonta aos primeiros anos da devocao ao Divino Pai Eterno na regiao.",
-    schedule: {
-      weekdays: "08h as 17h",
-      saturday: "08h as 16h",
-      sunday: "08h as 12h",
-    },
-    amenities: ["Acessivel"],
-    tips: [
-      "Visite durante a semana para evitar multidoes.",
-      "Aprecie os vitrais historicos.",
-    ],
-    related: ["Santuario Basilica", "Praca da Matriz"],
-  },
-  {
-    id: "3",
-    name: "Portal da Fe",
-    category: "Monumentos",
-    imageUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800",
-    distance: "1.2km",
-    address: "Entrada da cidade - Trindade, GO",
-    phone: "",
-    website: "",
-    description: "O Portal da Fe e um monumento imponente que marca a entrada da cidade de Trindade. Simboliza a fe e devocao dos romeiros que chegam a cidade.",
-    schedule: {
-      weekdays: "24 horas",
-      saturday: "24 horas",
-      sunday: "24 horas",
-    },
-    amenities: ["Estacionamento"],
-    tips: [
-      "Otimo local para fotos.",
-      "Visite ao entardecer para melhor iluminacao.",
-    ],
-    related: ["Santuario Basilica", "Carreirodromos"],
-  },
-  {
-    id: "4",
-    name: "Praca da Matriz",
-    category: "Pracas",
-    imageUrl: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800",
-    distance: "850m",
-    address: "Centro - Trindade, GO",
-    phone: "",
-    website: "",
-    description: "A Praca da Matriz e um espaco publico no coracao de Trindade, cercado por comercios e restaurantes. E um ponto de encontro tradicional para moradores e visitantes.",
-    schedule: {
-      weekdays: "24 horas",
-      saturday: "24 horas",
-      sunday: "24 horas",
-    },
-    amenities: ["Lanchonete", "Estacionamento"],
-    tips: [
-      "Boa opcao para descansar durante a romaria.",
-      "Experimente os doces tipicos vendidos na praca.",
-    ],
-    related: ["Igreja Matriz", "Restaurantes"],
-  },
-  {
-    id: "5",
-    name: "Via Sacra",
-    category: "Monumentos",
-    imageUrl: "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?w=800",
-    distance: "500m",
-    address: "Proximo ao Santuario - Trindade, GO",
-    phone: "",
-    website: "",
-    description: "A Via Sacra de Trindade e composta por estacoes que representam os momentos da Paixao de Cristo. E um percurso de oracao e meditacao muito procurado pelos romeiros.",
-    schedule: {
-      weekdays: "06h as 20h",
-      saturday: "06h as 20h",
-      sunday: "06h as 20h",
-    },
-    amenities: ["Acessivel"],
-    tips: [
-      "Leve agua e use calcados confortaveis.",
-      "Percorra com calma, parando em cada estacao.",
-    ],
-    related: ["Santuario Basilica", "Sala dos Milagres"],
-  },
-  {
-    id: "6",
-    name: "Museu de Arte Sacra",
-    category: "Museus",
-    imageUrl: "https://images.unsplash.com/photo-1554907984-15263bfd63bd?w=800",
-    distance: "300m",
-    address: "Anexo ao Santuario - Trindade, GO",
-    phone: "(62) 3505-1780",
-    website: "paieterno.com.br",
-    description: "O Museu de Arte Sacra abriga uma colecao de objetos religiosos, ex-votos e artefatos historicos relacionados a devocao ao Divino Pai Eterno.",
-    schedule: {
-      weekdays: "09h as 16h",
-      saturday: "09h as 15h",
-      sunday: "Fechado",
-    },
-    amenities: ["Acessivel", "Loja Oficial"],
-    tips: [
-      "Reserve pelo menos 1 hora para a visita.",
-      "Fotografias sem flash sao permitidas.",
-    ],
-    related: ["Santuario Basilica", "Sala dos Milagres"],
-  },
-];
+    massSchedule: item.massSchedule ? item.massSchedule.split("|").filter(s => s.trim()) : undefined,
+    amenities: item.amenities ? item.amenities.split(",").filter(a => a.trim()) : [],
+    tips: item.tips ? item.tips.split("|").filter(t => t.trim()) : [],
+    related: item.relatedAttractions ? item.relatedAttractions.split("|").filter(r => r.trim()) : [],
+  };
+}
+
 
 const categories: Category[] = ["Todas", "Igrejas", "Monumentos", "Pracas", "Museus"];
 
@@ -281,9 +191,11 @@ function AttractionCard({
 
 function AttractionDetailModal({ 
   attraction, 
+  allAttractions,
   onClose 
 }: { 
   attraction: Attraction; 
+  allAttractions: Attraction[];
   onClose: () => void;
 }) {
   const insets = useSafeAreaInsets();
@@ -508,7 +420,7 @@ function AttractionDetailModal({
                 contentContainerStyle={styles.relatedScroll}
               >
                 {attraction.related.map((name, index) => {
-                  const related = attractions.find(a => a.name.includes(name.split(" ")[0]));
+                  const related = allAttractions.find(a => a.name.toLowerCase().includes(name.toLowerCase().split(" ")[0]));
                   return (
                     <View key={index} style={styles.relatedCard}>
                       <Image 
@@ -534,20 +446,43 @@ export default function RoteirosScreen() {
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const { theme } = useTheme();
+  const queryClient = useQueryClient();
   const [selectedCategory, setSelectedCategory] = useState<Category>("Todas");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedAttraction, setSelectedAttraction] = useState<Attraction | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const filteredAttractions = attractions.filter(attraction => {
-    const matchesCategory = selectedCategory === "Todas" || attraction.category === selectedCategory;
-    const matchesSearch = attraction.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+  const { data, isLoading, error } = useQuery<{ attractions: AttractionFromAPI[] }>({
+    queryKey: ["/api/attractions"],
+    staleTime: 30000,
+    refetchInterval: 60000,
+    refetchOnWindowFocus: true,
   });
+
+  const attractions = useMemo(() => {
+    if (!data?.attractions) return [];
+    return data.attractions.map(transformAttraction);
+  }, [data?.attractions]);
+
+  const filteredAttractions = useMemo(() => {
+    return attractions.filter(attraction => {
+      const matchesCategory = selectedCategory === "Todas" || attraction.category === selectedCategory;
+      const matchesSearch = attraction.name.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesCategory && matchesSearch;
+    });
+  }, [attractions, selectedCategory, searchQuery]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await queryClient.invalidateQueries({ queryKey: ["/api/attractions"] });
+    setRefreshing(false);
+  }, [queryClient]);
 
   if (selectedAttraction) {
     return (
       <AttractionDetailModal 
         attraction={selectedAttraction} 
+        allAttractions={attractions}
         onClose={() => setSelectedAttraction(null)} 
       />
     );
@@ -562,6 +497,14 @@ export default function RoteirosScreen() {
         paddingHorizontal: Spacing.lg,
       }}
       showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={Colors.light.primary}
+          colors={[Colors.light.primary]}
+        />
+      }
     >
       <View style={styles.header}>
         <ThemedText type="caption" secondary style={styles.headerSubtitle}>
@@ -601,15 +544,33 @@ export default function RoteirosScreen() {
         ))}
       </ScrollView>
 
-      <View style={styles.attractionsGrid}>
-        {filteredAttractions.map((attraction) => (
-          <AttractionCard
-            key={attraction.id}
-            attraction={attraction}
-            onPress={() => setSelectedAttraction(attraction)}
-          />
-        ))}
-      </View>
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.light.primary} />
+          <ThemedText type="body" secondary style={{ marginTop: Spacing.md }}>
+            Carregando atracoes...
+          </ThemedText>
+        </View>
+      ) : filteredAttractions.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Feather name="map-pin" size={48} color={theme.textSecondary} />
+          <ThemedText type="body" secondary style={{ marginTop: Spacing.md, textAlign: "center" }}>
+            {searchQuery || selectedCategory !== "Todas" 
+              ? "Nenhuma atracao encontrada com os filtros selecionados."
+              : "Nenhuma atracao cadastrada ainda."}
+          </ThemedText>
+        </View>
+      ) : (
+        <View style={styles.attractionsGrid}>
+          {filteredAttractions.map((attraction) => (
+            <AttractionCard
+              key={attraction.id}
+              attraction={attraction}
+              onPress={() => setSelectedAttraction(attraction)}
+            />
+          ))}
+        </View>
+      )}
 
       <Pressable style={[styles.mapButton, { backgroundColor: Colors.light.primary }]}>
         <Feather name="map" size={18} color="#FFFFFF" />
@@ -677,6 +638,17 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     justifyContent: "space-between",
     marginBottom: Spacing.lg,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.xl * 2,
+  },
+  emptyContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: Spacing.xl * 2,
+    paddingHorizontal: Spacing.lg,
   },
   attractionCard: {
     width: "48%",
