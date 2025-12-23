@@ -99,10 +99,10 @@ function QuickActionButton({ action, onPress }: { action: QuickAction; onPress: 
       onPress={onPress}
       onPressIn={() => { scale.value = withSpring(0.95); }}
       onPressOut={() => { scale.value = withSpring(1); }}
-      style={[styles.quickAction, animatedStyle]}
+      style={[styles.quickAction, { backgroundColor: theme.backgroundDefault }, animatedStyle]}
     >
-      <View style={[styles.quickActionIcon, { backgroundColor: action.color + "15" }]}>
-        <Feather name={action.icon as any} size={24} color={action.color} />
+      <View style={[styles.quickActionIcon, { backgroundColor: action.color + "20" }]}>
+        <Feather name={action.icon as any} size={26} color={action.color} />
       </View>
       <ThemedText style={styles.quickActionText}>{action.title}</ThemedText>
     </AnimatedPressable>
@@ -268,11 +268,6 @@ export default function HomeScreen() {
       <FullScreenHeroBanner headerHeight={headerHeight} />
 
       <View style={styles.content}>
-
-        <SectionHeader
-          title="Categorias"
-        />
-
         <View style={styles.quickActionsGrid}>
           {quickActions.map((action) => (
             <QuickActionButton
@@ -426,17 +421,20 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
+    rowGap: Spacing.md,
   },
   quickAction: {
     width: "31%",
     alignItems: "center",
-    marginBottom: Spacing.lg,
+    paddingVertical: Spacing.lg,
+    paddingHorizontal: Spacing.sm,
+    borderRadius: BorderRadius.lg,
   },
   quickActionIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: BorderRadius.md,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: Spacing.sm,

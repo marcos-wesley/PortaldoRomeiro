@@ -67,12 +67,12 @@ export interface HistoryEvent {
 }
 
 export const quickActions: QuickAction[] = [
-  { id: "1", title: "Historia", icon: "book-open", screen: "Historia", color: "#4169E1" },
-  { id: "2", title: "TV Ao Vivo", icon: "tv", screen: "TVAoVivo", color: "#EF4444" },
-  { id: "3", title: "Roteiros", icon: "map-pin", screen: "Roteiros", color: "#10B981" },
-  { id: "4", title: "Info", icon: "info", screen: "Info", color: "#8B5CF6" },
-  { id: "5", title: "Hospedagem", icon: "home", screen: "Hospedagem", color: "#F97316" },
-  { id: "6", title: "Servicos", icon: "grid", screen: "Servicos", color: "#06B6D4" },
+  { id: "1", title: "Historia", icon: "book-open", screen: "Historia", color: "#3B82F6" },
+  { id: "2", title: "TV Ao Vivo", icon: "tv", screen: "TVAoVivo", color: "#F87171" },
+  { id: "3", title: "Roteiros", icon: "map-pin", screen: "Roteiros", color: "#34D399" },
+  { id: "4", title: "Info", icon: "info", screen: "Info", color: "#60A5FA" },
+  { id: "5", title: "Hospedagem", icon: "home", screen: "Hospedagem", color: "#FBBF24" },
+  { id: "6", title: "Servicos", icon: "truck", screen: "Servicos", color: "#A78BFA" },
 ];
 
 export const newsData: News[] = [
