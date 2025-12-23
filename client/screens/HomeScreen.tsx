@@ -35,15 +35,10 @@ function FullScreenHeroBanner({ headerHeight }: { headerHeight: number }) {
         contentPosition="center"
       />
       <LinearGradient
-        colors={["transparent", "rgba(255,255,255,0.9)", "#FFFFFF"]}
-        locations={[0.4, 0.85, 1]}
+        colors={["transparent", "rgba(255,255,255,0.85)", "#FFFFFF"]}
+        locations={[0.3, 0.7, 0.9]}
         style={styles.fullHeroGradient}
       />
-      <View style={[styles.fullHeroContent, { paddingTop: headerHeight }]}>
-        <View style={styles.destaqueBadge}>
-          <ThemedText style={styles.destaqueBadgeText}>DESTAQUE</ThemedText>
-        </View>
-      </View>
       <View style={styles.fullHeroTextContainer}>
         <ThemedText style={styles.fullHeroTitle}>Hora de conhecer a</ThemedText>
         <ThemedText style={styles.fullHeroHighlight}>capital da fe</ThemedText>
@@ -324,6 +319,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   content: {
     paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.xl,
   },
   fullHeroBanner: {
     width: "100%",
@@ -365,7 +361,7 @@ const styles = StyleSheet.create({
   },
   fullHeroTextContainer: {
     position: "absolute",
-    bottom: Spacing.lg,
+    bottom: Spacing.xl * 2,
     left: Spacing.lg,
     right: Spacing.lg,
   },
