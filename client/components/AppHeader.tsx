@@ -44,7 +44,7 @@ export function AppHeader({
       onAvatarPress();
     } else {
       try {
-        (nav as any).navigate("MaisTab", { screen: "Profile" });
+        (nav as any).navigate("Profile");
       } catch {
         (navigation as any)?.navigate?.("Profile");
       }
