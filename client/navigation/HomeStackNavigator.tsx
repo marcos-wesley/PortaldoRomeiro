@@ -11,7 +11,7 @@ import ServicosScreen from "@/screens/ServicosScreen";
 import VideosScreen from "@/screens/VideosScreen";
 import VideoDetailScreen from "@/screens/VideoDetailScreen";
 import NoticiaDetailScreen from "@/screens/NoticiaDetailScreen";
-import { AppHeader } from "@/components/AppHeader";
+import { AuthAwareHeader } from "@/components/AuthAwareHeader";
 import { useTheme } from "@/hooks/useTheme";
 
 export type HomeStackParamList = {
@@ -36,7 +36,7 @@ export default function HomeStackNavigator() {
   return (
     <Stack.Navigator
       screenOptions={{
-        header: (props) => <AppHeader {...props} showBackButton={props.navigation.canGoBack()} />,
+        header: (props) => <AuthAwareHeader {...props} showBackButton={props.navigation.canGoBack()} />,
         contentStyle: {
           backgroundColor: theme.backgroundRoot,
         },
@@ -46,7 +46,7 @@ export default function HomeStackNavigator() {
         name="Home"
         component={HomeScreen}
         options={{
-          header: (props) => <AppHeader {...props} showBackButton={false} />,
+          header: (props) => <AuthAwareHeader {...props} showBackButton={false} />,
         }}
       />
       <Stack.Screen name="Historia" component={HistoriaScreen} />

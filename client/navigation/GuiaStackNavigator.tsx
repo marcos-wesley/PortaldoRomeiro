@@ -2,7 +2,7 @@ import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import GuiaScreen from "@/screens/GuiaScreen";
 import EmpresaDetailScreen from "@/screens/EmpresaDetailScreen";
-import { AppHeader } from "@/components/AppHeader";
+import { AuthAwareHeader } from "@/components/AuthAwareHeader";
 import { useTheme } from "@/hooks/useTheme";
 
 export type GuiaStackParamList = {
@@ -18,7 +18,7 @@ export default function GuiaStackNavigator() {
   return (
     <Stack.Navigator
       screenOptions={{
-        header: (props) => <AppHeader {...props} showBackButton={props.navigation.canGoBack()} />,
+        header: (props) => <AuthAwareHeader {...props} showBackButton={props.navigation.canGoBack()} />,
         contentStyle: {
           backgroundColor: theme.backgroundRoot,
         },
@@ -28,7 +28,7 @@ export default function GuiaStackNavigator() {
         name="Guia"
         component={GuiaScreen}
         options={{
-          header: (props) => <AppHeader {...props} showBackButton={false} />,
+          header: (props) => <AuthAwareHeader {...props} showBackButton={false} />,
         }}
       />
       <Stack.Screen

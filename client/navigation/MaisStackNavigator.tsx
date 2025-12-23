@@ -4,7 +4,7 @@ import MaisScreen from "@/screens/MaisScreen";
 import DicasRomeiroScreen from "@/screens/DicasRomeiroScreen";
 import TelefonesUteisScreen from "@/screens/TelefonesUteisScreen";
 import ProfileScreen from "@/screens/ProfileScreen";
-import { AppHeader } from "@/components/AppHeader";
+import { AuthAwareHeader } from "@/components/AuthAwareHeader";
 import { useTheme } from "@/hooks/useTheme";
 
 export type MaisStackParamList = {
@@ -22,7 +22,7 @@ export default function MaisStackNavigator() {
   return (
     <Stack.Navigator
       screenOptions={{
-        header: (props) => <AppHeader {...props} showBackButton={props.navigation.canGoBack()} />,
+        header: (props) => <AuthAwareHeader {...props} showBackButton={props.navigation.canGoBack()} />,
         contentStyle: {
           backgroundColor: theme.backgroundRoot,
         },
@@ -32,7 +32,7 @@ export default function MaisStackNavigator() {
         name="Mais"
         component={MaisScreen}
         options={{
-          header: (props) => <AppHeader {...props} showBackButton={false} />,
+          header: (props) => <AuthAwareHeader {...props} showBackButton={false} />,
         }}
       />
       <Stack.Screen
