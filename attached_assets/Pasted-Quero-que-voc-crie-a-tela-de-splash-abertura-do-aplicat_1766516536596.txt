@@ -1,0 +1,96 @@
+Quero que você crie a tela de splash (abertura) do aplicativo Portal do Romeiro, que será exibida ao abrir o app.
+
+Essa tela deve causar impacto emocional, transmitir fé, acolhimento e identidade, e preparar o usuário para a experiência do aplicativo.
+
+🎨 Diretrizes visuais obrigatórias
+
+Cor de fundo: #b22226 (vermelho institucional)
+
+Ícone central: utilizar exatamente o ícone enviado (símbolo do Portal do Romeiro)
+
+O ícone deve ficar centralizado, com bom respiro ao redor
+
+O ícone deve estar em branco, contrastando com o fundo
+
+🧱 Estrutura da tela
+1. Fundo
+
+Fundo sólido na cor #b22226
+
+Sem ruído visual
+
+Pode ter um leve gradiente discreto ou textura muito sutil, se desejar, sem tirar a sobriedade
+
+2. Ícone central
+
+Ícone do Portal do Romeiro centralizado vertical e horizontalmente
+
+Tamanho proporcional (nem pequeno, nem exagerado)
+
+Pode ter:
+
+leve efeito de glow suave
+
+ou fade-in elegante
+
+ou scale-in (zoom muito leve)
+
+3. Frase de impacto
+
+Logo abaixo do ícone, exibir uma frase curta e forte, por exemplo:
+
+“Fé, devoção e informação na Capital da Fé.”
+ou
+
+“A Capital da Fé na palma da sua mão.”
+ou
+
+“Caminhando com você na fé.”
+
+A frase deve:
+
+Estar centralizada
+
+Tipografia limpa e elegante
+
+Boa legibilidade
+
+Espaçamento confortável entre ícone e texto
+
+✨ Efeitos e animações (obrigatório, porém sutis)
+
+Aplicar animações suaves, como:
+
+Fade-in do ícone
+
+Fade-in da frase logo após o ícone
+
+Pequeno movimento vertical (ease-in / ease-out)
+
+Duração curta (1,5s a 2,5s no total)
+
+⚠️ O efeito deve ser elegante e respeitoso, não chamativo demais.
+
+⏱️ Tempo de exibição
+
+Exibir a splash por 2 a 3 segundos
+
+Após isso:
+
+Se usuário logado → ir para Home
+
+Se não logado → ir para Login ou Onboarding
+
+(Fluxo apenas conceitual, não precisa implementar lógica agora)
+
+📱 Comportamento UX
+
+Tela sem botões
+
+Sem interação do usuário
+
+Apenas apresentação visual e transição automática
+
+✔️ INSTRUÇÃO FINAL
+
+Crie a Tela de Splash do app Portal do Romeiro com fundo #b22226, utilizando o ícone oficial enviado como elemento central, uma frase curta de impacto relacionada à fé e à Romaria, e uma animação suave de entrada (fade/scale), mantendo um visual moderno, respeitoso e emocionalmente envolvente.
