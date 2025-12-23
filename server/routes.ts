@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "node:http";
 import { randomBytes, pbkdf2Sync, timingSafeEqual } from "node:crypto";
-import { registerUserSchema, loginUserSchema, updateProfileSchema, createNewsSchema, updateNewsSchema } from "@shared/schema";
+import { registerUserSchema, loginUserSchema, updateProfileSchema, createNewsSchema, updateNewsSchema, createVideoSchema, updateVideoSchema } from "@shared/schema";
 import { storage } from "./storage";
 import { fromError } from "zod-validation-error";
 import * as fs from "node:fs";
@@ -252,6 +252,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get news item error:", error);
       return res.status(500).json({ error: "Erro ao buscar noticia" });
+    }
+  });
+
+  // Videos Routes (Public API)
+  app.get("/api/videos", async (req, res) => {
+    try {
+      const publishedOnly = req.query.published !== "false";
+      const allVideos = await storage.getAllVideos(publishedOnly);
+      return res.json({ videos: allVideos });
+    } catch (error) {
+      console.error("Get videos error:", error);
+      return res.status(500).json({ error: "Erro ao buscar videos" });
+    }
+  });
+
+  app.get("/api/videos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const video = await storage.getVideoById(id);
+      
+      if (!video) {
+        return res.status(404).json({ error: "Video nao encontrado" });
+      }
+
+      await storage.incrementVideoViews(id);
+
+      return res.json({ video });
+    } catch (error) {
+      console.error("Get video error:", error);
+      return res.status(500).json({ error: "Erro ao buscar video" });
     }
   });
 

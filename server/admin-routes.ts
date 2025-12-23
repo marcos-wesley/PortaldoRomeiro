@@ -3,7 +3,7 @@ import { randomBytes, pbkdf2Sync, timingSafeEqual } from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { storage } from "./storage";
-import { createNewsSchema, updateNewsSchema } from "@shared/schema";
+import { createNewsSchema, updateNewsSchema, createVideoSchema, updateVideoSchema } from "@shared/schema";
 import { fromError } from "zod-validation-error";
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
@@ -102,6 +102,21 @@ export function registerAdminRoutes(app: Express) {
     res.sendFile(formPath);
   });
 
+  app.get("/admin/videos", requireAuth, (req, res) => {
+    const videosPath = path.join(__dirname, "admin", "videos.html");
+    res.sendFile(videosPath);
+  });
+
+  app.get("/admin/videos/novo", requireAuth, (req, res) => {
+    const formPath = path.join(__dirname, "admin", "videos-form.html");
+    res.sendFile(formPath);
+  });
+
+  app.get("/admin/videos/editar/:id", requireAuth, (req, res) => {
+    const formPath = path.join(__dirname, "admin", "videos-form.html");
+    res.sendFile(formPath);
+  });
+
   app.get("/admin/hospedagens", requireAuth, (req, res) => {
     res.send(getPlaceholderPage("Hospedagens", "Gerencie as hospedagens"));
   });
@@ -171,10 +186,12 @@ export function registerAdminRoutes(app: Express) {
     try {
       const usersCount = await storage.getUsersCount();
       const newsCount = await storage.getNewsCount();
+      const videosCount = await storage.getVideosCount();
       
       return res.json({
         users: usersCount,
         news: newsCount,
+        videos: videosCount,
         hotels: 0,
         events: 0,
       });
@@ -265,6 +282,90 @@ export function registerAdminRoutes(app: Express) {
     } catch (error) {
       console.error("Admin delete news error:", error);
       return res.status(500).json({ error: "Erro ao excluir noticia" });
+    }
+  });
+
+  // Videos CRUD API
+  app.get("/admin/api/videos", requireAuth, async (req, res) => {
+    try {
+      const allVideos = await storage.getAllVideos(false);
+      return res.json({ videos: allVideos });
+    } catch (error) {
+      console.error("Admin get videos error:", error);
+      return res.status(500).json({ error: "Erro ao buscar videos" });
+    }
+  });
+
+  app.get("/admin/api/videos/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const video = await storage.getVideoById(id);
+      
+      if (!video) {
+        return res.status(404).json({ error: "Video nao encontrado" });
+      }
+
+      return res.json({ video });
+    } catch (error) {
+      console.error("Admin get video error:", error);
+      return res.status(500).json({ error: "Erro ao buscar video" });
+    }
+  });
+
+  app.post("/admin/api/videos", requireAuth, async (req, res) => {
+    try {
+      const validationResult = createVideoSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+
+      const videoData = validationResult.data;
+      const created = await storage.createVideo(videoData);
+      
+      return res.status(201).json({ video: created, message: "Video criado com sucesso!" });
+    } catch (error) {
+      console.error("Admin create video error:", error);
+      return res.status(500).json({ error: "Erro ao criar video" });
+    }
+  });
+
+  app.put("/admin/api/videos/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validationResult = updateVideoSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+
+      const videoData = validationResult.data;
+      const updated = await storage.updateVideo(id, videoData);
+      
+      if (!updated) {
+        return res.status(404).json({ error: "Video nao encontrado" });
+      }
+
+      return res.json({ video: updated, message: "Video atualizado com sucesso!" });
+    } catch (error) {
+      console.error("Admin update video error:", error);
+      return res.status(500).json({ error: "Erro ao atualizar video" });
+    }
+  });
+
+  app.delete("/admin/api/videos/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteVideo(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ error: "Video nao encontrado" });
+      }
+
+      return res.json({ message: "Video excluido com sucesso!" });
+    } catch (error) {
+      console.error("Admin delete video error:", error);
+      return res.status(500).json({ error: "Erro ao excluir video" });
     }
   });
 }

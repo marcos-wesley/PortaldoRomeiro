@@ -117,3 +117,51 @@ export type InsertNews = z.infer<typeof insertNewsSchema>;
 export type News = typeof news.$inferSelect;
 export type CreateNewsInput = z.infer<typeof createNewsSchema>;
 export type UpdateNewsInput = z.infer<typeof updateNewsSchema>;
+
+export const videos = pgTable("videos", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  description: text("description"),
+  youtubeUrl: text("youtube_url").notNull(),
+  thumbnailUrl: text("thumbnail_url"),
+  featured: boolean("featured").default(false),
+  published: boolean("published").default(false),
+  publishedAt: timestamp("published_at"),
+  views: integer("views").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertVideoSchema = createInsertSchema(videos).pick({
+  title: true,
+  description: true,
+  youtubeUrl: true,
+  thumbnailUrl: true,
+  featured: true,
+  published: true,
+});
+
+export const createVideoSchema = z.object({
+  title: z.string().min(3, "Titulo deve ter pelo menos 3 caracteres"),
+  description: z.string().optional().nullable(),
+  youtubeUrl: z.string().url("URL do YouTube invalida"),
+  thumbnailUrl: z.string().optional().nullable(),
+  featured: z.boolean().optional().default(false),
+  published: z.boolean().optional().default(false),
+});
+
+export const updateVideoSchema = z.object({
+  title: z.string().min(3, "Titulo deve ter pelo menos 3 caracteres").optional(),
+  description: z.string().optional().nullable(),
+  youtubeUrl: z.string().url("URL do YouTube invalida").optional(),
+  thumbnailUrl: z.string().optional().nullable(),
+  featured: z.boolean().optional(),
+  published: z.boolean().optional(),
+});
+
+export type InsertVideo = z.infer<typeof insertVideoSchema>;
+export type Video = typeof videos.$inferSelect;
+export type CreateVideoInput = z.infer<typeof createVideoSchema>;
+export type UpdateVideoInput = z.infer<typeof updateVideoSchema>;

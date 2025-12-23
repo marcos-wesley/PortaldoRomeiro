@@ -1,10 +1,11 @@
-import { FlatList, View, StyleSheet, Pressable } from "react-native";
+import { FlatList, View, StyleSheet, Pressable, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
+import { useQuery } from "@tanstack/react-query";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -15,12 +16,71 @@ import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Colors } from "@/constants/theme";
 import { HomeStackParamList } from "@/navigation/HomeStackNavigator";
-import { videosData, Video } from "@/lib/data";
+import { getApiUrl } from "@/lib/query-client";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-function FeaturedVideo({ video, onPress }: { video: Video; onPress: () => void }) {
+interface VideoItem {
+  id: string;
+  title: string;
+  description: string | null;
+  youtubeUrl: string;
+  thumbnailUrl: string | null;
+  featured: boolean;
+  published: boolean;
+  publishedAt: string | null;
+  views: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+function getFullImageUrl(imageUrl: string | null): string | null {
+  if (!imageUrl) return null;
+  if (imageUrl.startsWith("http")) return imageUrl;
+  try {
+    const baseUrl = getApiUrl();
+    return new URL(imageUrl, baseUrl).href;
+  } catch {
+    return imageUrl;
+  }
+}
+
+function extractYouTubeId(url: string): string | null {
+  const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[7].length === 11) ? match[7] : null;
+}
+
+function getVideoThumbnail(video: VideoItem): string {
+  if (video.thumbnailUrl) {
+    return getFullImageUrl(video.thumbnailUrl) || "";
+  }
+  const ytId = extractYouTubeId(video.youtubeUrl);
+  if (ytId) {
+    return `https://img.youtube.com/vi/${ytId}/mqdefault.jpg`;
+  }
+  return "https://via.placeholder.com/320x180?text=Video";
+}
+
+function formatDate(dateString: string | null): string {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 0) {
+    return "Hoje";
+  } else if (diffDays === 1) {
+    return "Ontem";
+  } else {
+    return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
+  }
+}
+
+function FeaturedVideo({ video, onPress }: { video: VideoItem; onPress: () => void }) {
   const scale = useSharedValue(1);
+  const thumbnailUrl = getVideoThumbnail(video);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -33,26 +93,27 @@ function FeaturedVideo({ video, onPress }: { video: Video; onPress: () => void }
       onPressOut={() => { scale.value = withSpring(1); }}
       style={[styles.featuredVideo, animatedStyle]}
     >
-      <Image source={{ uri: video.thumbnailUrl }} style={styles.featuredImage} contentFit="cover" />
+      <Image source={{ uri: thumbnailUrl }} style={styles.featuredImage} contentFit="cover" />
       <View style={styles.featuredOverlay}>
         <View style={styles.playButtonLarge}>
           <Feather name="play" size={32} color="#FFFFFF" />
         </View>
         <View style={styles.featuredInfo}>
           <View style={styles.durationBadge}>
-            <ThemedText style={styles.durationText}>{video.duration}</ThemedText>
+            <ThemedText style={styles.durationText}>YouTube</ThemedText>
           </View>
           <ThemedText style={styles.featuredTitle}>{video.title}</ThemedText>
-          <ThemedText style={styles.featuredDate}>{video.date}</ThemedText>
+          <ThemedText style={styles.featuredDate}>{formatDate(video.publishedAt || video.createdAt)}</ThemedText>
         </View>
       </View>
     </AnimatedPressable>
   );
 }
 
-function VideoCard({ video, onPress }: { video: Video; onPress: () => void }) {
+function VideoCard({ video, onPress }: { video: VideoItem; onPress: () => void }) {
   const { theme } = useTheme();
   const scale = useSharedValue(1);
+  const thumbnailUrl = getVideoThumbnail(video);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -66,17 +127,17 @@ function VideoCard({ video, onPress }: { video: Video; onPress: () => void }) {
       style={[styles.videoCard, { backgroundColor: theme.backgroundDefault }, animatedStyle]}
     >
       <View style={styles.videoThumbnailContainer}>
-        <Image source={{ uri: video.thumbnailUrl }} style={styles.videoThumbnail} contentFit="cover" />
+        <Image source={{ uri: thumbnailUrl }} style={styles.videoThumbnail} contentFit="cover" />
         <View style={styles.playButton}>
           <Feather name="play" size={18} color="#FFFFFF" />
         </View>
         <View style={styles.durationBadgeSmall}>
-          <ThemedText style={styles.durationTextSmall}>{video.duration}</ThemedText>
+          <ThemedText style={styles.durationTextSmall}>YouTube</ThemedText>
         </View>
       </View>
       <View style={styles.videoContent}>
         <ThemedText style={styles.videoTitle} numberOfLines={2}>{video.title}</ThemedText>
-        <ThemedText type="caption" secondary>{video.date}</ThemedText>
+        <ThemedText type="caption" secondary>{formatDate(video.publishedAt || video.createdAt)}</ThemedText>
       </View>
     </AnimatedPressable>
   );
@@ -118,8 +179,13 @@ export default function VideosScreen() {
   const { theme } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
 
-  const featuredVideo = videosData[0];
-  const otherVideos = videosData.slice(1);
+  const { data, isLoading, error } = useQuery<{ videos: VideoItem[] }>({
+    queryKey: ["/api/videos"],
+  });
+
+  const videosList = data?.videos || [];
+  const featuredVideo = videosList.find((v) => v.featured) || videosList[0];
+  const otherVideos = videosList.filter((v) => v.id !== featuredVideo?.id);
 
   const handleVideoPress = (videoId: string) => {
     navigation.navigate("VideoDetail", { id: videoId });
@@ -127,11 +193,32 @@ export default function VideosScreen() {
 
   const renderHeader = () => (
     <View style={styles.header}>
-      <FeaturedVideo video={featuredVideo} onPress={() => handleVideoPress(featuredVideo.id)} />
+      {featuredVideo ? (
+        <FeaturedVideo video={featuredVideo} onPress={() => handleVideoPress(featuredVideo.id)} />
+      ) : null}
       <CategoryChips />
       <ThemedText type="h4" style={styles.sectionTitle}>Todos os Videos</ThemedText>
     </View>
   );
+
+  if (isLoading) {
+    return (
+      <View style={[styles.centerContainer, { backgroundColor: theme.backgroundRoot, paddingTop: headerHeight }]}>
+        <ActivityIndicator size="large" color={Colors.light.primary} />
+        <ThemedText style={styles.loadingText}>Carregando videos...</ThemedText>
+      </View>
+    );
+  }
+
+  if (error || videosList.length === 0) {
+    return (
+      <View style={[styles.centerContainer, { backgroundColor: theme.backgroundRoot, paddingTop: headerHeight }]}>
+        <Feather name="video-off" size={48} color={theme.textSecondary} />
+        <ThemedText type="h4" style={styles.emptyTitle}>Nenhum video disponivel</ThemedText>
+        <ThemedText secondary style={styles.emptySubtitle}>Em breve novos videos serao publicados</ThemedText>
+      </View>
+    );
+  }
 
   return (
     <FlatList
@@ -154,6 +241,23 @@ export default function VideosScreen() {
 }
 
 const styles = StyleSheet.create({
+  centerContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: Spacing.xl,
+  },
+  loadingText: {
+    marginTop: Spacing.md,
+  },
+  emptyTitle: {
+    marginTop: Spacing.md,
+    textAlign: "center",
+  },
+  emptySubtitle: {
+    marginTop: Spacing.xs,
+    textAlign: "center",
+  },
   header: {
     marginBottom: Spacing.md,
   },

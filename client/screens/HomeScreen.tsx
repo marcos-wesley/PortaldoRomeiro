@@ -18,7 +18,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Colors } from "@/constants/theme";
 import { HomeStackParamList } from "@/navigation/HomeStackNavigator";
-import { quickActions, videosData, Video, QuickAction } from "@/lib/data";
+import { quickActions, QuickAction } from "@/lib/data";
 import { getApiUrl } from "@/lib/query-client";
 
 function getFullImageUrl(imageUrl: string | null): string | null {
@@ -45,6 +45,37 @@ interface NewsItem {
   views: number;
   createdAt: string;
   updatedAt: string;
+}
+
+interface VideoItem {
+  id: string;
+  title: string;
+  description: string | null;
+  youtubeUrl: string;
+  thumbnailUrl: string | null;
+  featured: boolean;
+  published: boolean;
+  publishedAt: string | null;
+  views: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+function extractYouTubeId(url: string): string | null {
+  const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[7].length === 11) ? match[7] : null;
+}
+
+function getVideoThumbnail(video: VideoItem): string {
+  if (video.thumbnailUrl) {
+    return getFullImageUrl(video.thumbnailUrl) || "";
+  }
+  const ytId = extractYouTubeId(video.youtubeUrl);
+  if (ytId) {
+    return `https://img.youtube.com/vi/${ytId}/mqdefault.jpg`;
+  }
+  return "https://via.placeholder.com/280x180?text=Video";
 }
 
 const categoryColors: Record<string, string> = {
@@ -224,9 +255,10 @@ function NewsListItem({ news, onPress }: { news: NewsItem; onPress: () => void }
   );
 }
 
-function VideoCard({ video, onPress }: { video: Video; onPress: () => void }) {
+function VideoCard({ video, onPress }: { video: VideoItem; onPress: () => void }) {
   const { theme } = useTheme();
   const scale = useSharedValue(1);
+  const thumbnailUrl = getVideoThumbnail(video);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -240,12 +272,12 @@ function VideoCard({ video, onPress }: { video: Video; onPress: () => void }) {
       style={[styles.videoCard, animatedStyle]}
     >
       <View style={styles.videoThumbnailContainer}>
-        <Image source={{ uri: video.thumbnailUrl }} style={styles.videoThumbnail} contentFit="cover" />
+        <Image source={{ uri: thumbnailUrl }} style={styles.videoThumbnail} contentFit="cover" />
         <View style={styles.playButton}>
           <Feather name="play" size={20} color="#FFFFFF" />
         </View>
         <View style={styles.durationBadge}>
-          <ThemedText style={styles.durationText}>{video.duration}</ThemedText>
+          <ThemedText style={styles.durationText}>YouTube</ThemedText>
         </View>
       </View>
       <ThemedText style={styles.videoTitle} numberOfLines={2}>{video.title}</ThemedText>
@@ -315,13 +347,20 @@ export default function HomeScreen() {
   const { theme } = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<HomeStackParamList>>();
 
-  const { data: newsData, isLoading } = useQuery<{ news: NewsItem[] }>({
+  const { data: newsData, isLoading: newsLoading } = useQuery<{ news: NewsItem[] }>({
     queryKey: ["/api/news"],
+  });
+
+  const { data: videosData, isLoading: videosLoading } = useQuery<{ videos: VideoItem[] }>({
+    queryKey: ["/api/videos"],
   });
 
   const allNews = newsData?.news || [];
   const featuredNews = allNews.find((n) => n.featured) || allNews[0];
   const otherNews = allNews.filter((n) => n.id !== featuredNews?.id);
+
+  const allVideos = videosData?.videos || [];
+  const displayVideos = [...allVideos].sort((a, b) => (a.featured === b.featured ? 0 : a.featured ? -1 : 1)).slice(0, 4);
 
   const handleQuickAction = (screen: string) => {
     navigation.navigate(screen as any);
@@ -372,7 +411,7 @@ export default function HomeScreen() {
         />
 
         <View style={styles.newsSection}>
-          {isLoading ? (
+          {newsLoading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={Colors.light.primary} />
             </View>
@@ -410,13 +449,23 @@ export default function HomeScreen() {
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.videosScroll}
         >
-          {videosData.slice(0, 4).map((video) => (
-            <VideoCard
-              key={video.id}
-              video={video}
-              onPress={() => handleVideoPress(video.id)}
-            />
-          ))}
+          {videosLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color={Colors.light.primary} />
+            </View>
+          ) : displayVideos.length > 0 ? (
+            displayVideos.map((video) => (
+              <VideoCard
+                key={video.id}
+                video={video}
+                onPress={() => handleVideoPress(video.id)}
+              />
+            ))
+          ) : (
+            <ThemedText type="body" secondary style={{ paddingVertical: Spacing.lg }}>
+              Nenhum video disponivel
+            </ThemedText>
+          )}
         </ScrollView>
       </View>
     </ScrollView>
