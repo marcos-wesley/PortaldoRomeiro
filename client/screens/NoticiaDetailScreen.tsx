@@ -18,9 +18,21 @@ import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { HomeStackParamList } from "@/navigation/HomeStackNavigator";
+import { getApiUrl } from "@/lib/query-client";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+function getFullImageUrl(imageUrl: string | null): string | null {
+  if (!imageUrl) return null;
+  if (imageUrl.startsWith("http")) return imageUrl;
+  try {
+    const baseUrl = getApiUrl();
+    return new URL(imageUrl, baseUrl).href;
+  } catch {
+    return imageUrl;
+  }
+}
 
 interface NewsItem {
   id: string;
@@ -29,6 +41,7 @@ interface NewsItem {
   content: string;
   coverImage: string | null;
   category: string;
+  featured: boolean;
   published: boolean;
   publishedAt: string | null;
   views: number;
@@ -133,9 +146,10 @@ function HtmlContent({ html }: { html: string }) {
         }
       }
       
+      const inlineImageUrl = getFullImageUrl(match[1]) || match[1];
       elements.push(
         <View key={keyIndex++} style={styles.internalImageContainer}>
-          <Image source={{ uri: match[1] }} style={styles.internalImage} contentFit="cover" />
+          <Image source={{ uri: inlineImageUrl }} style={styles.internalImage} contentFit="cover" />
         </View>
       );
       
@@ -228,7 +242,7 @@ export default function NoticiaDetailScreen() {
   }
 
   const categoryColor = getCategoryColor(news.category);
-  const imageUrl = news.coverImage || "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?w=800";
+  const imageUrl = getFullImageUrl(news.coverImage) || "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?w=800";
 
   return (
     <ScrollView

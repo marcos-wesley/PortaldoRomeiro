@@ -17,8 +17,20 @@ import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { NoticiasStackParamList } from "@/navigation/NoticiasStackNavigator";
+import { getApiUrl } from "@/lib/query-client";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+function getFullImageUrl(imageUrl: string | null): string | null {
+  if (!imageUrl) return null;
+  if (imageUrl.startsWith("http")) return imageUrl;
+  try {
+    const baseUrl = getApiUrl();
+    return new URL(imageUrl, baseUrl).href;
+  } catch {
+    return imageUrl;
+  }
+}
 
 interface NewsItem {
   id: string;
@@ -27,6 +39,7 @@ interface NewsItem {
   content: string;
   coverImage: string | null;
   category: string;
+  featured: boolean;
   published: boolean;
   publishedAt: string | null;
   views: number;
@@ -71,7 +84,7 @@ function FeaturedNewsCard({ news, onPress }: { news: NewsItem; onPress: () => vo
     transform: [{ scale: scale.value }],
   }));
 
-  const imageUrl = news.coverImage || "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?w=800";
+  const imageUrl = getFullImageUrl(news.coverImage) || "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?w=800";
 
   return (
     <AnimatedPressable
@@ -109,7 +122,7 @@ function NewsListItem({ news, onPress }: { news: NewsItem; onPress: () => void }
     transform: [{ scale: scale.value }],
   }));
 
-  const imageUrl = news.coverImage || "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?w=800";
+  const imageUrl = getFullImageUrl(news.coverImage) || "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?w=800";
 
   return (
     <AnimatedPressable
@@ -144,8 +157,8 @@ export default function NoticiasScreen() {
   });
 
   const newsList = data?.news || [];
-  const featuredNews = newsList.length > 0 ? newsList[0] : null;
-  const otherNews = newsList.length > 1 ? newsList.slice(1) : [];
+  const featuredNews = newsList.find((n) => n.featured) || (newsList.length > 0 ? newsList[0] : null);
+  const otherNews = newsList.filter((n) => n.id !== featuredNews?.id);
 
   const handleNewsPress = (newsId: string) => {
     navigation.navigate("NoticiaDetail", { id: newsId });

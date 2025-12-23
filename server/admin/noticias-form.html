@@ -249,6 +249,13 @@
 
         <div class="form-group">
           <div class="checkbox-group">
+            <input type="checkbox" id="featured" name="featured">
+            <label for="featured" style="margin: 0;">Marcar como Destaque (aparece na Home e no topo das Noticias)</label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <div class="checkbox-group">
             <input type="checkbox" id="published" name="published">
             <label for="published" style="margin: 0;">Publicar noticia imediatamente</label>
           </div>
@@ -393,6 +400,7 @@
         document.getElementById('title').value = news.title;
         document.getElementById('summary').value = news.summary;
         document.getElementById('category').value = news.category || 'geral';
+        document.getElementById('featured').checked = news.featured;
         document.getElementById('published').checked = news.published;
         quill.root.innerHTML = news.content;
         
@@ -436,12 +444,14 @@
 
       showLoading(true);
       try {
+        const featured = document.getElementById('featured').checked;
         const payload = {
           title,
           summary,
           content,
           category,
           coverImage: coverImageUrl,
+          featured: featured,
           published: publish
         };
 

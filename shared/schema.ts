@@ -75,6 +75,7 @@ export const news = pgTable("news", {
   content: text("content").notNull(),
   coverImage: text("cover_image"),
   category: text("category").default("geral"),
+  featured: boolean("featured").default(false),
   published: boolean("published").default(false),
   publishedAt: timestamp("published_at"),
   views: integer("views").default(0),
@@ -88,6 +89,7 @@ export const insertNewsSchema = createInsertSchema(news).pick({
   content: true,
   coverImage: true,
   category: true,
+  featured: true,
   published: true,
 });
 
@@ -97,6 +99,7 @@ export const createNewsSchema = z.object({
   content: z.string().min(20, "Conteudo deve ter pelo menos 20 caracteres"),
   coverImage: z.string().optional().nullable(),
   category: z.string().optional().default("geral"),
+  featured: z.boolean().optional().default(false),
   published: z.boolean().optional().default(false),
 });
 
@@ -106,6 +109,7 @@ export const updateNewsSchema = z.object({
   content: z.string().min(20, "Conteudo deve ter pelo menos 20 caracteres").optional(),
   coverImage: z.string().optional().nullable(),
   category: z.string().optional(),
+  featured: z.boolean().optional(),
   published: z.boolean().optional(),
 });
 
