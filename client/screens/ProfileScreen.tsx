@@ -9,7 +9,6 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
-import { useNavigation, CommonActions } from "@react-navigation/native";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
@@ -85,7 +84,6 @@ export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const { user, logout, updateUser } = useAuth();
-  const navigation = useNavigation();
   
   const [notificationsEnabled, setNotificationsEnabled] = useState(user?.receiveNews ?? true);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
@@ -98,27 +96,28 @@ export default function ProfileScreen() {
   const [editState, setEditState] = useState(user?.state || "");
 
   const handleLogout = useCallback(async () => {
-    Alert.alert(
-      "Sair da conta",
-      "Tem certeza que deseja sair?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Sair",
-          style: "destructive",
-          onPress: async () => {
-            await logout();
-            navigation.dispatch(
-              CommonActions.reset({
-                index: 0,
-                routes: [{ name: "Auth" as never }],
-              })
-            );
+    if (Platform.OS === "web") {
+      const confirmed = window.confirm("Tem certeza que deseja sair?");
+      if (confirmed) {
+        await logout();
+      }
+    } else {
+      Alert.alert(
+        "Sair da conta",
+        "Tem certeza que deseja sair?",
+        [
+          { text: "Cancelar", style: "cancel" },
+          {
+            text: "Sair",
+            style: "destructive",
+            onPress: async () => {
+              await logout();
+            },
           },
-        },
-      ]
-    );
-  }, [logout, navigation]);
+        ]
+      );
+    }
+  }, [logout]);
 
   const handleOpenEditModal = () => {
     setEditName(user?.name || "");
@@ -129,16 +128,24 @@ export default function ProfileScreen() {
     setIsEditModalVisible(true);
   };
 
+  const showAlert = (title: string, message: string) => {
+    if (Platform.OS === "web") {
+      window.alert(`${title}\n${message}`);
+    } else {
+      Alert.alert(title, message);
+    }
+  };
+
   const handleSaveProfile = async () => {
     if (!user?.id) return;
 
     if (editName.trim().length < 2) {
-      Alert.alert("Erro", "Nome deve ter pelo menos 2 caracteres");
+      showAlert("Erro", "Nome deve ter pelo menos 2 caracteres");
       return;
     }
 
     if (!editEmail.includes("@")) {
-      Alert.alert("Erro", "E-mail invalido");
+      showAlert("Erro", "E-mail invalido");
       return;
     }
 
@@ -157,61 +164,62 @@ export default function ProfileScreen() {
       if (response.ok) {
         await updateUser(data.user);
         setIsEditModalVisible(false);
-        Alert.alert("Sucesso", "Perfil atualizado com sucesso!");
+        showAlert("Sucesso", "Perfil atualizado com sucesso!");
       } else {
-        Alert.alert("Erro", data.error || "Erro ao atualizar perfil");
+        showAlert("Erro", data.error || "Erro ao atualizar perfil");
       }
     } catch (error) {
-      Alert.alert("Erro", "Erro ao atualizar perfil. Tente novamente.");
+      showAlert("Erro", "Erro ao atualizar perfil. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handlePickImage = async () => {
-    if (Platform.OS === "web") {
-      Alert.alert("Aviso", "Use o app no celular para alterar a foto de perfil");
-      return;
-    }
-
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("Permissao necessaria", "Precisamos de acesso a sua galeria para alterar a foto de perfil");
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: "images",
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-      base64: true,
-    });
-
-    if (!result.canceled && result.assets[0].base64 && user?.id) {
-      setIsLoading(true);
-      try {
-        const asset = result.assets[0];
-        const mimeType = asset.mimeType || "image/jpeg";
-        const imageData = `data:${mimeType};base64,${asset.base64}`;
-
-        const response = await apiRequest("POST", `/api/user/profile/${user.id}/avatar`, {
-          imageData,
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-          await updateUser(data.user);
-          Alert.alert("Sucesso", "Foto atualizada com sucesso!");
-        } else {
-          Alert.alert("Erro", data.error || "Erro ao atualizar foto");
-        }
-      } catch (error) {
-        Alert.alert("Erro", "Erro ao atualizar foto. Tente novamente.");
-      } finally {
-        setIsLoading(false);
+    if (Platform.OS !== "web") {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== "granted") {
+        showAlert("Permissao necessaria", "Precisamos de acesso a sua galeria para alterar a foto de perfil");
+        return;
       }
+    }
+
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: "images",
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+        base64: true,
+      });
+
+      if (!result.canceled && result.assets[0].base64 && user?.id) {
+        setIsLoading(true);
+        try {
+          const asset = result.assets[0];
+          const mimeType = asset.mimeType || "image/jpeg";
+          const imageData = `data:${mimeType};base64,${asset.base64}`;
+
+          const response = await apiRequest("POST", `/api/user/profile/${user.id}/avatar`, {
+            imageData,
+          });
+
+          const data = await response.json();
+
+          if (response.ok) {
+            await updateUser(data.user);
+            showAlert("Sucesso", "Foto atualizada com sucesso!");
+          } else {
+            showAlert("Erro", data.error || "Erro ao atualizar foto");
+          }
+        } catch (error) {
+          showAlert("Erro", "Erro ao atualizar foto. Tente novamente.");
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    } catch (error) {
+      showAlert("Erro", "Nao foi possivel abrir a galeria de fotos.");
     }
   };
 

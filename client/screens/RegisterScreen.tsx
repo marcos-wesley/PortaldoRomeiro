@@ -75,11 +75,16 @@ export default function RegisterScreen() {
       return response.json();
     },
     onSuccess: () => {
-      Alert.alert(
-        "Conta criada!",
-        "Sua conta foi criada com sucesso. Agora faca login para acessar o Portal do Romeiro!",
-        [{ text: "OK", onPress: () => navigation.navigate("Login") }]
-      );
+      if (Platform.OS === "web") {
+        window.alert("Conta criada!\n\nSua conta foi criada com sucesso. Agora faca login para acessar o Portal do Romeiro!");
+        navigation.navigate("Login");
+      } else {
+        Alert.alert(
+          "Conta criada!",
+          "Sua conta foi criada com sucesso. Agora faca login para acessar o Portal do Romeiro!",
+          [{ text: "OK", onPress: () => navigation.navigate("Login") }]
+        );
+      }
     },
     onError: (error: Error) => {
       const errorMessage = error.message.includes("409")
