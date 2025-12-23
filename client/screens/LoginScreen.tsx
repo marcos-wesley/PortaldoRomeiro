@@ -127,13 +127,11 @@ export default function LoginScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <View style={styles.logoContainer}>
-            <Image
-              source={require("../../assets/images/portal-logo-full.webp")}
-              style={styles.logo}
-              contentFit="contain"
-            />
-          </View>
+          <Image
+            source={require("../../assets/images/portal-logo-full.webp")}
+            style={styles.logo}
+            contentFit="contain"
+          />
           <ThemedText type="h2" style={styles.title}>
             Entrar
           </ThemedText>
@@ -323,16 +321,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: Spacing["2xl"],
   },
-  logoContainer: {
-    backgroundColor: "#1a1a2e",
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.xl,
-    borderRadius: BorderRadius.lg,
-    marginBottom: Spacing.lg,
-  },
   logo: {
     width: 260,
-    height: 60,
+    height: 70,
+    marginBottom: Spacing.lg,
   },
   title: {
     marginBottom: Spacing.xs,
