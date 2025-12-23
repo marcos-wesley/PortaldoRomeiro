@@ -104,7 +104,36 @@ function QuickActionButton({ action, onPress }: { action: QuickAction; onPress: 
   );
 }
 
-function NewsCard({ news, onPress, compact = false }: { news: News; onPress: () => void; compact?: boolean }) {
+function FeaturedNewsCard({ news, onPress }: { news: News; onPress: () => void }) {
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <AnimatedPressable
+      onPress={onPress}
+      onPressIn={() => { scale.value = withSpring(0.98); }}
+      onPressOut={() => { scale.value = withSpring(1); }}
+      style={[styles.featuredNewsCard, animatedStyle]}
+    >
+      <Image source={{ uri: news.imageUrl }} style={styles.featuredNewsImage} contentFit="cover" />
+      <LinearGradient
+        colors={["transparent", "rgba(0,0,0,0.8)"]}
+        style={styles.featuredNewsGradient}
+      >
+        <View style={styles.featuredNewsBadge}>
+          <ThemedText style={styles.featuredNewsBadgeText}>Destaque</ThemedText>
+        </View>
+        <ThemedText style={styles.featuredNewsTitle} numberOfLines={2}>{news.title}</ThemedText>
+        <ThemedText style={styles.featuredNewsDate}>{news.date}</ThemedText>
+      </LinearGradient>
+    </AnimatedPressable>
+  );
+}
+
+function NewsListItem({ news, onPress }: { news: News; onPress: () => void }) {
   const { theme } = useTheme();
   const scale = useSharedValue(1);
 
@@ -112,29 +141,25 @@ function NewsCard({ news, onPress, compact = false }: { news: News; onPress: () 
     transform: [{ scale: scale.value }],
   }));
 
-  if (compact) {
-    return (
-      <AnimatedPressable
-        onPress={onPress}
-        onPressIn={() => { scale.value = withSpring(0.98); }}
-        onPressOut={() => { scale.value = withSpring(1); }}
-        style={[styles.newsCardCompact, { backgroundColor: theme.backgroundDefault }, animatedStyle]}
-      >
-        <Image source={{ uri: news.imageUrl }} style={styles.newsImageCompact} contentFit="cover" />
-        <View style={styles.newsContentCompact}>
-          <ThemedText style={[styles.newsCategoryCompact, { color: news.categoryColor }]}>
-            {news.category}
-          </ThemedText>
-          <ThemedText style={styles.newsTitleCompact} numberOfLines={2}>
-            {news.title}
-          </ThemedText>
-          <ThemedText type="caption" secondary>{news.date}</ThemedText>
-        </View>
-      </AnimatedPressable>
-    );
-  }
-
-  return null;
+  return (
+    <AnimatedPressable
+      onPress={onPress}
+      onPressIn={() => { scale.value = withSpring(0.98); }}
+      onPressOut={() => { scale.value = withSpring(1); }}
+      style={[styles.newsListItem, { backgroundColor: theme.backgroundDefault }, animatedStyle]}
+    >
+      <Image source={{ uri: news.imageUrl }} style={styles.newsListImage} contentFit="cover" />
+      <View style={styles.newsListContent}>
+        <ThemedText style={[styles.newsListCategory, { color: news.categoryColor }]}>
+          {news.category}
+        </ThemedText>
+        <ThemedText style={styles.newsListTitle} numberOfLines={2}>
+          {news.title}
+        </ThemedText>
+        <ThemedText type="caption" secondary>{news.date}</ThemedText>
+      </View>
+    </AnimatedPressable>
+  );
 }
 
 function VideoCard({ video, onPress }: { video: Video; onPress: () => void }) {
@@ -280,11 +305,14 @@ export default function HomeScreen() {
         />
 
         <View style={styles.newsSection}>
-          {otherNews.map((news) => (
-            <NewsCard
+          <FeaturedNewsCard
+            news={featuredNews}
+            onPress={() => handleNewsPress(featuredNews.id)}
+          />
+          {otherNews.slice(0, 2).map((news) => (
+            <NewsListItem
               key={news.id}
               news={news}
-              compact
               onPress={() => handleNewsPress(news.id)}
             />
           ))}
@@ -453,29 +481,70 @@ const styles = StyleSheet.create({
   newsSection: {
     marginBottom: Spacing.xl,
   },
-  newsCardCompact: {
-    flexDirection: "row",
-    borderRadius: BorderRadius.md,
+  featuredNewsCard: {
+    height: 200,
+    borderRadius: BorderRadius.lg,
     overflow: "hidden",
     marginBottom: Spacing.md,
   },
-  newsImageCompact: {
-    width: 100,
-    height: 80,
+  featuredNewsImage: {
+    ...StyleSheet.absoluteFillObject,
   },
-  newsContentCompact: {
+  featuredNewsGradient: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "flex-end",
+    padding: Spacing.lg,
+  },
+  featuredNewsBadge: {
+    alignSelf: "flex-start",
+    backgroundColor: "#F59E0B",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.full,
+    marginBottom: Spacing.sm,
+  },
+  featuredNewsBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  featuredNewsTitle: {
+    color: "#FFFFFF",
+    fontSize: 20,
+    fontWeight: "700",
+    lineHeight: 26,
+    marginBottom: Spacing.xs,
+  },
+  featuredNewsDate: {
+    color: "rgba(255,255,255,0.8)",
+    fontSize: 12,
+  },
+  newsListItem: {
+    flexDirection: "row",
+    borderRadius: BorderRadius.lg,
+    overflow: "hidden",
+    marginBottom: Spacing.md,
+    padding: Spacing.sm,
+  },
+  newsListImage: {
+    width: 90,
+    height: 90,
+    borderRadius: BorderRadius.md,
+  },
+  newsListContent: {
     flex: 1,
-    padding: Spacing.md,
+    paddingLeft: Spacing.md,
     justifyContent: "center",
   },
-  newsCategoryCompact: {
-    fontSize: 11,
+  newsListCategory: {
+    fontSize: 12,
     fontWeight: "600",
     marginBottom: Spacing.xs,
   },
-  newsTitleCompact: {
-    fontSize: 14,
+  newsListTitle: {
+    fontSize: 15,
     fontWeight: "600",
+    lineHeight: 20,
     marginBottom: Spacing.xs,
   },
   partnerBanner: {

@@ -52,8 +52,8 @@ export default function MainTabNavigator() {
         component={HomeStackNavigator}
         options={{
           title: "Home",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="home" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Feather name={focused ? "home" : "home"} size={24} color={color} />
           ),
         }}
       />
@@ -62,8 +62,8 @@ export default function MainTabNavigator() {
         component={GuiaStackNavigator}
         options={{
           title: "Guia",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="compass" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Feather name="compass" size={24} color={color} />
           ),
         }}
       />
@@ -72,8 +72,8 @@ export default function MainTabNavigator() {
         component={NoticiasStackNavigator}
         options={{
           title: "Noticias",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="file-text" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Feather name="file-text" size={24} color={color} />
           ),
         }}
       />
@@ -82,8 +82,8 @@ export default function MainTabNavigator() {
         component={MaisStackNavigator}
         options={{
           title: "Mais",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="menu" size={size} color={color} />
+          tabBarIcon: ({ color, size, focused }) => (
+            <Feather name="menu" size={24} color={color} />
           ),
         }}
       />
