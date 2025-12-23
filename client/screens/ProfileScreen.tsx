@@ -1,5 +1,6 @@
 import { ScrollView, View, StyleSheet, Pressable, Switch, TextInput, Alert, Modal, Platform, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useHeaderHeight } from "@react-navigation/elements";
 import { Feather } from "@expo/vector-icons";
 import { useState, useCallback } from "react";
 import { Image } from "expo-image";
@@ -82,6 +83,7 @@ function DataItem({ icon, label, value }: { icon: string; label: string; value: 
 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
+  const headerHeight = useHeaderHeight();
   const { theme } = useTheme();
   const { user, logout, updateUser } = useAuth();
   
@@ -268,6 +270,7 @@ export default function ProfileScreen() {
       <ScrollView
         style={{ flex: 1, backgroundColor: theme.backgroundRoot }}
         contentContainerStyle={{
+          paddingTop: headerHeight,
           paddingBottom: insets.bottom + Spacing.xl,
         }}
         showsVerticalScrollIndicator={false}
