@@ -5,6 +5,7 @@ import { useNavigation } from "@react-navigation/native";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feather } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -14,6 +15,28 @@ import Animated, {
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Colors } from "@/constants/theme";
+import { getApiUrl } from "@/lib/query-client";
+
+interface HistoriaPageContent {
+  heroTitle: string;
+  heroSubtitle: string;
+  heroImage: string | null;
+  introTitle: string;
+  introText: string;
+  todayTitle: string;
+  todayText: string;
+}
+
+function getFullImageUrl(imageUrl: string | null): string | null {
+  if (!imageUrl) return null;
+  if (imageUrl.startsWith("http")) return imageUrl;
+  try {
+    const baseUrl = getApiUrl();
+    return new URL(imageUrl, baseUrl).href;
+  } catch {
+    return imageUrl;
+  }
+}
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -284,13 +307,13 @@ function SanctuaryHighlight() {
   );
 }
 
-function TodaySection() {
+function TodaySection({ title, text }: { title?: string; text?: string }) {
   const { theme } = useTheme();
   return (
     <View style={styles.todaySection}>
-      <ThemedText type="h3" style={styles.todayTitle}>Trindade Hoje</ThemedText>
+      <ThemedText type="h3" style={styles.todayTitle}>{title || "Trindade Hoje"}</ThemedText>
       <ThemedText type="body" secondary style={styles.todayText}>
-        Uma cidade que respira fe, acolhe com amor e preserva sua historia. Capital da Fe recebe romeiros de todo o Brasil oferecendo uma experiencia unica de espiritualidade.
+        {text || "Uma cidade que respira fe, acolhe com amor e preserva sua historia. Capital da Fe recebe romeiros de todo o Brasil oferecendo uma experiencia unica de espiritualidade."}
       </ThemedText>
     </View>
   );
@@ -342,6 +365,19 @@ export default function HistoriaScreen() {
   const headerHeight = useHeaderHeight();
   const { theme } = useTheme();
 
+  const { data: pageContent } = useQuery<{ content: HistoriaPageContent | null }>({
+    queryKey: ["/api/static-pages/historia"],
+  });
+
+  const content = pageContent?.content;
+  const heroTitle = content?.heroTitle || "Historia de Trindade";
+  const heroSubtitle = content?.heroSubtitle || "A Capital da Fe";
+  const heroImage = content?.heroImage ? getFullImageUrl(content.heroImage) : "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200";
+  const introTitle = content?.introTitle || "Trindade - Goias";
+  const introText = content?.introText || "Conhecida mundialmente como a Capital da Fe, Trindade e um dos principais destinos de turismo religioso do Brasil, lar do Santuario do Divino Pai Eterno.";
+  const todayTitle = content?.todayTitle || "Trindade Hoje";
+  const todayText = content?.todayText || "Uma cidade que respira fe, acolhe com amor e preserva sua historia. Capital da Fe recebe romeiros de todo o Brasil oferecendo uma experiencia unica de espiritualidade.";
+
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.backgroundRoot }}
@@ -352,7 +388,7 @@ export default function HistoriaScreen() {
     >
       <View style={styles.heroBanner}>
         <Image
-          source={{ uri: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200" }}
+          source={{ uri: heroImage || "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200" }}
           style={styles.heroImage}
           contentFit="cover"
         />
@@ -362,17 +398,17 @@ export default function HistoriaScreen() {
         >
           <View style={styles.heroContent}>
             <Feather name="map-pin" size={20} color="#FFFFFF" />
-            <ThemedText style={styles.heroTitle}>Historia de Trindade</ThemedText>
-            <ThemedText style={styles.heroSubtitle}>A Capital da Fe</ThemedText>
+            <ThemedText style={styles.heroTitle}>{heroTitle}</ThemedText>
+            <ThemedText style={styles.heroSubtitle}>{heroSubtitle}</ThemedText>
           </View>
         </LinearGradient>
       </View>
 
       <View style={styles.content}>
         <View style={[styles.introCard, { backgroundColor: theme.backgroundDefault }]}>
-          <ThemedText type="h4" style={styles.introTitle}>Trindade - Goias</ThemedText>
+          <ThemedText type="h4" style={styles.introTitle}>{introTitle}</ThemedText>
           <ThemedText type="small" secondary style={styles.introText}>
-            Conhecida mundialmente como a Capital da Fe, Trindade e um dos principais destinos de turismo religioso do Brasil, lar do Santuario do Divino Pai Eterno.
+            {introText}
           </ThemedText>
           <View style={styles.infoGrid}>
             {cityInfo.map((info, index) => (
@@ -395,7 +431,7 @@ export default function HistoriaScreen() {
 
         <SanctuaryHighlight />
 
-        <TodaySection />
+        <TodaySection title={todayTitle} text={todayText} />
 
         <ExploreSection />
 

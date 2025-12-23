@@ -4,6 +4,7 @@ import { useHeaderHeight } from "@react-navigation/elements";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feather } from "@expo/vector-icons";
+import { useQuery } from "@tanstack/react-query";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -13,6 +14,28 @@ import Animated, {
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
+import { getApiUrl } from "@/lib/query-client";
+
+interface InfoPageContent {
+  heroTitle: string;
+  heroSubtitle: string;
+  heroImage: string | null;
+  nossaHistoria1: string;
+  nossaHistoria2: string;
+  quemSomos: string;
+  quemSomosImage: string | null;
+}
+
+function getFullImageUrl(imageUrl: string | null): string | null {
+  if (!imageUrl) return null;
+  if (imageUrl.startsWith("http")) return imageUrl;
+  try {
+    const baseUrl = getApiUrl();
+    return new URL(imageUrl, baseUrl).href;
+  } catch {
+    return imageUrl;
+  }
+}
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -83,6 +106,19 @@ export default function InfoScreen() {
   const headerHeight = useHeaderHeight();
   const { theme } = useTheme();
 
+  const { data: pageContent } = useQuery<{ content: InfoPageContent | null }>({
+    queryKey: ["/api/static-pages/info"],
+  });
+
+  const content = pageContent?.content;
+  const heroTitle = content?.heroTitle || "Portal do Romeiro";
+  const heroSubtitle = content?.heroSubtitle || "Fe, devocao e informacao na Capital da Fe";
+  const heroImage = content?.heroImage ? getFullImageUrl(content.heroImage) : "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200";
+  const nossaHistoria1 = content?.nossaHistoria1 || "O Portal do Romeiro nasceu do desejo de conectar o coracao dos fieis a Capital da Fe. Percebemos a necessidade de um guia completo que nao apenas informasse, mas acolhesse cada visitante com o carinho que Trindade oferece.";
+  const nossaHistoria2 = content?.nossaHistoria2 || "Nossa jornada comecou com um pequeno blog e hoje somos a principal referencia digital para milhoes de romeiros, unindo tradicao, cultura e tecnologia para servir a Fe.";
+  const quemSomos = content?.quemSomos || "Somos peregrinos servindo peregrinos. Uma equipe apaixonada por Trindade, comprometida em levar informacao confiavel e manter viva a chama da devocao.";
+  const quemSomosImage = content?.quemSomosImage ? getFullImageUrl(content.quemSomosImage) : "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600";
+
   const handleOpenLink = async (url: string) => {
     try {
       await Linking.openURL(url);
@@ -97,7 +133,7 @@ export default function InfoScreen() {
     >
       <View style={styles.heroBanner}>
         <Image
-          source={{ uri: "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200" }}
+          source={{ uri: heroImage || "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200" }}
           style={styles.heroImage}
           contentFit="cover"
         />
@@ -105,8 +141,8 @@ export default function InfoScreen() {
           colors={["rgba(0,0,0,0.2)", "rgba(139, 92, 246, 0.85)"]}
           style={styles.heroGradient}
         >
-          <ThemedText style={styles.heroTitle}>Portal do Romeiro</ThemedText>
-          <ThemedText style={styles.heroSubtitle}>Fe, devocao e informacao na Capital da Fe</ThemedText>
+          <ThemedText style={styles.heroTitle}>{heroTitle}</ThemedText>
+          <ThemedText style={styles.heroSubtitle}>{heroSubtitle}</ThemedText>
         </LinearGradient>
       </View>
 
@@ -119,23 +155,23 @@ export default function InfoScreen() {
             <ThemedText type="h3">Nossa Historia</ThemedText>
           </View>
           <ThemedText type="body" secondary style={styles.paragraph}>
-            O Portal do Romeiro nasceu do desejo de conectar o coracao dos fieis a Capital da Fe. Percebemos a necessidade de um guia completo que nao apenas informasse, mas acolhesse cada visitante com o carinho que Trindade oferece.
+            {nossaHistoria1}
           </ThemedText>
           <ThemedText type="body" secondary style={styles.paragraph}>
-            Nossa jornada comecou com um pequeno blog e hoje somos a principal referencia digital para milhoes de romeiros, unindo tradicao, cultura e tecnologia para servir a Fe.
+            {nossaHistoria2}
           </ThemedText>
         </View>
 
         <View style={[styles.quemSomosCard, { backgroundColor: theme.backgroundDefault }]}>
           <Image
-            source={{ uri: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600" }}
+            source={{ uri: quemSomosImage || "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600" }}
             style={styles.quemSomosImage}
             contentFit="cover"
           />
           <View style={styles.quemSomosContent}>
             <ThemedText type="h4">Quem Somos</ThemedText>
             <ThemedText type="small" secondary style={styles.quemSomosText}>
-              Somos peregrinos servindo peregrinos. Uma equipe apaixonada por Trindade, comprometida em levar informacao confiavel e manter viva a chama da devocao.
+              {quemSomos}
             </ThemedText>
           </View>
         </View>

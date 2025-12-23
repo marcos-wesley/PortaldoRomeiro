@@ -8,7 +8,7 @@ import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -21,6 +21,12 @@ import { Spacing, BorderRadius, Colors } from "@/constants/theme";
 import { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 import { quickActions, QuickAction } from "@/lib/data";
 import { getApiUrl } from "@/lib/query-client";
+
+interface HomePageContent {
+  heroTitle: string;
+  heroSubtitle: string;
+  heroImage: string | null;
+}
 
 function getFullImageUrl(imageUrl: string | null): string | null {
   if (!imageUrl) return null;
@@ -114,23 +120,36 @@ const HERO_HEIGHT = SCREEN_HEIGHT * 0.45;
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-function FullScreenHeroBanner({ headerHeight }: { headerHeight: number }) {
+function FullScreenHeroBanner({ headerHeight, content }: { headerHeight: number; content?: HomePageContent | null }) {
+  const heroTitle = content?.heroTitle || "Hora de conhecer a";
+  const heroSubtitle = content?.heroSubtitle || "capital da fe";
+  const heroImage = content?.heroImage ? getFullImageUrl(content.heroImage) : null;
+
   return (
     <View style={[styles.fullHeroBanner, { height: HERO_HEIGHT }]}>
-      <Image
-        source={require("../assets/images/home-hero.jpg")}
-        style={styles.fullHeroImage}
-        contentFit="cover"
-        contentPosition="center"
-      />
+      {heroImage ? (
+        <Image
+          source={{ uri: heroImage }}
+          style={styles.fullHeroImage}
+          contentFit="cover"
+          contentPosition="center"
+        />
+      ) : (
+        <Image
+          source={require("../assets/images/home-hero.jpg")}
+          style={styles.fullHeroImage}
+          contentFit="cover"
+          contentPosition="center"
+        />
+      )}
       <LinearGradient
         colors={["transparent", "rgba(255,255,255,0.85)", "#FFFFFF"]}
         locations={[0.3, 0.7, 0.9]}
         style={styles.fullHeroGradient}
       />
       <View style={styles.fullHeroTextContainer}>
-        <ThemedText style={styles.fullHeroTitle}>Hora de conhecer a</ThemedText>
-        <ThemedText style={styles.fullHeroHighlight}>capital da fe</ThemedText>
+        <ThemedText style={styles.fullHeroTitle}>{heroTitle}</ThemedText>
+        <ThemedText style={styles.fullHeroHighlight}>{heroSubtitle}</ThemedText>
       </View>
     </View>
   );
@@ -350,6 +369,10 @@ export default function HomeScreen() {
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
 
+  const { data: pageContent } = useQuery<{ content: HomePageContent | null }>({
+    queryKey: ["/api/static-pages/home"],
+  });
+
   const { data: newsData, isLoading: newsLoading } = useQuery<{ news: NewsItem[] }>({
     queryKey: ["/api/news"],
   });
@@ -360,6 +383,7 @@ export default function HomeScreen() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
+    await queryClient.invalidateQueries({ queryKey: ["/api/static-pages/home"] });
     await queryClient.invalidateQueries({ queryKey: ["/api/news"] });
     await queryClient.invalidateQueries({ queryKey: ["/api/videos"] });
     setRefreshing(false);
@@ -409,7 +433,7 @@ export default function HomeScreen() {
         />
       }
     >
-      <FullScreenHeroBanner headerHeight={headerHeight} />
+      <FullScreenHeroBanner headerHeight={headerHeight} content={pageContent?.content} />
 
       <View style={styles.content}>
         <View style={styles.quickActionsGrid}>
