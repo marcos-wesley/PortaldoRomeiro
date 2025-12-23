@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Noticias - Admin Portal do Romeiro</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8f9fa;
+      min-height: 100vh;
+      display: flex;
+    }
+    .sidebar {
+      width: 260px;
+      background: #1a1a2e;
+      color: white;
+      padding: 24px;
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    .sidebar h1 { color: #b22226; font-size: 18px; margin-bottom: 4px; }
+    .sidebar > p { color: #9ca3af; font-size: 12px; margin-bottom: 32px; }
+    .nav-item {
+      display: block;
+      padding: 12px 16px;
+      color: #9ca3af;
+      text-decoration: none;
+      border-radius: 8px;
+      margin-bottom: 4px;
+    }
+    .nav-item:hover { background: #16213e; color: white; }
+    .nav-item.active { background: #b22226; color: white; }
+    .main {
+      flex: 1;
+      margin-left: 260px;
+      padding: 32px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .header h2 { font-size: 24px; color: #1f2937; }
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary { background: #b22226; color: white; }
+    .btn-primary:hover { background: #8b1a1d; }
+    .btn-secondary { background: #e5e7eb; color: #374151; }
+    .btn-secondary:hover { background: #d1d5db; }
+    .btn-danger { background: #ef4444; color: white; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .table-container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 16px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    th {
+      background: #f9fafb;
+      font-weight: 600;
+      color: #374151;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+    td { color: #4b5563; }
+    .news-title { color: #1f2937; font-weight: 500; }
+    .news-cover {
+      width: 60px;
+      height: 40px;
+      object-fit: cover;
+      border-radius: 4px;
+      background: #e5e7eb;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .badge-success { background: #d1fae5; color: #059669; }
+    .badge-warning { background: #fef3c7; color: #d97706; }
+    .badge-secondary { background: #e5e7eb; color: #6b7280; }
+    .actions { display: flex; gap: 8px; }
+    .empty-state {
+      text-align: center;
+      padding: 64px 32px;
+      color: #6b7280;
+    }
+    .empty-state h3 { color: #374151; margin-bottom: 8px; }
+    .loading {
+      text-align: center;
+      padding: 48px;
+      color: #6b7280;
+    }
+    .category-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <h1>Portal do Romeiro</h1>
+    <p>Painel Administrativo</p>
+    <a href="/admin/dashboard" class="nav-item">Dashboard</a>
+    <a href="/admin/noticias" class="nav-item active">Noticias</a>
+    <a href="/admin/hospedagens" class="nav-item">Hospedagens</a>
+    <a href="/admin/eventos" class="nav-item">Eventos</a>
+    <a href="/admin/oracoes" class="nav-item">Oracoes</a>
+    <a href="/admin/pontos-turisticos" class="nav-item">Pontos Turisticos</a>
+    <a href="/admin/usuarios" class="nav-item">Usuarios</a>
+    <a href="/admin/configuracoes" class="nav-item">Configuracoes</a>
+  </aside>
+
+  <main class="main">
+    <div class="header">
+      <h2>Noticias</h2>
+      <a href="/admin/noticias/nova" class="btn btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Nova Noticia
+      </a>
+    </div>
+
+    <div class="table-container">
+      <div id="loading" class="loading">Carregando noticias...</div>
+      <div id="empty" class="empty-state" style="display: none;">
+        <h3>Nenhuma noticia cadastrada</h3>
+        <p>Clique em "Nova Noticia" para adicionar a primeira noticia.</p>
+      </div>
+      <table id="news-table" style="display: none;">
+        <thead>
+          <tr>
+            <th>Imagem</th>
+            <th>Titulo</th>
+            <th>Categoria</th>
+            <th>Status</th>
+            <th>Visualizacoes</th>
+            <th>Data</th>
+            <th>Acoes</th>
+          </tr>
+        </thead>
+        <tbody id="news-list"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    async function loadNews() {
+      try {
+        const response = await fetch('/admin/api/news');
+        const data = await response.json();
+        
+        document.getElementById('loading').style.display = 'none';
+        
+        if (!data.news || data.news.length === 0) {
+          document.getElementById('empty').style.display = 'block';
+          return;
+        }
+        
+        document.getElementById('news-table').style.display = 'table';
+        const tbody = document.getElementById('news-list');
+        tbody.innerHTML = '';
+        
+        data.news.forEach(news => {
+          const row = document.createElement('tr');
+          const date = new Date(news.createdAt).toLocaleDateString('pt-BR');
+          const coverImg = news.coverImage 
+            ? `<img src="${news.coverImage}" class="news-cover" alt="">` 
+            : '<div class="news-cover"></div>';
+          
+          row.innerHTML = `
+            <td>${coverImg}</td>
+            <td class="news-title">${escapeHtml(news.title)}</td>
+            <td><span class="category-badge">${escapeHtml(news.category || 'Geral')}</span></td>
+            <td>
+              <span class="badge ${news.published ? 'badge-success' : 'badge-warning'}">
+                ${news.published ? 'Publicada' : 'Rascunho'}
+              </span>
+            </td>
+            <td>${news.views || 0}</td>
+            <td>${date}</td>
+            <td class="actions">
+              <a href="/admin/noticias/editar/${news.id}" class="btn btn-secondary btn-sm">Editar</a>
+              <button class="btn btn-danger btn-sm" onclick="deleteNews('${news.id}')">Excluir</button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (error) {
+        console.error('Error loading news:', error);
+        document.getElementById('loading').textContent = 'Erro ao carregar noticias';
+      }
+    }
+    
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    async function deleteNews(id) {
+      if (!confirm('Tem certeza que deseja excluir esta noticia?')) return;
+      
+      try {
+        const response = await fetch(`/admin/api/news/${id}`, { method: 'DELETE' });
+        const data = await response.json();
+        
+        if (response.ok) {
+          loadNews();
+        } else {
+          alert(data.error || 'Erro ao excluir noticia');
+        }
+      } catch (error) {
+        console.error('Error deleting news:', error);
+        alert('Erro ao excluir noticia');
+      }
+    }
+    
+    loadNews();
+  </script>
+</body>
+</html>

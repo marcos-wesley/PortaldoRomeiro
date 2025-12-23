@@ -88,7 +88,18 @@ export function registerAdminRoutes(app: Express) {
   });
 
   app.get("/admin/noticias", requireAuth, (req, res) => {
-    res.send(getPlaceholderPage("Noticias", "Gerencie as noticias do app"));
+    const noticiasPath = path.join(__dirname, "admin", "noticias.html");
+    res.sendFile(noticiasPath);
+  });
+
+  app.get("/admin/noticias/nova", requireAuth, (req, res) => {
+    const formPath = path.join(__dirname, "admin", "noticias-form.html");
+    res.sendFile(formPath);
+  });
+
+  app.get("/admin/noticias/editar/:id", requireAuth, (req, res) => {
+    const formPath = path.join(__dirname, "admin", "noticias-form.html");
+    res.sendFile(formPath);
   });
 
   app.get("/admin/hospedagens", requireAuth, (req, res) => {
