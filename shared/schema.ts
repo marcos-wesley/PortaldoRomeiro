@@ -260,3 +260,25 @@ export type InsertAttraction = z.infer<typeof insertAttractionSchema>;
 export type Attraction = typeof attractions.$inferSelect;
 export type CreateAttractionInput = z.infer<typeof createAttractionSchema>;
 export type UpdateAttractionInput = z.infer<typeof updateAttractionSchema>;
+
+export const staticPages = pgTable("static_pages", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  pageKey: text("page_key").notNull().unique(),
+  content: text("content").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertStaticPageSchema = createInsertSchema(staticPages).pick({
+  pageKey: true,
+  content: true,
+});
+
+export const updateStaticPageSchema = z.object({
+  content: z.string().min(1, "Conteudo nao pode estar vazio"),
+});
+
+export type InsertStaticPage = z.infer<typeof insertStaticPageSchema>;
+export type StaticPage = typeof staticPages.$inferSelect;
+export type UpdateStaticPageInput = z.infer<typeof updateStaticPageSchema>;

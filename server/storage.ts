@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type UpdateProfileInput, users, type News, type InsertNews, type UpdateNewsInput, news, type Video, type InsertVideo, type UpdateVideoInput, videos, type Attraction, type InsertAttraction, type UpdateAttractionInput, attractions } from "@shared/schema";
+import { type User, type InsertUser, type UpdateProfileInput, users, type News, type InsertNews, type UpdateNewsInput, news, type Video, type InsertVideo, type UpdateVideoInput, videos, type Attraction, type InsertAttraction, type UpdateAttractionInput, attractions, type StaticPage, type InsertStaticPage, type UpdateStaticPageInput, staticPages } from "@shared/schema";
 import { db } from "./db";
 import { eq, count, desc, ilike, or, and } from "drizzle-orm";
 
@@ -203,6 +203,30 @@ export class DatabaseStorage implements IStorage {
     if (existing) {
       await db.update(attractions).set({ views: (existing.views || 0) + 1 }).where(eq(attractions.id, id));
     }
+  }
+
+  async getStaticPage(pageKey: string): Promise<StaticPage | undefined> {
+    const result = await db.select().from(staticPages).where(eq(staticPages.pageKey, pageKey));
+    return result[0];
+  }
+
+  async getAllStaticPages(): Promise<StaticPage[]> {
+    const result = await db.select().from(staticPages).orderBy(staticPages.pageKey);
+    return result;
+  }
+
+  async upsertStaticPage(pageKey: string, content: string): Promise<StaticPage> {
+    const existing = await this.getStaticPage(pageKey);
+    if (existing) {
+      const result = await db
+        .update(staticPages)
+        .set({ content, updatedAt: new Date() })
+        .where(eq(staticPages.pageKey, pageKey))
+        .returning();
+      return result[0];
+    }
+    const result = await db.insert(staticPages).values({ pageKey, content }).returning();
+    return result[0];
   }
 }
 

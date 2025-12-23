@@ -410,6 +410,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Static Pages Routes (Public API)
+  app.get("/api/static-pages/:pageKey", async (req, res) => {
+    try {
+      const { pageKey } = req.params;
+      const page = await storage.getStaticPage(pageKey);
+      
+      if (!page) {
+        return res.json({ content: null });
+      }
+
+      return res.json({ content: JSON.parse(page.content), updatedAt: page.updatedAt });
+    } catch (error) {
+      console.error("Get static page error:", error);
+      return res.status(500).json({ error: "Erro ao buscar conteudo" });
+    }
+  });
+
+  app.get("/api/static-pages", async (req, res) => {
+    try {
+      const pages = await storage.getAllStaticPages();
+      return res.json({ pages: pages.map(p => ({ ...p, content: JSON.parse(p.content) })) });
+    } catch (error) {
+      console.error("Get all static pages error:", error);
+      return res.status(500).json({ error: "Erro ao buscar paginas" });
+    }
+  });
+
+  // Admin Static Pages Routes
+  app.put("/api/static-pages/:pageKey", async (req, res) => {
+    try {
+      const { pageKey } = req.params;
+      const { content } = req.body;
+      
+      if (!content) {
+        return res.status(400).json({ error: "Conteudo e obrigatorio" });
+      }
+
+      const contentString = typeof content === "string" ? content : JSON.stringify(content);
+      const page = await storage.upsertStaticPage(pageKey, contentString);
+      
+      return res.json({ page: { ...page, content: JSON.parse(page.content) }, message: "Conteudo atualizado com sucesso!" });
+    } catch (error) {
+      console.error("Update static page error:", error);
+      return res.status(500).json({ error: "Erro ao atualizar conteudo" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
