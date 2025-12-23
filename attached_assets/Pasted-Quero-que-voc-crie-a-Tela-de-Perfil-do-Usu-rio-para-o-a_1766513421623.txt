@@ -1,0 +1,115 @@
+Quero que você crie a Tela de Perfil do Usuário para o aplicativo Portal do Romeiro.
+A tela deve ser simples, limpa e objetiva, apenas com as informações essenciais do usuário e algumas ações básicas.
+
+Ela deve seguir o mesmo estilo visual moderno das demais telas do app (login, cadastro, etc.).
+
+🧱 ESTRUTURA DA TELA “MEU PERFIL”
+1. Header
+
+Botão de voltar ou ícone de menu (dependendo do fluxo do app)
+
+Título: Meu Perfil
+
+2. Área do usuário (topo)
+
+Criar um bloco com:
+
+Avatar do usuário (círculo, com iniciais ou imagem)
+
+Nome completo do usuário
+
+E-mail do usuário
+
+Opcional: pequeno texto abaixo, tipo:
+
+“Bem-vindo ao Portal do Romeiro.”
+
+3. Bloco de informações básicas
+
+Logo abaixo, criar uma lista simples ou cards com os dados essenciais do usuário:
+
+Nome
+
+E-mail
+
+Celular
+
+Cidade / Estado
+
+Esses itens podem estar em formato de linhas:
+
+[ícone] Nome: Marcos Wesley
+
+[ícone] E-mail: exemplo@exemplo.com
+
+[ícone] Celular: (62) 9 XXXX-XXXX
+
+Não precisa ser editável diretamente aqui, a não ser que você queira acionar outra tela.
+
+4. Botão “Editar Perfil”
+
+Adicionar um botão simples:
+
+[ Editar perfil ]
+
+Ao tocar nesse botão, o app pode levar para uma Tela de Edição de Perfil (que você pode criar depois), onde o usuário altera nome, celular, cidade etc.
+
+5. Opções rápidas
+
+Uma pequena lista com itens simples, como:
+
+Meus favoritos (hospedagens, empresas, atrações marcadas)
+
+Minhas reservas (se houver módulo de reservas)
+
+Notificações (apenas um toggle simples: ativar/desativar)
+
+Isso pode estar em formato de lista:
+
+Meus favoritos → (seta para outra tela)
+
+Notificações → interruptor ON/OFF
+
+6. Botão de sair
+
+Na parte inferior da tela, colocar um botão:
+
+[ Sair da conta ]
+
+Comportamento esperado (conceito):
+
+Desloga o usuário e volta para a tela de login.
+
+7. Rodapé (opcional)
+
+Texto discreto:
+
+Portal do Romeiro – A Capital da Fé na palma da sua mão.
+
+📱 UX E COMPORTAMENTO
+
+Tela simples, com scroll mínimo (idealmente tudo cabendo em uma única tela).
+
+Foco em clareza e fácil visualização dos dados.
+
+Botões grandes, fáceis de tocar.
+
+Visual consistente com o restante do app (cores, tipografia, espaçamentos).
+
+✔️ INSTRUÇÃO FINAL
+
+Crie a Tela de Perfil do Usuário (Meu Perfil) do app Portal do Romeiro com:
+
+Avatar + nome + e-mail no topo
+
+Lista simples com dados básicos (nome, e-mail, celular, cidade)
+
+Botão “Editar perfil”
+
+Opções rápidas (Meus favoritos, Notificações, etc.)
+
+Botão “Sair da conta” na parte inferior
+
+Tudo com layout em anexo simples, moderno e coerente com as demais telas já definidas do aplicativo. E já com o backend funcional trazendo os dados do usuário logado.
+
+

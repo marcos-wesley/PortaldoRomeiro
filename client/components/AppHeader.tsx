@@ -4,6 +4,7 @@ import { Image } from "expo-image";
 import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { NativeStackHeaderProps } from "@react-navigation/native-stack";
+import { useNavigation } from "@react-navigation/native";
 
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { useTheme } from "@/hooks/useTheme";
@@ -30,10 +31,23 @@ export function AppHeader({
 }: AppHeaderProps) {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
+  const nav = useNavigation();
 
   const handleBack = () => {
     if (navigation?.canGoBack()) {
       navigation.goBack();
+    }
+  };
+
+  const handleAvatarPress = () => {
+    if (onAvatarPress) {
+      onAvatarPress();
+    } else {
+      try {
+        (nav as any).navigate("MaisTab", { screen: "Profile" });
+      } catch {
+        (navigation as any)?.navigate?.("Profile");
+      }
     }
   };
 
@@ -72,7 +86,7 @@ export function AppHeader({
         </Pressable>
         
         <Pressable 
-          onPress={onAvatarPress}
+          onPress={handleAvatarPress}
           style={({ pressed }) => [pressed && styles.avatarPressed]}
         >
           <View style={[styles.avatarContainer, { borderColor: theme.avatarBorder, backgroundColor: theme.backgroundSecondary }]}>
