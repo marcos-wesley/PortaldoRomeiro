@@ -15,7 +15,6 @@ import Animated, {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import * as Location from "expo-location";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import MapView, { Marker } from "react-native-maps";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
@@ -24,6 +23,49 @@ import type { MaisStackParamList } from "@/navigation/MaisStackNavigator";
 import { getApiUrl } from "@/lib/query-client";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+let MapViewComponent: any = null;
+let MarkerComponent: any = null;
+if (Platform.OS !== "web") {
+  try {
+    const RNMaps = require("react-native-maps");
+    MapViewComponent = RNMaps.default;
+    MarkerComponent = RNMaps.Marker;
+  } catch (e) {
+  }
+}
+
+function NativeMapView({ attraction, userLocation }: { 
+  attraction: Attraction; 
+  userLocation: { latitude: number; longitude: number } | null;
+}) {
+  if (!MapViewComponent || !MarkerComponent) {
+    return null;
+  }
+  
+  return (
+    <MapViewComponent
+      style={styles.mapView}
+      initialRegion={{
+        latitude: parseFloat(attraction.latitude!),
+        longitude: parseFloat(attraction.longitude!),
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      }}
+      showsUserLocation={true}
+      showsMyLocationButton={true}
+    >
+      <MarkerComponent
+        coordinate={{
+          latitude: parseFloat(attraction.latitude!),
+          longitude: parseFloat(attraction.longitude!),
+        }}
+        title={attraction.name}
+        description={attraction.address || undefined}
+      />
+    </MapViewComponent>
+  );
+}
 
 type Category = "Todas" | "Igrejas" | "Monumentos" | "Pracas" | "Museus";
 
@@ -597,26 +639,26 @@ function AttractionDetailModal({
             </ThemedText>
           </View>
           {hasCoordinates ? (
-            <MapView
-              style={styles.mapView}
-              initialRegion={{
-                latitude: parseFloat(attraction.latitude!),
-                longitude: parseFloat(attraction.longitude!),
-                latitudeDelta: 0.01,
-                longitudeDelta: 0.01,
-              }}
-              showsUserLocation={true}
-              showsMyLocationButton={true}
-            >
-              <Marker
-                coordinate={{
-                  latitude: parseFloat(attraction.latitude!),
-                  longitude: parseFloat(attraction.longitude!),
-                }}
-                title={attraction.name}
-                description={attraction.address || undefined}
+            Platform.OS === "web" ? (
+              <View style={styles.mapErrorContainer}>
+                <Feather name="map" size={48} color={Colors.light.primary} />
+                <ThemedText type="body" style={{ marginTop: Spacing.md, textAlign: "center" }}>
+                  Abra o app no Expo Go para ver o mapa interativo
+                </ThemedText>
+                <Pressable 
+                  onPress={handleDirections}
+                  style={[styles.primaryActionButton, { backgroundColor: Colors.light.primary, marginTop: Spacing.lg }]}
+                >
+                  <Feather name="external-link" size={18} color="#FFFFFF" />
+                  <ThemedText style={styles.primaryActionButtonText}>Abrir no Google Maps</ThemedText>
+                </Pressable>
+              </View>
+            ) : (
+              <NativeMapView 
+                attraction={attraction} 
+                userLocation={userLocation}
               />
-            </MapView>
+            )
           ) : (
             <View style={styles.mapErrorContainer}>
               <Feather name="map-pin" size={48} color={theme.textSecondary} />
