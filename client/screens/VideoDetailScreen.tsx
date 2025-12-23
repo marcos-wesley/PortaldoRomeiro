@@ -82,26 +82,7 @@ function YouTubePlayer({ videoId }: { videoId: string }) {
   const [isLoading, setIsLoading] = useState(true);
   const playerHeight = (screenWidth * 9) / 16;
 
-  const embedHtml = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
-          iframe { width: 100%; height: 100%; border: none; }
-        </style>
-      </head>
-      <body>
-        <iframe
-          src="https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1&autoplay=0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          allowfullscreen
-        ></iframe>
-      </body>
-    </html>
-  `;
+  const youtubeUrl = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&playsinline=1&autoplay=0&origin=https://replit.com&enablejsapi=1`;
 
   return (
     <View style={[styles.playerContainer, { height: playerHeight }]}>
@@ -111,14 +92,18 @@ function YouTubePlayer({ videoId }: { videoId: string }) {
         </View>
       ) : null}
       <WebView
-        source={{ html: embedHtml }}
+        source={{ uri: youtubeUrl }}
         style={[styles.webview, { opacity: isLoading ? 0 : 1 }]}
         allowsFullscreenVideo
         allowsInlineMediaPlayback
         mediaPlaybackRequiresUserAction={false}
         javaScriptEnabled
+        domStorageEnabled
         onLoadEnd={() => setIsLoading(false)}
         scrollEnabled={false}
+        originWhitelist={["*"]}
+        mixedContentMode="compatibility"
+        userAgent="Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1"
       />
     </View>
   );
