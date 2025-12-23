@@ -1,6 +1,6 @@
 import { type User, type InsertUser, type UpdateProfileInput, users } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, count } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -8,6 +8,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: string, data: UpdateProfileInput): Promise<User | undefined>;
   updateUserAvatar(id: string, avatarUrl: string): Promise<User | undefined>;
+  getUsersCount(): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -42,6 +43,11 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, id))
       .returning();
     return result[0];
+  }
+
+  async getUsersCount(): Promise<number> {
+    const result = await db.select({ count: count() }).from(users);
+    return result[0]?.count ?? 0;
   }
 }
 

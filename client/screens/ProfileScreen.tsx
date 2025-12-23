@@ -32,7 +32,7 @@ function ProfileOption({
   title, 
   onPress, 
   rightElement,
-  iconColor = Colors.primary,
+  iconColor = Colors.light.primary,
 }: { 
   icon: string; 
   title: string; 
@@ -260,7 +260,7 @@ export default function ProfileScreen() {
   if (!user) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: theme.backgroundRoot }]}>
-        <ActivityIndicator size="large" color={Colors.primary} />
+        <ActivityIndicator size="large" color={theme.primary} />
       </View>
     );
   }
@@ -285,19 +285,19 @@ export default function ProfileScreen() {
                   contentFit="cover"
                 />
               ) : (
-                <View style={[styles.avatar, { borderColor: Colors.primaryLight }]}>
+                <View style={[styles.avatar, { borderColor: theme.primary }]}>
                   <ThemedText style={styles.avatarText}>{initials}</ThemedText>
                 </View>
               )}
             </View>
-            <View style={[styles.cameraIconContainer, { backgroundColor: Colors.primary }]}>
+            <View style={[styles.cameraIconContainer, { backgroundColor: theme.primary }]}>
               <Feather name="camera" size={14} color="#FFFFFF" />
             </View>
           </Pressable>
           <ThemedText type="h3" style={styles.userName}>{user.name}</ThemedText>
           <ThemedText type="small" secondary style={styles.userEmail}>{user.email}</ThemedText>
-          <View style={[styles.welcomeBadge, { backgroundColor: Colors.primaryLight }]}>
-            <ThemedText style={[styles.welcomeBadgeText, { color: Colors.primary }]}>Bem-vindo ao Portal do Romeiro</ThemedText>
+          <View style={[styles.welcomeBadge, { backgroundColor: theme.highlight }]}>
+            <ThemedText style={[styles.welcomeBadgeText, { color: theme.primary }]}>Bem-vindo ao Portal do Romeiro</ThemedText>
           </View>
         </View>
 
@@ -306,8 +306,8 @@ export default function ProfileScreen() {
             <ThemedText type="caption" secondary style={styles.sectionTitle}>DADOS PESSOAIS</ThemedText>
             <Pressable onPress={handleOpenEditModal}>
               <View style={styles.editButton}>
-                <Feather name="edit-2" size={14} color={Colors.primary} />
-                <ThemedText style={[styles.editButtonText, { color: Colors.primary }]}>Editar</ThemedText>
+                <Feather name="edit-2" size={14} color={theme.primary} />
+                <ThemedText style={[styles.editButtonText, { color: theme.primary }]}>Editar</ThemedText>
               </View>
             </Pressable>
           </View>
@@ -338,7 +338,7 @@ export default function ProfileScreen() {
                 <Switch
                   value={notificationsEnabled}
                   onValueChange={handleToggleNotifications}
-                  trackColor={{ false: "#D1D5DB", true: Colors.primary }}
+                  trackColor={{ false: "#D1D5DB", true: theme.primary }}
                   thumbColor="#FFFFFF"
                 />
               }
@@ -380,11 +380,11 @@ export default function ProfileScreen() {
         <View style={[styles.modalContainer, { backgroundColor: theme.backgroundRoot }]}>
           <View style={[styles.modalHeader, { backgroundColor: theme.backgroundDefault }]}>
             <Pressable onPress={() => setIsEditModalVisible(false)}>
-              <ThemedText style={[styles.modalHeaderButton, { color: Colors.primary }]}>Cancelar</ThemedText>
+              <ThemedText style={[styles.modalHeaderButton, { color: theme.primary }]}>Cancelar</ThemedText>
             </Pressable>
             <ThemedText type="h4">Editar Perfil</ThemedText>
             <Pressable onPress={handleSaveProfile} disabled={isLoading}>
-              <ThemedText style={[styles.modalHeaderButton, { color: Colors.primary, opacity: isLoading ? 0.5 : 1 }]}>
+              <ThemedText style={[styles.modalHeaderButton, { color: theme.primary, opacity: isLoading ? 0.5 : 1 }]}>
                 {isLoading ? "Salvando..." : "Salvar"}
               </ThemedText>
             </Pressable>
@@ -397,7 +397,7 @@ export default function ProfileScreen() {
             <View style={styles.inputGroup}>
               <ThemedText type="caption" secondary style={styles.inputLabel}>Nome completo</ThemedText>
               <TextInput
-                style={[styles.textInput, { backgroundColor: theme.backgroundDefault, color: theme.textPrimary, borderColor: theme.border }]}
+                style={[styles.textInput, { backgroundColor: theme.backgroundDefault, color: theme.text, borderColor: theme.border }]}
                 value={editName}
                 onChangeText={setEditName}
                 placeholder="Seu nome"
@@ -408,7 +408,7 @@ export default function ProfileScreen() {
             <View style={styles.inputGroup}>
               <ThemedText type="caption" secondary style={styles.inputLabel}>E-mail</ThemedText>
               <TextInput
-                style={[styles.textInput, { backgroundColor: theme.backgroundDefault, color: theme.textPrimary, borderColor: theme.border }]}
+                style={[styles.textInput, { backgroundColor: theme.backgroundDefault, color: theme.text, borderColor: theme.border }]}
                 value={editEmail}
                 onChangeText={setEditEmail}
                 placeholder="seu@email.com"
@@ -421,7 +421,7 @@ export default function ProfileScreen() {
             <View style={styles.inputGroup}>
               <ThemedText type="caption" secondary style={styles.inputLabel}>Celular</ThemedText>
               <TextInput
-                style={[styles.textInput, { backgroundColor: theme.backgroundDefault, color: theme.textPrimary, borderColor: theme.border }]}
+                style={[styles.textInput, { backgroundColor: theme.backgroundDefault, color: theme.text, borderColor: theme.border }]}
                 value={editPhone}
                 onChangeText={setEditPhone}
                 placeholder="(00) 00000-0000"
@@ -433,7 +433,7 @@ export default function ProfileScreen() {
             <View style={styles.inputGroup}>
               <ThemedText type="caption" secondary style={styles.inputLabel}>Cidade</ThemedText>
               <TextInput
-                style={[styles.textInput, { backgroundColor: theme.backgroundDefault, color: theme.textPrimary, borderColor: theme.border }]}
+                style={[styles.textInput, { backgroundColor: theme.backgroundDefault, color: theme.text, borderColor: theme.border }]}
                 value={editCity}
                 onChangeText={setEditCity}
                 placeholder="Sua cidade"
@@ -444,7 +444,7 @@ export default function ProfileScreen() {
             <View style={styles.inputGroup}>
               <ThemedText type="caption" secondary style={styles.inputLabel}>Estado</ThemedText>
               <TextInput
-                style={[styles.textInput, { backgroundColor: theme.backgroundDefault, color: theme.textPrimary, borderColor: theme.border }]}
+                style={[styles.textInput, { backgroundColor: theme.backgroundDefault, color: theme.text, borderColor: theme.border }]}
                 value={editState}
                 onChangeText={setEditState}
                 placeholder="GO"
@@ -459,7 +459,7 @@ export default function ProfileScreen() {
 
       {isLoading ? (
         <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+          <ActivityIndicator size="large" color={theme.primary} />
         </View>
       ) : null}
     </>
@@ -506,7 +506,7 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 32,
     fontWeight: "700",
-    color: Colors.primary,
+    color: Colors.light.primary,
   },
   cameraIconContainer: {
     position: "absolute",
