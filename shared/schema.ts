@@ -13,6 +13,7 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   city: text("city"),
   state: text("state"),
+  avatarUrl: text("avatar_url"),
   receiveNews: boolean("receive_news").default(false),
   acceptedTerms: boolean("accepted_terms").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow(),
@@ -50,7 +51,17 @@ export const loginUserSchema = z.object({
   password: z.string().min(1, "Senha é obrigatória"),
 });
 
+export const updateProfileSchema = z.object({
+  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").optional(),
+  email: z.string().email("E-mail inválido").optional(),
+  phone: z.string().optional().nullable(),
+  city: z.string().optional().nullable(),
+  state: z.string().optional().nullable(),
+  receiveNews: z.boolean().optional(),
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type RegisterUserInput = z.infer<typeof registerUserSchema>;
 export type LoginUserInput = z.infer<typeof loginUserSchema>;
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;

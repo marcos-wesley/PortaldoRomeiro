@@ -1,33 +1,38 @@
-import { ScrollView, View, StyleSheet, Pressable, Switch } from "react-native";
+import { ScrollView, View, StyleSheet, Pressable, Switch, TextInput, Alert, Modal, Platform, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
-import { useState } from "react";
+import { useState, useCallback } from "react";
+import { Image } from "expo-image";
+import * as ImagePicker from "expo-image-picker";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
+import { useNavigation, CommonActions } from "@react-navigation/native";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
-import { Spacing, BorderRadius } from "@/constants/theme";
+import { useAuth } from "@/contexts/AuthContext";
+import { Spacing, BorderRadius, Colors } from "@/constants/theme";
+import { getApiUrl, apiRequest } from "@/lib/query-client";
+import { KeyboardAwareScrollViewCompat } from "@/components/KeyboardAwareScrollViewCompat";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-const userData = {
-  name: "Marcos Wesley",
-  email: "marcos.wesley@exemplo.com",
-  phone: "(62) 9 9999-8888",
-  city: "Goiania - GO",
-  initials: "MW",
-};
+function getInitials(name: string): string {
+  if (!name) return "?";
+  const parts = name.trim().split(" ");
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+}
 
 function ProfileOption({ 
   icon, 
   title, 
   onPress, 
   rightElement,
-  iconColor = "#3B82F6",
+  iconColor = Colors.primary,
 }: { 
   icon: string; 
   title: string; 
@@ -70,7 +75,7 @@ function DataItem({ icon, label, value }: { icon: string; label: string; value: 
       </View>
       <View style={styles.dataContent}>
         <ThemedText type="caption" secondary>{label}</ThemedText>
-        <ThemedText style={styles.dataValue}>{value}</ThemedText>
+        <ThemedText style={styles.dataValue}>{value || "-"}</ThemedText>
       </View>
     </View>
   );
@@ -79,110 +84,390 @@ function DataItem({ icon, label, value }: { icon: string; label: string; value: 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const { user, logout, updateUser } = useAuth();
+  const navigation = useNavigation();
+  
+  const [notificationsEnabled, setNotificationsEnabled] = useState(user?.receiveNews ?? true);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const [editName, setEditName] = useState(user?.name || "");
+  const [editEmail, setEditEmail] = useState(user?.email || "");
+  const [editPhone, setEditPhone] = useState(user?.phone || "");
+  const [editCity, setEditCity] = useState(user?.city || "");
+  const [editState, setEditState] = useState(user?.state || "");
 
-  const handleLogout = () => {
-    // Logout logic would go here
+  const handleLogout = useCallback(async () => {
+    Alert.alert(
+      "Sair da conta",
+      "Tem certeza que deseja sair?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Sair",
+          style: "destructive",
+          onPress: async () => {
+            await logout();
+            navigation.dispatch(
+              CommonActions.reset({
+                index: 0,
+                routes: [{ name: "Auth" as never }],
+              })
+            );
+          },
+        },
+      ]
+    );
+  }, [logout, navigation]);
+
+  const handleOpenEditModal = () => {
+    setEditName(user?.name || "");
+    setEditEmail(user?.email || "");
+    setEditPhone(user?.phone || "");
+    setEditCity(user?.city || "");
+    setEditState(user?.state || "");
+    setIsEditModalVisible(true);
   };
 
+  const handleSaveProfile = async () => {
+    if (!user?.id) return;
+
+    if (editName.trim().length < 2) {
+      Alert.alert("Erro", "Nome deve ter pelo menos 2 caracteres");
+      return;
+    }
+
+    if (!editEmail.includes("@")) {
+      Alert.alert("Erro", "E-mail invalido");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await apiRequest("PUT", `/api/user/profile/${user.id}`, {
+        name: editName.trim(),
+        email: editEmail.trim().toLowerCase(),
+        phone: editPhone.trim() || null,
+        city: editCity.trim() || null,
+        state: editState.trim() || null,
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        await updateUser(data.user);
+        setIsEditModalVisible(false);
+        Alert.alert("Sucesso", "Perfil atualizado com sucesso!");
+      } else {
+        Alert.alert("Erro", data.error || "Erro ao atualizar perfil");
+      }
+    } catch (error) {
+      Alert.alert("Erro", "Erro ao atualizar perfil. Tente novamente.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePickImage = async () => {
+    if (Platform.OS === "web") {
+      Alert.alert("Aviso", "Use o app no celular para alterar a foto de perfil");
+      return;
+    }
+
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permissao necessaria", "Precisamos de acesso a sua galeria para alterar a foto de perfil");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: "images",
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+      base64: true,
+    });
+
+    if (!result.canceled && result.assets[0].base64 && user?.id) {
+      setIsLoading(true);
+      try {
+        const asset = result.assets[0];
+        const mimeType = asset.mimeType || "image/jpeg";
+        const imageData = `data:${mimeType};base64,${asset.base64}`;
+
+        const response = await apiRequest("POST", `/api/user/profile/${user.id}/avatar`, {
+          imageData,
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          await updateUser(data.user);
+          Alert.alert("Sucesso", "Foto atualizada com sucesso!");
+        } else {
+          Alert.alert("Erro", data.error || "Erro ao atualizar foto");
+        }
+      } catch (error) {
+        Alert.alert("Erro", "Erro ao atualizar foto. Tente novamente.");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  const handleToggleNotifications = async (value: boolean) => {
+    if (!user?.id) return;
+    
+    setNotificationsEnabled(value);
+    
+    try {
+      const response = await apiRequest("PUT", `/api/user/profile/${user.id}`, {
+        receiveNews: value,
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        await updateUser(data.user);
+      } else {
+        setNotificationsEnabled(!value);
+      }
+    } catch (error) {
+      setNotificationsEnabled(!value);
+    }
+  };
+
+  const getAvatarUrl = () => {
+    if (!user?.avatarUrl) return null;
+    if (user.avatarUrl.startsWith("http")) return user.avatarUrl;
+    return `${getApiUrl()}${user.avatarUrl}`;
+  };
+
+  const avatarUrl = getAvatarUrl();
+  const initials = getInitials(user?.name || "");
+  const locationDisplay = [user?.city, user?.state].filter(Boolean).join(" - ") || "-";
+
+  if (!user) {
+    return (
+      <View style={[styles.loadingContainer, { backgroundColor: theme.backgroundRoot }]}>
+        <ActivityIndicator size="large" color={Colors.primary} />
+      </View>
+    );
+  }
+
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: theme.backgroundRoot }}
-      contentContainerStyle={{
-        paddingBottom: insets.bottom + Spacing.xl,
-      }}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.avatarSection}>
-        <View style={[styles.avatarContainer, { backgroundColor: theme.backgroundDefault }]}>
-          <View style={[styles.avatar, { borderColor: "#E0E7FF" }]}>
-            <ThemedText style={styles.avatarText}>{userData.initials}</ThemedText>
+    <>
+      <ScrollView
+        style={{ flex: 1, backgroundColor: theme.backgroundRoot }}
+        contentContainerStyle={{
+          paddingBottom: insets.bottom + Spacing.xl,
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.avatarSection}>
+          <Pressable onPress={handlePickImage} style={styles.avatarPressable}>
+            <View style={[styles.avatarContainer, { backgroundColor: theme.backgroundDefault }]}>
+              {avatarUrl ? (
+                <Image
+                  source={{ uri: avatarUrl }}
+                  style={styles.avatarImage}
+                  contentFit="cover"
+                />
+              ) : (
+                <View style={[styles.avatar, { borderColor: Colors.primaryLight }]}>
+                  <ThemedText style={styles.avatarText}>{initials}</ThemedText>
+                </View>
+              )}
+            </View>
+            <View style={[styles.cameraIconContainer, { backgroundColor: Colors.primary }]}>
+              <Feather name="camera" size={14} color="#FFFFFF" />
+            </View>
+          </Pressable>
+          <ThemedText type="h3" style={styles.userName}>{user.name}</ThemedText>
+          <ThemedText type="small" secondary style={styles.userEmail}>{user.email}</ThemedText>
+          <View style={[styles.welcomeBadge, { backgroundColor: Colors.primaryLight }]}>
+            <ThemedText style={[styles.welcomeBadgeText, { color: Colors.primary }]}>Bem-vindo ao Portal do Romeiro</ThemedText>
           </View>
         </View>
-        <ThemedText type="h3" style={styles.userName}>{userData.name}</ThemedText>
-        <ThemedText type="small" secondary style={styles.userEmail}>{userData.email}</ThemedText>
-        <View style={[styles.welcomeBadge, { backgroundColor: "#E0F2FE" }]}>
-          <ThemedText style={styles.welcomeBadgeText}>Bem-vindo ao Portal do Romeiro</ThemedText>
-        </View>
-      </View>
 
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <ThemedText type="caption" secondary style={styles.sectionTitle}>DADOS PESSOAIS</ThemedText>
-          <Pressable>
-            <View style={styles.editButton}>
-              <Feather name="edit-2" size={14} color="#3B82F6" />
-              <ThemedText style={styles.editButtonText}>Editar</ThemedText>
-            </View>
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <ThemedText type="caption" secondary style={styles.sectionTitle}>DADOS PESSOAIS</ThemedText>
+            <Pressable onPress={handleOpenEditModal}>
+              <View style={styles.editButton}>
+                <Feather name="edit-2" size={14} color={Colors.primary} />
+                <ThemedText style={[styles.editButtonText, { color: Colors.primary }]}>Editar</ThemedText>
+              </View>
+            </Pressable>
+          </View>
+
+          <View style={[styles.dataCard, { backgroundColor: theme.backgroundDefault }]}>
+            <DataItem icon="user" label="Nome completo" value={user.name} />
+            <DataItem icon="mail" label="E-mail" value={user.email} />
+            <DataItem icon="phone" label="Celular" value={user.phone || ""} />
+            <DataItem icon="map-pin" label="Cidade / Estado" value={locationDisplay} />
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <ThemedText type="caption" secondary style={styles.sectionTitle}>PREFERENCIAS</ThemedText>
+
+          <View style={styles.optionsContainer}>
+            <ProfileOption
+              icon="heart"
+              title="Meus Favoritos"
+              iconColor="#EF4444"
+              onPress={() => {}}
+            />
+            <ProfileOption
+              icon="bell"
+              title="Notificacoes"
+              iconColor="#F59E0B"
+              rightElement={
+                <Switch
+                  value={notificationsEnabled}
+                  onValueChange={handleToggleNotifications}
+                  trackColor={{ false: "#D1D5DB", true: Colors.primary }}
+                  thumbColor="#FFFFFF"
+                />
+              }
+            />
+            <ProfileOption
+              icon="shield"
+              title="Privacidade e Seguranca"
+              iconColor="#8B5CF6"
+              onPress={() => {}}
+            />
+          </View>
+        </View>
+
+        <View style={styles.logoutSection}>
+          <Pressable 
+            onPress={handleLogout}
+            style={[styles.logoutButton, { backgroundColor: "#FEF2F2" }]}
+          >
+            <Feather name="log-out" size={20} color="#EF4444" />
+            <ThemedText style={styles.logoutButtonText}>Sair da conta</ThemedText>
           </Pressable>
         </View>
 
-        <View style={[styles.dataCard, { backgroundColor: theme.backgroundDefault }]}>
-          <DataItem icon="user" label="Nome completo" value={userData.name} />
-          <DataItem icon="mail" label="E-mail" value={userData.email} />
-          <DataItem icon="phone" label="Celular" value={userData.phone} />
-          <DataItem icon="map-pin" label="Cidade / Estado" value={userData.city} />
+        <View style={styles.footer}>
+          <ThemedText type="small" style={styles.footerTitle}>Portal do Romeiro</ThemedText>
+          <ThemedText type="caption" secondary style={styles.footerSubtitle}>
+            A Capital da Fe na palma da sua mao
+          </ThemedText>
+          <ThemedText type="caption" secondary style={styles.footerVersion}>v1.0.0</ThemedText>
         </View>
-      </View>
+      </ScrollView>
 
-      <View style={styles.section}>
-        <ThemedText type="caption" secondary style={styles.sectionTitle}>PREFERENCIAS</ThemedText>
+      <Modal
+        visible={isEditModalVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setIsEditModalVisible(false)}
+      >
+        <View style={[styles.modalContainer, { backgroundColor: theme.backgroundRoot }]}>
+          <View style={[styles.modalHeader, { backgroundColor: theme.backgroundDefault }]}>
+            <Pressable onPress={() => setIsEditModalVisible(false)}>
+              <ThemedText style={[styles.modalHeaderButton, { color: Colors.primary }]}>Cancelar</ThemedText>
+            </Pressable>
+            <ThemedText type="h4">Editar Perfil</ThemedText>
+            <Pressable onPress={handleSaveProfile} disabled={isLoading}>
+              <ThemedText style={[styles.modalHeaderButton, { color: Colors.primary, opacity: isLoading ? 0.5 : 1 }]}>
+                {isLoading ? "Salvando..." : "Salvar"}
+              </ThemedText>
+            </Pressable>
+          </View>
 
-        <View style={styles.optionsContainer}>
-          <ProfileOption
-            icon="heart"
-            title="Meus Favoritos"
-            iconColor="#EF4444"
-            onPress={() => {}}
-          />
-          <ProfileOption
-            icon="bell"
-            title="Notificacoes"
-            iconColor="#F59E0B"
-            rightElement={
-              <Switch
-                value={notificationsEnabled}
-                onValueChange={setNotificationsEnabled}
-                trackColor={{ false: "#D1D5DB", true: "#3B82F6" }}
-                thumbColor="#FFFFFF"
+          <KeyboardAwareScrollViewCompat
+            style={{ flex: 1 }}
+            contentContainerStyle={styles.modalContent}
+          >
+            <View style={styles.inputGroup}>
+              <ThemedText type="caption" secondary style={styles.inputLabel}>Nome completo</ThemedText>
+              <TextInput
+                style={[styles.textInput, { backgroundColor: theme.backgroundDefault, color: theme.textPrimary, borderColor: theme.border }]}
+                value={editName}
+                onChangeText={setEditName}
+                placeholder="Seu nome"
+                placeholderTextColor={theme.textSecondary}
               />
-            }
-          />
-          <ProfileOption
-            icon="shield"
-            title="Privacidade e Seguranca"
-            iconColor="#8B5CF6"
-            onPress={() => {}}
-          />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <ThemedText type="caption" secondary style={styles.inputLabel}>E-mail</ThemedText>
+              <TextInput
+                style={[styles.textInput, { backgroundColor: theme.backgroundDefault, color: theme.textPrimary, borderColor: theme.border }]}
+                value={editEmail}
+                onChangeText={setEditEmail}
+                placeholder="seu@email.com"
+                placeholderTextColor={theme.textSecondary}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <ThemedText type="caption" secondary style={styles.inputLabel}>Celular</ThemedText>
+              <TextInput
+                style={[styles.textInput, { backgroundColor: theme.backgroundDefault, color: theme.textPrimary, borderColor: theme.border }]}
+                value={editPhone}
+                onChangeText={setEditPhone}
+                placeholder="(00) 00000-0000"
+                placeholderTextColor={theme.textSecondary}
+                keyboardType="phone-pad"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <ThemedText type="caption" secondary style={styles.inputLabel}>Cidade</ThemedText>
+              <TextInput
+                style={[styles.textInput, { backgroundColor: theme.backgroundDefault, color: theme.textPrimary, borderColor: theme.border }]}
+                value={editCity}
+                onChangeText={setEditCity}
+                placeholder="Sua cidade"
+                placeholderTextColor={theme.textSecondary}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <ThemedText type="caption" secondary style={styles.inputLabel}>Estado</ThemedText>
+              <TextInput
+                style={[styles.textInput, { backgroundColor: theme.backgroundDefault, color: theme.textPrimary, borderColor: theme.border }]}
+                value={editState}
+                onChangeText={setEditState}
+                placeholder="GO"
+                placeholderTextColor={theme.textSecondary}
+                autoCapitalize="characters"
+                maxLength={2}
+              />
+            </View>
+          </KeyboardAwareScrollViewCompat>
         </View>
-      </View>
+      </Modal>
 
-      <View style={styles.logoutSection}>
-        <Pressable 
-          onPress={handleLogout}
-          style={[styles.logoutButton, { backgroundColor: "#FEF2F2" }]}
-        >
-          <Feather name="log-out" size={20} color="#EF4444" />
-          <ThemedText style={styles.logoutButtonText}>Sair da conta</ThemedText>
-        </Pressable>
-      </View>
-
-      <View style={styles.footer}>
-        <ThemedText type="small" style={styles.footerTitle}>Portal do Romeiro</ThemedText>
-        <ThemedText type="caption" secondary style={styles.footerSubtitle}>
-          A Capital da Fe na palma da sua mao
-        </ThemedText>
-        <ThemedText type="caption" secondary style={styles.footerVersion}>v1.0.0</ThemedText>
-      </View>
-    </ScrollView>
+      {isLoading ? (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color={Colors.primary} />
+        </View>
+      ) : null}
+    </>
   );
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   avatarSection: {
     alignItems: "center",
     paddingTop: Spacing.xl,
     paddingBottom: Spacing.xl,
+  },
+  avatarPressable: {
+    position: "relative",
   },
   avatarContainer: {
     width: 100,
@@ -191,6 +476,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: Spacing.md,
+    overflow: "hidden",
+  },
+  avatarImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
   },
   avatar: {
     width: 88,
@@ -204,7 +495,19 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 32,
     fontWeight: "700",
-    color: "#3B82F6",
+    color: Colors.primary,
+  },
+  cameraIconContainer: {
+    position: "absolute",
+    bottom: Spacing.md,
+    right: 0,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
   },
   userName: {
     marginBottom: Spacing.xs,
@@ -220,7 +523,6 @@ const styles = StyleSheet.create({
   welcomeBadgeText: {
     fontSize: 12,
     fontWeight: "500",
-    color: "#0369A1",
   },
   section: {
     paddingHorizontal: Spacing.lg,
@@ -244,7 +546,6 @@ const styles = StyleSheet.create({
   editButtonText: {
     fontSize: 13,
     fontWeight: "500",
-    color: "#3B82F6",
   },
   dataCard: {
     borderRadius: BorderRadius.lg,
@@ -318,5 +619,48 @@ const styles = StyleSheet.create({
   },
   footerVersion: {
     marginTop: Spacing.sm,
+  },
+  modalContainer: {
+    flex: 1,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+  },
+  modalHeaderButton: {
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  modalContent: {
+    padding: Spacing.lg,
+    paddingBottom: Spacing.xl * 2,
+  },
+  inputGroup: {
+    marginBottom: Spacing.lg,
+  },
+  inputLabel: {
+    marginBottom: Spacing.xs,
+    fontWeight: "500",
+  },
+  textInput: {
+    borderWidth: 1,
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    fontSize: 16,
+  },
+  loadingOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.3)",
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

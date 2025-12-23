@@ -10,6 +10,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   login: (user: UserWithoutPassword, rememberMe?: boolean) => Promise<void>;
   logout: () => Promise<void>;
+  updateUser: (user: UserWithoutPassword) => Promise<void>;
 }
 
 const AUTH_STORAGE_KEY = "@portal_romeiro_user";
@@ -61,6 +62,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const updateUser = async (userData: UserWithoutPassword) => {
+    setUser(userData);
+    try {
+      await AsyncStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(userData));
+    } catch (error) {
+      console.error("Error updating stored user:", error);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -69,6 +79,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         isAuthenticated: user !== null,
         login,
         logout,
+        updateUser,
       }}
     >
       {children}
