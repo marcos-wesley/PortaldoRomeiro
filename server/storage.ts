@@ -1,6 +1,6 @@
-import { type User, type InsertUser, type UpdateProfileInput, users } from "@shared/schema";
+import { type User, type InsertUser, type UpdateProfileInput, users, type News, type InsertNews, type UpdateNewsInput, news } from "@shared/schema";
 import { db } from "./db";
-import { eq, count } from "drizzle-orm";
+import { eq, count, desc } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -48,6 +48,55 @@ export class DatabaseStorage implements IStorage {
   async getUsersCount(): Promise<number> {
     const result = await db.select({ count: count() }).from(users);
     return result[0]?.count ?? 0;
+  }
+
+  async getAllNews(publishedOnly = false): Promise<News[]> {
+    if (publishedOnly) {
+      const result = await db.select().from(news).where(eq(news.published, true)).orderBy(desc(news.publishedAt));
+      return result;
+    }
+    const result = await db.select().from(news).orderBy(desc(news.createdAt));
+    return result;
+  }
+
+  async getNewsById(id: string): Promise<News | undefined> {
+    const result = await db.select().from(news).where(eq(news.id, id));
+    return result[0];
+  }
+
+  async createNews(data: InsertNews): Promise<News> {
+    const publishedAt = data.published ? new Date() : null;
+    const result = await db.insert(news).values({ ...data, publishedAt }).returning();
+    return result[0];
+  }
+
+  async updateNews(id: string, data: UpdateNewsInput): Promise<News | undefined> {
+    const updateData: any = { ...data, updatedAt: new Date() };
+    if (data.published === true) {
+      const existing = await this.getNewsById(id);
+      if (!existing?.publishedAt) {
+        updateData.publishedAt = new Date();
+      }
+    }
+    const result = await db.update(news).set(updateData).where(eq(news.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteNews(id: string): Promise<boolean> {
+    const result = await db.delete(news).where(eq(news.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getNewsCount(): Promise<number> {
+    const result = await db.select({ count: count() }).from(news);
+    return result[0]?.count ?? 0;
+  }
+
+  async incrementNewsViews(id: string): Promise<void> {
+    const existing = await this.getNewsById(id);
+    if (existing) {
+      await db.update(news).set({ views: (existing.views || 0) + 1 }).where(eq(news.id, id));
+    }
   }
 }
 

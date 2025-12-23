@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, boolean, timestamp, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -65,3 +65,51 @@ export type User = typeof users.$inferSelect;
 export type RegisterUserInput = z.infer<typeof registerUserSchema>;
 export type LoginUserInput = z.infer<typeof loginUserSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
+
+export const news = pgTable("news", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  summary: text("summary").notNull(),
+  content: text("content").notNull(),
+  coverImage: text("cover_image"),
+  category: text("category").default("geral"),
+  published: boolean("published").default(false),
+  publishedAt: timestamp("published_at"),
+  views: integer("views").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertNewsSchema = createInsertSchema(news).pick({
+  title: true,
+  summary: true,
+  content: true,
+  coverImage: true,
+  category: true,
+  published: true,
+});
+
+export const createNewsSchema = z.object({
+  title: z.string().min(3, "Titulo deve ter pelo menos 3 caracteres"),
+  summary: z.string().min(10, "Resumo deve ter pelo menos 10 caracteres"),
+  content: z.string().min(20, "Conteudo deve ter pelo menos 20 caracteres"),
+  coverImage: z.string().optional().nullable(),
+  category: z.string().optional().default("geral"),
+  published: z.boolean().optional().default(false),
+});
+
+export const updateNewsSchema = z.object({
+  title: z.string().min(3, "Titulo deve ter pelo menos 3 caracteres").optional(),
+  summary: z.string().min(10, "Resumo deve ter pelo menos 10 caracteres").optional(),
+  content: z.string().min(20, "Conteudo deve ter pelo menos 20 caracteres").optional(),
+  coverImage: z.string().optional().nullable(),
+  category: z.string().optional(),
+  published: z.boolean().optional(),
+});
+
+export type InsertNews = z.infer<typeof insertNewsSchema>;
+export type News = typeof news.$inferSelect;
+export type CreateNewsInput = z.infer<typeof createNewsSchema>;
+export type UpdateNewsInput = z.infer<typeof updateNewsSchema>;
