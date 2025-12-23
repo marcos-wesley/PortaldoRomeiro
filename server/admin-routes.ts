@@ -144,6 +144,11 @@ export function registerAdminRoutes(app: Express) {
     res.sendFile(formPath);
   });
 
+  app.get("/admin/paginas", requireAuth, (req, res) => {
+    const paginasPath = path.join(__dirname, "admin", "paginas.html");
+    res.sendFile(paginasPath);
+  });
+
   app.get("/admin/usuarios", requireAuth, (req, res) => {
     res.send(getPlaceholderPage("Usuarios", "Gerencie os usuarios do app"));
   });
