@@ -52,7 +52,7 @@ export function AppHeader({
   };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + Spacing.sm, backgroundColor: theme.headerBackground }]}>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: theme.headerBackground }]}>
       {showBackButton && navigation?.canGoBack() ? (
         <Pressable onPress={handleBack} style={styles.backButton}>
           <Feather name="arrow-left" size={24} color={theme.headerTitleText} />
@@ -114,7 +114,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: Spacing.lg,
-    paddingBottom: Spacing.md,
+    paddingBottom: Spacing.xs,
     width: "100%",
   },
   backButton: {
