@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "node:http";
 import { randomBytes, pbkdf2Sync, timingSafeEqual } from "node:crypto";
-import { registerUserSchema, loginUserSchema, updateProfileSchema, createNewsSchema, updateNewsSchema, createVideoSchema, updateVideoSchema } from "@shared/schema";
+import { registerUserSchema, loginUserSchema, updateProfileSchema, createNewsSchema, updateNewsSchema, createVideoSchema, updateVideoSchema, createAttractionSchema, updateAttractionSchema } from "@shared/schema";
 import { storage } from "./storage";
 import { fromError } from "zod-validation-error";
 import * as fs from "node:fs";
@@ -322,6 +322,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Upload image error:", error);
       return res.status(500).json({ error: "Erro ao enviar imagem" });
+    }
+  });
+
+  // Attractions Routes (Public API)
+  app.get("/api/attractions", async (req, res) => {
+    try {
+      const publishedOnly = req.query.published !== "false";
+      const category = req.query.category as string | undefined;
+      const allAttractions = await storage.getAllAttractions(publishedOnly, category);
+      return res.json({ attractions: allAttractions });
+    } catch (error) {
+      console.error("Get attractions error:", error);
+      return res.status(500).json({ error: "Erro ao buscar atracoes" });
+    }
+  });
+
+  app.get("/api/attractions/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const attraction = await storage.getAttractionById(id);
+      
+      if (!attraction) {
+        return res.status(404).json({ error: "Atracao nao encontrada" });
+      }
+
+      await storage.incrementAttractionViews(id);
+
+      return res.json({ attraction });
+    } catch (error) {
+      console.error("Get attraction error:", error);
+      return res.status(500).json({ error: "Erro ao buscar atracao" });
+    }
+  });
+
+  // Admin Attractions Routes
+  app.post("/api/attractions", async (req, res) => {
+    try {
+      const validationResult = createAttractionSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+
+      const attraction = await storage.createAttraction(validationResult.data);
+      return res.status(201).json({ attraction, message: "Atracao criada com sucesso!" });
+    } catch (error) {
+      console.error("Create attraction error:", error);
+      return res.status(500).json({ error: "Erro ao criar atracao" });
+    }
+  });
+
+  app.put("/api/attractions/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validationResult = updateAttractionSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+
+      const attraction = await storage.updateAttraction(id, validationResult.data);
+      if (!attraction) {
+        return res.status(404).json({ error: "Atracao nao encontrada" });
+      }
+
+      return res.json({ attraction, message: "Atracao atualizada com sucesso!" });
+    } catch (error) {
+      console.error("Update attraction error:", error);
+      return res.status(500).json({ error: "Erro ao atualizar atracao" });
+    }
+  });
+
+  app.delete("/api/attractions/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const success = await storage.deleteAttraction(id);
+      
+      if (!success) {
+        return res.status(404).json({ error: "Atracao nao encontrada" });
+      }
+
+      return res.json({ message: "Atracao excluida com sucesso!" });
+    } catch (error) {
+      console.error("Delete attraction error:", error);
+      return res.status(500).json({ error: "Erro ao excluir atracao" });
     }
   });
 

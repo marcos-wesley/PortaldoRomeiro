@@ -165,3 +165,98 @@ export type InsertVideo = z.infer<typeof insertVideoSchema>;
 export type Video = typeof videos.$inferSelect;
 export type CreateVideoInput = z.infer<typeof createVideoSchema>;
 export type UpdateVideoInput = z.infer<typeof updateVideoSchema>;
+
+export const attractions = pgTable("attractions", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  category: text("category").notNull(),
+  imageUrl: text("image_url"),
+  description: text("description"),
+  address: text("address"),
+  phone: text("phone"),
+  website: text("website"),
+  latitude: text("latitude"),
+  longitude: text("longitude"),
+  scheduleWeekdays: text("schedule_weekdays"),
+  scheduleSaturday: text("schedule_saturday"),
+  scheduleSunday: text("schedule_sunday"),
+  massSchedule: text("mass_schedule"),
+  amenities: text("amenities"),
+  tips: text("tips"),
+  relatedAttractions: text("related_attractions"),
+  featured: boolean("featured").default(false),
+  published: boolean("published").default(true),
+  views: integer("views").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertAttractionSchema = createInsertSchema(attractions).pick({
+  name: true,
+  category: true,
+  imageUrl: true,
+  description: true,
+  address: true,
+  phone: true,
+  website: true,
+  latitude: true,
+  longitude: true,
+  scheduleWeekdays: true,
+  scheduleSaturday: true,
+  scheduleSunday: true,
+  massSchedule: true,
+  amenities: true,
+  tips: true,
+  relatedAttractions: true,
+  featured: true,
+  published: true,
+});
+
+export const createAttractionSchema = z.object({
+  name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres"),
+  category: z.enum(["Igrejas", "Monumentos", "Pracas", "Museus"]),
+  imageUrl: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
+  address: z.string().optional().nullable(),
+  phone: z.string().optional().nullable(),
+  website: z.string().optional().nullable(),
+  latitude: z.string().optional().nullable(),
+  longitude: z.string().optional().nullable(),
+  scheduleWeekdays: z.string().optional().nullable(),
+  scheduleSaturday: z.string().optional().nullable(),
+  scheduleSunday: z.string().optional().nullable(),
+  massSchedule: z.string().optional().nullable(),
+  amenities: z.string().optional().nullable(),
+  tips: z.string().optional().nullable(),
+  relatedAttractions: z.string().optional().nullable(),
+  featured: z.boolean().optional().default(false),
+  published: z.boolean().optional().default(true),
+});
+
+export const updateAttractionSchema = z.object({
+  name: z.string().min(3, "Nome deve ter pelo menos 3 caracteres").optional(),
+  category: z.enum(["Igrejas", "Monumentos", "Pracas", "Museus"]).optional(),
+  imageUrl: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
+  address: z.string().optional().nullable(),
+  phone: z.string().optional().nullable(),
+  website: z.string().optional().nullable(),
+  latitude: z.string().optional().nullable(),
+  longitude: z.string().optional().nullable(),
+  scheduleWeekdays: z.string().optional().nullable(),
+  scheduleSaturday: z.string().optional().nullable(),
+  scheduleSunday: z.string().optional().nullable(),
+  massSchedule: z.string().optional().nullable(),
+  amenities: z.string().optional().nullable(),
+  tips: z.string().optional().nullable(),
+  relatedAttractions: z.string().optional().nullable(),
+  featured: z.boolean().optional(),
+  published: z.boolean().optional(),
+});
+
+export type InsertAttraction = z.infer<typeof insertAttractionSchema>;
+export type Attraction = typeof attractions.$inferSelect;
+export type CreateAttractionInput = z.infer<typeof createAttractionSchema>;
+export type UpdateAttractionInput = z.infer<typeof updateAttractionSchema>;

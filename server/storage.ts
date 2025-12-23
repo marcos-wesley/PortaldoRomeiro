@@ -1,6 +1,6 @@
-import { type User, type InsertUser, type UpdateProfileInput, users, type News, type InsertNews, type UpdateNewsInput, news, type Video, type InsertVideo, type UpdateVideoInput, videos } from "@shared/schema";
+import { type User, type InsertUser, type UpdateProfileInput, users, type News, type InsertNews, type UpdateNewsInput, news, type Video, type InsertVideo, type UpdateVideoInput, videos, type Attraction, type InsertAttraction, type UpdateAttractionInput, attractions } from "@shared/schema";
 import { db } from "./db";
-import { eq, count, desc } from "drizzle-orm";
+import { eq, count, desc, ilike, or, and } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -145,6 +145,63 @@ export class DatabaseStorage implements IStorage {
     const existing = await this.getVideoById(id);
     if (existing) {
       await db.update(videos).set({ views: (existing.views || 0) + 1 }).where(eq(videos.id, id));
+    }
+  }
+
+  async getAllAttractions(publishedOnly = false, category?: string): Promise<Attraction[]> {
+    let query = db.select().from(attractions);
+    
+    if (publishedOnly && category && category !== "Todas") {
+      const result = await query
+        .where(and(eq(attractions.published, true), eq(attractions.category, category)))
+        .orderBy(desc(attractions.createdAt));
+      return result;
+    } else if (publishedOnly) {
+      const result = await query
+        .where(eq(attractions.published, true))
+        .orderBy(desc(attractions.createdAt));
+      return result;
+    } else if (category && category !== "Todas") {
+      const result = await query
+        .where(eq(attractions.category, category))
+        .orderBy(desc(attractions.createdAt));
+      return result;
+    }
+    
+    const result = await query.orderBy(desc(attractions.createdAt));
+    return result;
+  }
+
+  async getAttractionById(id: string): Promise<Attraction | undefined> {
+    const result = await db.select().from(attractions).where(eq(attractions.id, id));
+    return result[0];
+  }
+
+  async createAttraction(data: InsertAttraction): Promise<Attraction> {
+    const result = await db.insert(attractions).values(data).returning();
+    return result[0];
+  }
+
+  async updateAttraction(id: string, data: UpdateAttractionInput): Promise<Attraction | undefined> {
+    const updateData: any = { ...data, updatedAt: new Date() };
+    const result = await db.update(attractions).set(updateData).where(eq(attractions.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteAttraction(id: string): Promise<boolean> {
+    const result = await db.delete(attractions).where(eq(attractions.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getAttractionsCount(): Promise<number> {
+    const result = await db.select({ count: count() }).from(attractions);
+    return result[0]?.count ?? 0;
+  }
+
+  async incrementAttractionViews(id: string): Promise<void> {
+    const existing = await this.getAttractionById(id);
+    if (existing) {
+      await db.update(attractions).set({ views: (existing.views || 0) + 1 }).where(eq(attractions.id, id));
     }
   }
 }
