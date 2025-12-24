@@ -1,4 +1,5 @@
-import { ScrollView, View, StyleSheet, Pressable, Linking, Platform } from "react-native";
+import { ScrollView, View, StyleSheet, Pressable, Linking, Platform, Modal, Dimensions } from "react-native";
+import { useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { Feather } from "@expo/vector-icons";
@@ -118,6 +119,13 @@ export default function EmpresaDetailScreen({ route }: Props) {
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const { theme } = useTheme();
+  const [galleryModalVisible, setGalleryModalVisible] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+
+  const openGalleryImage = (index: number) => {
+    setSelectedImageIndex(index);
+    setGalleryModalVisible(true);
+  };
 
   if (!business) {
     return (
@@ -351,17 +359,62 @@ export default function EmpresaDetailScreen({ route }: Props) {
               contentContainerStyle={styles.galleryContainer}
             >
               {business.gallery.map((imageUrl, index) => (
-                <Image
-                  key={index}
-                  source={{ uri: imageUrl }}
-                  style={styles.galleryImage}
-                  contentFit="cover"
-                />
+                <Pressable 
+                  key={index} 
+                  onPress={() => openGalleryImage(index)}
+                >
+                  <Image
+                    source={{ uri: imageUrl }}
+                    style={styles.galleryImage}
+                    contentFit="cover"
+                  />
+                </Pressable>
               ))}
             </ScrollView>
           </View>
         ) : null}
       </View>
+
+      <Modal
+        visible={galleryModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setGalleryModalVisible(false)}
+      >
+        <View style={styles.galleryModalOverlay}>
+          <Pressable 
+            style={styles.galleryModalClose}
+            onPress={() => setGalleryModalVisible(false)}
+          >
+            <View style={styles.galleryModalCloseButton}>
+              <Feather name="x" size={24} color="#FFFFFF" />
+            </View>
+          </Pressable>
+          
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            contentOffset={{ x: selectedImageIndex * Dimensions.get("window").width, y: 0 }}
+          >
+            {business.gallery?.map((imageUrl, index) => (
+              <View key={index} style={styles.galleryModalImageContainer}>
+                <Image
+                  source={{ uri: imageUrl }}
+                  style={styles.galleryModalImage}
+                  contentFit="contain"
+                />
+              </View>
+            ))}
+          </ScrollView>
+
+          <View style={[styles.galleryModalFooter, { paddingBottom: insets.bottom + Spacing.md }]}>
+            <ThemedText style={styles.galleryModalCounter}>
+              {selectedImageIndex + 1} / {business.gallery?.length || 0}
+            </ThemedText>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 }
@@ -507,5 +560,47 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     marginTop: Spacing.lg,
+  },
+  galleryModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.95)",
+    justifyContent: "center",
+  },
+  galleryModalClose: {
+    position: "absolute",
+    top: 50,
+    right: 20,
+    zIndex: 10,
+  },
+  galleryModalCloseButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  galleryModalImageContainer: {
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height * 0.7,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  galleryModalImage: {
+    width: "100%",
+    height: "100%",
+  },
+  galleryModalFooter: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    paddingTop: Spacing.md,
+  },
+  galleryModalCounter: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "500",
   },
 });
