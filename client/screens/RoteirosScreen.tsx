@@ -811,7 +811,7 @@ export default function RoteirosScreen() {
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.backgroundRoot }}
       contentContainerStyle={{
-        paddingTop: headerHeight,
+        paddingTop: Spacing.lg,
         paddingBottom: insets.bottom + Spacing.xl + 60,
         paddingHorizontal: Spacing.lg,
       }}
