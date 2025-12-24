@@ -2,9 +2,43 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { randomBytes, pbkdf2Sync, timingSafeEqual } from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import multer from "multer";
 import { storage } from "./storage";
 import { createNewsSchema, updateNewsSchema, createVideoSchema, updateVideoSchema, createAttractionSchema, updateAttractionSchema, createUsefulPhoneSchema, updateUsefulPhoneSchema, createPilgrimTipSchema, updatePilgrimTipSchema, createServiceSchema, updateServiceSchema, createBusinessSchema, updateBusinessSchema } from "@shared/schema";
 import { fromError } from "zod-validation-error";
+
+const uploadsDir = path.join(process.cwd(), "server", "uploads", "empresas");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const imageStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (_req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname);
+    cb(null, uniqueSuffix + ext);
+  },
+});
+
+const imageFilter = (_req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+  const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error("Tipo de arquivo nao permitido. Use JPEG, PNG, GIF ou WebP."));
+  }
+};
+
+const upload = multer({
+  storage: imageStorage,
+  fileFilter: imageFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
+});
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
@@ -74,6 +108,56 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
 }
 
 export function registerAdminRoutes(app: Express) {
+  const express = require("express");
+  app.use("/uploads/empresas", express.static(uploadsDir));
+
+  app.post("/admin/api/upload/image", requireAuth, upload.single("image"), (req: Request, res: Response) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "Nenhuma imagem enviada" });
+      }
+      const imageUrl = `/uploads/empresas/${req.file.filename}`;
+      res.json({ success: true, url: imageUrl, filename: req.file.filename });
+    } catch (error) {
+      console.error("Erro no upload:", error);
+      res.status(500).json({ error: "Erro ao fazer upload da imagem" });
+    }
+  });
+
+  app.post("/admin/api/upload/images", requireAuth, upload.array("images", 10), (req: Request, res: Response) => {
+    try {
+      const files = req.files as Express.Multer.File[];
+      if (!files || files.length === 0) {
+        return res.status(400).json({ error: "Nenhuma imagem enviada" });
+      }
+      const urls = files.map((file) => `/uploads/empresas/${file.filename}`);
+      res.json({ success: true, urls });
+    } catch (error) {
+      console.error("Erro no upload:", error);
+      res.status(500).json({ error: "Erro ao fazer upload das imagens" });
+    }
+  });
+
+  app.delete("/admin/api/upload/image", requireAuth, (req: Request, res: Response) => {
+    try {
+      const { url } = req.body;
+      if (!url) {
+        return res.status(400).json({ error: "URL da imagem nao fornecida" });
+      }
+      const filename = url.split("/").pop();
+      if (filename) {
+        const filePath = path.join(uploadsDir, filename);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Erro ao deletar imagem:", error);
+      res.status(500).json({ error: "Erro ao deletar imagem" });
+    }
+  });
+
   app.get("/admin", (req, res) => {
     if (isAuthenticated(req)) {
       return res.redirect("/admin/dashboard");
