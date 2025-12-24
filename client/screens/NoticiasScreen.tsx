@@ -206,7 +206,7 @@ export default function NoticiasScreen() {
     <FlatList
       style={{ flex: 1, backgroundColor: theme.backgroundRoot }}
       contentContainerStyle={{
-        paddingTop: headerHeight,
+        paddingTop: Spacing.lg,
         paddingBottom: tabBarHeight + Spacing.xl,
         paddingHorizontal: Spacing.lg,
         flexGrow: 1,
