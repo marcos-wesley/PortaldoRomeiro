@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type UpdateProfileInput, users, type News, type InsertNews, type UpdateNewsInput, news, type Video, type InsertVideo, type UpdateVideoInput, videos, type Attraction, type InsertAttraction, type UpdateAttractionInput, attractions, type StaticPage, type InsertStaticPage, type UpdateStaticPageInput, staticPages, type UsefulPhone, type CreateUsefulPhoneInput, type UpdateUsefulPhoneInput, usefulPhones, type PilgrimTip, type CreatePilgrimTipInput, type UpdatePilgrimTipInput, pilgrimTips, type Service, type CreateServiceInput, type UpdateServiceInput, services, type Business, type CreateBusinessInput, type UpdateBusinessInput, businesses, type BusinessReview, type CreateBusinessReviewInput, businessReviews, type Accommodation, type CreateAccommodationInput, type UpdateAccommodationInput, accommodations, type Room, type CreateRoomInput, type UpdateRoomInput, rooms, type RoomBlockedDate, type CreateRoomBlockedDateInput, roomBlockedDates, type AccommodationReview, type CreateAccommodationReviewInput, accommodationReviews } from "@shared/schema";
+import { type User, type InsertUser, type UpdateProfileInput, users, type News, type InsertNews, type UpdateNewsInput, news, type Video, type InsertVideo, type UpdateVideoInput, videos, type Attraction, type InsertAttraction, type UpdateAttractionInput, attractions, type StaticPage, type InsertStaticPage, type UpdateStaticPageInput, staticPages, type UsefulPhone, type CreateUsefulPhoneInput, type UpdateUsefulPhoneInput, usefulPhones, type PilgrimTip, type CreatePilgrimTipInput, type UpdatePilgrimTipInput, pilgrimTips, type Service, type CreateServiceInput, type UpdateServiceInput, services, type Business, type CreateBusinessInput, type UpdateBusinessInput, businesses, type BusinessReview, type CreateBusinessReviewInput, businessReviews, type Accommodation, type CreateAccommodationInput, type UpdateAccommodationInput, accommodations, type Room, type CreateRoomInput, type UpdateRoomInput, rooms, type RoomBlockedDate, type CreateRoomBlockedDateInput, roomBlockedDates, type AccommodationReview, type CreateAccommodationReviewInput, accommodationReviews, type Partner, type CreatePartnerInput, type UpdatePartnerInput, partners, type Banner, type CreateBannerInput, type UpdateBannerInput, banners } from "@shared/schema";
 import { db } from "./db";
 import { eq, count, desc, ilike, or, and, asc } from "drizzle-orm";
 
@@ -614,6 +614,83 @@ export class DatabaseStorage implements IStorage {
     }
     
     return result.length > 0;
+  }
+
+  // Partners
+  async getAllPartners(publishedOnly = false): Promise<Partner[]> {
+    if (publishedOnly) {
+      return await db.select().from(partners).where(eq(partners.published, true)).orderBy(asc(partners.order));
+    }
+    return await db.select().from(partners).orderBy(asc(partners.order));
+  }
+
+  async getPartnerById(id: string): Promise<Partner | undefined> {
+    const result = await db.select().from(partners).where(eq(partners.id, id));
+    return result[0];
+  }
+
+  async createPartner(data: CreatePartnerInput): Promise<Partner> {
+    const result = await db.insert(partners).values(data).returning();
+    return result[0];
+  }
+
+  async updatePartner(id: string, data: UpdatePartnerInput): Promise<Partner | undefined> {
+    const result = await db.update(partners).set({ ...data, updatedAt: new Date() }).where(eq(partners.id, id)).returning();
+    return result[0];
+  }
+
+  async deletePartner(id: string): Promise<boolean> {
+    const result = await db.delete(partners).where(eq(partners.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getPartnersCount(): Promise<number> {
+    const result = await db.select({ count: count() }).from(partners);
+    return result[0]?.count ?? 0;
+  }
+
+  // Banners
+  async getAllBanners(publishedOnly = false, position?: string): Promise<Banner[]> {
+    if (publishedOnly && position) {
+      return await db.select().from(banners)
+        .where(and(eq(banners.published, true), or(eq(banners.position, position), eq(banners.position, "all"))))
+        .orderBy(asc(banners.order));
+    }
+    if (publishedOnly) {
+      return await db.select().from(banners).where(eq(banners.published, true)).orderBy(asc(banners.order));
+    }
+    return await db.select().from(banners).orderBy(asc(banners.order));
+  }
+
+  async getBannerById(id: string): Promise<Banner | undefined> {
+    const result = await db.select().from(banners).where(eq(banners.id, id));
+    return result[0];
+  }
+
+  async createBanner(data: CreateBannerInput): Promise<Banner> {
+    const bannerData: any = { ...data };
+    if (data.startDate) bannerData.startDate = new Date(data.startDate);
+    if (data.endDate) bannerData.endDate = new Date(data.endDate);
+    const result = await db.insert(banners).values(bannerData).returning();
+    return result[0];
+  }
+
+  async updateBanner(id: string, data: UpdateBannerInput): Promise<Banner | undefined> {
+    const updateData: any = { ...data, updatedAt: new Date() };
+    if (data.startDate) updateData.startDate = new Date(data.startDate);
+    if (data.endDate) updateData.endDate = new Date(data.endDate);
+    const result = await db.update(banners).set(updateData).where(eq(banners.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteBanner(id: string): Promise<boolean> {
+    const result = await db.delete(banners).where(eq(banners.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getBannersCount(): Promise<number> {
+    const result = await db.select({ count: count() }).from(banners);
+    return result[0]?.count ?? 0;
   }
 }
 

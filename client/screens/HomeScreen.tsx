@@ -68,6 +68,31 @@ interface VideoItem {
   updatedAt: string;
 }
 
+interface Partner {
+  id: string;
+  name: string;
+  logoUrl: string | null;
+  website: string | null;
+  order: number;
+  published: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Banner {
+  id: string;
+  title: string;
+  imageUrl: string | null;
+  link: string | null;
+  position: string;
+  order: number;
+  published: boolean;
+  startDate: string | null;
+  endDate: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 function extractYouTubeId(url: string): string | null {
   const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
   const match = url.match(regExp);
@@ -305,39 +330,84 @@ function VideoCard({ video, onPress }: { video: VideoItem; onPress: () => void }
   );
 }
 
-function PartnerBanner({ onPress }: { onPress: () => void }) {
+function PartnersSection({ partners }: { partners: Partner[] }) {
+  const openWebsite = async (url: string | null) => {
+    if (url) {
+      try {
+        const { openBrowserAsync } = await import("expo-web-browser");
+        await openBrowserAsync(url);
+      } catch (e) {
+        console.error("Error opening URL:", e);
+      }
+    }
+  };
+
+  if (partners.length === 0) return null;
+
+  return (
+    <View style={styles.partnersSection}>
+      <ThemedText style={styles.partnersSectionTitle}>Nossos Parceiros</ThemedText>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.partnersScroll}
+      >
+        {partners.map((partner) => (
+          <Pressable
+            key={partner.id}
+            onPress={() => openWebsite(partner.website)}
+            style={styles.partnerLogoContainer}
+          >
+            {partner.logoUrl ? (
+              <Image
+                source={{ uri: getFullImageUrl(partner.logoUrl) || "" }}
+                style={styles.partnerLogo}
+                contentFit="contain"
+              />
+            ) : (
+              <View style={styles.partnerLogoPlaceholder}>
+                <Feather name="image" size={24} color="#9CA3AF" />
+              </View>
+            )}
+          </Pressable>
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
+
+function HomeBannerAd({ banner }: { banner: Banner }) {
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
 
+  const openLink = async () => {
+    if (banner.link) {
+      try {
+        const { openBrowserAsync } = await import("expo-web-browser");
+        await openBrowserAsync(banner.link);
+      } catch (e) {
+        console.error("Error opening URL:", e);
+      }
+    }
+  };
+
+  if (!banner.imageUrl) return null;
+
   return (
     <AnimatedPressable
-      onPress={onPress}
+      onPress={openLink}
       onPressIn={() => { scale.value = withSpring(0.98); }}
       onPressOut={() => { scale.value = withSpring(1); }}
-      style={animatedStyle}
+      style={[animatedStyle, styles.bannerAdContainer]}
     >
-      <LinearGradient
-        colors={[Colors.light.primary, "#6366F1"]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.partnerBanner}
-      >
-        <View style={styles.partnerIcon}>
-          <Feather name="tv" size={24} color="#FFFFFF" />
-        </View>
-        <View style={styles.partnerContent}>
-          <ThemedText style={styles.partnerTitle}>Seja nosso parceiro</ThemedText>
-          <ThemedText style={styles.partnerSubtitle}>
-            Divulgue sua marca para milhares de romeiros.
-          </ThemedText>
-        </View>
-        <View style={styles.partnerButton}>
-          <ThemedText style={styles.partnerButtonText}>Saiba mais</ThemedText>
-        </View>
-      </LinearGradient>
+      <Image
+        source={{ uri: getFullImageUrl(banner.imageUrl) || "" }}
+        style={styles.bannerAdImage}
+        contentFit="cover"
+      />
     </AnimatedPressable>
   );
 }
@@ -381,11 +451,21 @@ export default function HomeScreen() {
     queryKey: ["/api/videos"],
   });
 
+  const { data: partnersData } = useQuery<{ partners: Partner[] }>({
+    queryKey: ["/api/partners"],
+  });
+
+  const { data: bannersData } = useQuery<{ banners: Banner[] }>({
+    queryKey: ["/api/banners?position=home"],
+  });
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await queryClient.invalidateQueries({ queryKey: ["/api/static-pages/home"] });
     await queryClient.invalidateQueries({ queryKey: ["/api/news"] });
     await queryClient.invalidateQueries({ queryKey: ["/api/videos"] });
+    await queryClient.invalidateQueries({ queryKey: ["/api/partners"] });
+    await queryClient.invalidateQueries({ queryKey: ["/api/banners?position=home"] });
     setRefreshing(false);
   }, [queryClient]);
 
@@ -478,7 +558,13 @@ export default function HomeScreen() {
           )}
         </View>
 
-        <PartnerBanner onPress={() => {}} />
+        {partnersData?.partners && partnersData.partners.length > 0 ? (
+          <PartnersSection partners={partnersData.partners} />
+        ) : null}
+
+        {bannersData?.banners && bannersData.banners.length > 0 ? (
+          <HomeBannerAd banner={bannersData.banners[0]} />
+        ) : null}
 
         <SectionHeader
           title="Videos em Destaque"
@@ -720,6 +806,57 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     lineHeight: 20,
     marginBottom: Spacing.xs,
+  },
+  partnersSection: {
+    marginBottom: Spacing.xl,
+    backgroundColor: "#F9FAFB",
+    marginHorizontal: -Spacing.lg,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.lg,
+  },
+  partnersSectionTitle: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#6B7280",
+    marginBottom: Spacing.md,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  partnersScroll: {
+    paddingRight: Spacing.lg,
+    gap: Spacing.lg,
+  },
+  partnerLogoContainer: {
+    width: 80,
+    height: 50,
+    backgroundColor: "#FFFFFF",
+    borderRadius: BorderRadius.md,
+    padding: Spacing.sm,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  partnerLogo: {
+    width: "100%",
+    height: "100%",
+  },
+  partnerLogoPlaceholder: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  bannerAdContainer: {
+    marginBottom: Spacing.xl,
+    borderRadius: BorderRadius.md,
+    overflow: "hidden",
+  },
+  bannerAdImage: {
+    width: "100%",
+    height: 80,
+    borderRadius: BorderRadius.md,
   },
   partnerBanner: {
     borderRadius: BorderRadius.lg,

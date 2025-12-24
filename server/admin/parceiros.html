@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Parceiros - Admin Portal do Romeiro</title>
+  <style>
+    :root {
+      --primary: #b22226;
+      --primary-dark: #8b1a1d;
+      --sidebar-bg: #1a1a2e;
+      --text-light: #e5e7eb;
+      --text-muted: #9ca3af;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8f9fa;
+      min-height: 100vh;
+      display: flex;
+    }
+    .sidebar {
+      width: 260px;
+      background: var(--sidebar-bg);
+      color: var(--text-light);
+      position: fixed;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-header {
+      padding: 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .sidebar-header h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+    .sidebar-header p {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .sidebar nav {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 0;
+    }
+    .nav-section {
+      padding: 0 16px;
+      margin-bottom: 16px;
+    }
+    .nav-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 0 8px;
+      margin-bottom: 8px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      color: var(--text-muted);
+      text-decoration: none;
+      border-radius: 8px;
+      margin-bottom: 4px;
+      transition: all 0.2s;
+    }
+    .nav-item:hover { background: #16213e; color: white; }
+    .nav-item.active { background: var(--primary); color: white; }
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 16px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .logout-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      color: #ef4444;
+      text-decoration: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .logout-btn:hover { background: rgba(239, 68, 68, 0.1); }
+    .main {
+      flex: 1;
+      margin-left: 260px;
+      padding: 32px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .header h2 { font-size: 24px; color: #1f2937; }
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-danger { background: #ef4444; color: white; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .table th, .table td {
+      padding: 16px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .table th {
+      background: #f9fafb;
+      font-weight: 600;
+      color: #374151;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+    .table tbody tr:hover { background: #f9fafb; }
+    .logo-preview {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: #f3f4f6;
+    }
+    .logo-placeholder {
+      width: 48px;
+      height: 48px;
+      border-radius: 8px;
+      background: #f3f4f6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #9ca3af;
+      font-size: 20px;
+    }
+    .badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .badge-success { background: #d1fae5; color: #059669; }
+    .badge-gray { background: #f3f4f6; color: #6b7280; }
+    .actions { display: flex; gap: 8px; }
+    .empty-state {
+      text-align: center;
+      padding: 48px;
+      color: #6b7280;
+    }
+    .loading {
+      text-align: center;
+      padding: 48px;
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h1>Portal do Romeiro</h1>
+      <p>Painel Administrativo</p>
+    </div>
+    <nav>
+      <div class="nav-section">
+        <div class="nav-section-title">Menu</div>
+        <a href="/admin/dashboard" class="nav-item">Dashboard</a>
+        <a href="/admin/noticias" class="nav-item">Noticias</a>
+        <a href="/admin/hospedagens" class="nav-item">Hospedagens</a>
+        <a href="/admin/empresas" class="nav-item">Guia Comercial</a>
+        <a href="/admin/parceiros" class="nav-item active">Parceiros</a>
+        <a href="/admin/banners" class="nav-item">Banners</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="/admin/logout" class="logout-btn">Sair</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="header">
+      <h2>Parceiros</h2>
+      <a href="/admin/parceiros/novo" class="btn btn-primary">+ Novo Parceiro</a>
+    </div>
+
+    <div class="card">
+      <div id="loading" class="loading">Carregando parceiros...</div>
+      <div id="empty" class="empty-state" style="display: none;">
+        <p>Nenhum parceiro cadastrado.</p>
+        <p style="margin-top: 8px; font-size: 14px;">Clique em "Novo Parceiro" para adicionar.</p>
+      </div>
+      <table class="table" id="table" style="display: none;">
+        <thead>
+          <tr>
+            <th>Logo</th>
+            <th>Nome</th>
+            <th>Website</th>
+            <th>Ordem</th>
+            <th>Status</th>
+            <th>Acoes</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    async function loadPartners() {
+      try {
+        const res = await fetch('/admin/api/partners');
+        const data = await res.json();
+        
+        document.getElementById('loading').style.display = 'none';
+        
+        if (!data.partners || data.partners.length === 0) {
+          document.getElementById('empty').style.display = 'block';
+          return;
+        }
+        
+        document.getElementById('table').style.display = 'table';
+        const tbody = document.getElementById('tbody');
+        tbody.innerHTML = data.partners.map(p => `
+          <tr>
+            <td>
+              ${p.logoUrl 
+                ? `<img src="${p.logoUrl}" class="logo-preview" alt="${p.name}">`
+                : `<div class="logo-placeholder">?</div>`
+              }
+            </td>
+            <td><strong>${p.name}</strong></td>
+            <td>${p.website || '-'}</td>
+            <td>${p.order || 0}</td>
+            <td>
+              <span class="badge ${p.published ? 'badge-success' : 'badge-gray'}">
+                ${p.published ? 'Ativo' : 'Inativo'}
+              </span>
+            </td>
+            <td class="actions">
+              <a href="/admin/parceiros/editar/${p.id}" class="btn btn-sm btn-primary">Editar</a>
+              <button onclick="deletePartner('${p.id}')" class="btn btn-sm btn-danger">Excluir</button>
+            </td>
+          </tr>
+        `).join('');
+      } catch (error) {
+        console.error('Error loading partners:', error);
+        document.getElementById('loading').textContent = 'Erro ao carregar parceiros.';
+      }
+    }
+
+    async function deletePartner(id) {
+      if (!confirm('Tem certeza que deseja excluir este parceiro?')) return;
+      
+      try {
+        const res = await fetch(`/admin/api/partners/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+          loadPartners();
+        } else {
+          alert('Erro ao excluir parceiro.');
+        }
+      } catch (error) {
+        console.error('Error deleting partner:', error);
+        alert('Erro ao excluir parceiro.');
+      }
+    }
+
+    loadPartners();
+  </script>
+</body>
+</html>

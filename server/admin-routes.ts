@@ -4,12 +4,14 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import multer from "multer";
 import { storage } from "./storage";
-import { createNewsSchema, updateNewsSchema, createVideoSchema, updateVideoSchema, createAttractionSchema, updateAttractionSchema, createUsefulPhoneSchema, updateUsefulPhoneSchema, createPilgrimTipSchema, updatePilgrimTipSchema, createServiceSchema, updateServiceSchema, createBusinessSchema, updateBusinessSchema, createAccommodationSchema, updateAccommodationSchema, createRoomSchema, updateRoomSchema, createRoomBlockedDateSchema } from "@shared/schema";
+import { createNewsSchema, updateNewsSchema, createVideoSchema, updateVideoSchema, createAttractionSchema, updateAttractionSchema, createUsefulPhoneSchema, updateUsefulPhoneSchema, createPilgrimTipSchema, updatePilgrimTipSchema, createServiceSchema, updateServiceSchema, createBusinessSchema, updateBusinessSchema, createAccommodationSchema, updateAccommodationSchema, createRoomSchema, updateRoomSchema, createRoomBlockedDateSchema, createPartnerSchema, updatePartnerSchema, createBannerSchema, updateBannerSchema } from "@shared/schema";
 import { fromError } from "zod-validation-error";
 
 const uploadsDir = path.join(process.cwd(), "server", "uploads", "empresas");
 const uploadsHospedagensDir = path.join(process.cwd(), "server", "uploads", "hospedagens");
 const uploadsQuartosDir = path.join(process.cwd(), "server", "uploads", "quartos");
+const uploadsParceirosDir = path.join(process.cwd(), "server", "uploads", "parceiros");
+const uploadsBannersDir = path.join(process.cwd(), "server", "uploads", "banners");
 
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
@@ -19,6 +21,12 @@ if (!fs.existsSync(uploadsHospedagensDir)) {
 }
 if (!fs.existsSync(uploadsQuartosDir)) {
   fs.mkdirSync(uploadsQuartosDir, { recursive: true });
+}
+if (!fs.existsSync(uploadsParceirosDir)) {
+  fs.mkdirSync(uploadsParceirosDir, { recursive: true });
+}
+if (!fs.existsSync(uploadsBannersDir)) {
+  fs.mkdirSync(uploadsBannersDir, { recursive: true });
 }
 
 const imageStorage = multer.diskStorage({
@@ -81,6 +89,44 @@ const uploadHospedagens = multer({
 
 const uploadQuartos = multer({
   storage: quartosStorage,
+  fileFilter: imageFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
+});
+
+const parceirosStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, uploadsParceirosDir);
+  },
+  filename: (_req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname);
+    cb(null, uniqueSuffix + ext);
+  },
+});
+
+const bannersStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, uploadsBannersDir);
+  },
+  filename: (_req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname);
+    cb(null, uniqueSuffix + ext);
+  },
+});
+
+const uploadParceiros = multer({
+  storage: parceirosStorage,
+  fileFilter: imageFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
+});
+
+const uploadBanners = multer({
+  storage: bannersStorage,
   fileFilter: imageFilter,
   limits: {
     fileSize: 5 * 1024 * 1024,
@@ -1336,6 +1382,191 @@ export function registerAdminRoutes(app: Express) {
       console.error("Admin delete accommodation review error:", error);
       return res.status(500).json({ error: "Erro ao excluir avaliacao" });
     }
+  });
+
+  // Partners Admin API
+  app.get("/admin/api/partners", requireAuth, async (req, res) => {
+    try {
+      const partners = await storage.getAllPartners();
+      return res.json({ partners });
+    } catch (error) {
+      console.error("Admin get partners error:", error);
+      return res.status(500).json({ error: "Erro ao buscar parceiros" });
+    }
+  });
+
+  app.post("/admin/api/partners", requireAuth, async (req, res) => {
+    try {
+      const validationResult = createPartnerSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+      const partner = await storage.createPartner(validationResult.data);
+      return res.status(201).json({ partner, message: "Parceiro criado com sucesso!" });
+    } catch (error) {
+      console.error("Admin create partner error:", error);
+      return res.status(500).json({ error: "Erro ao criar parceiro" });
+    }
+  });
+
+  app.put("/admin/api/partners/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validationResult = updatePartnerSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+      const partner = await storage.updatePartner(id, validationResult.data);
+      if (!partner) {
+        return res.status(404).json({ error: "Parceiro nao encontrado" });
+      }
+      return res.json({ partner, message: "Parceiro atualizado com sucesso!" });
+    } catch (error) {
+      console.error("Admin update partner error:", error);
+      return res.status(500).json({ error: "Erro ao atualizar parceiro" });
+    }
+  });
+
+  app.delete("/admin/api/partners/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deletePartner(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Parceiro nao encontrado" });
+      }
+      return res.json({ message: "Parceiro excluido com sucesso!" });
+    } catch (error) {
+      console.error("Admin delete partner error:", error);
+      return res.status(500).json({ error: "Erro ao excluir parceiro" });
+    }
+  });
+
+  app.post("/admin/api/parceiros/upload/image", requireAuth, uploadParceiros.single("image"), (req: Request, res: Response) => {
+    if (!req.file) {
+      return res.status(400).json({ error: "Nenhuma imagem enviada" });
+    }
+    const imageUrl = `/uploads/parceiros/${req.file.filename}`;
+    return res.json({ imageUrl, message: "Imagem enviada com sucesso!" });
+  });
+
+  app.delete("/admin/api/parceiros/upload/image", requireAuth, (req: Request, res: Response) => {
+    const { imageUrl } = req.body;
+    if (!imageUrl) {
+      return res.status(400).json({ error: "URL da imagem nao fornecida" });
+    }
+    const filename = path.basename(imageUrl);
+    const filePath = path.join(uploadsParceirosDir, filename);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+    return res.json({ message: "Imagem removida com sucesso!" });
+  });
+
+  // Banners Admin API
+  app.get("/admin/api/banners", requireAuth, async (req, res) => {
+    try {
+      const banners = await storage.getAllBanners();
+      return res.json({ banners });
+    } catch (error) {
+      console.error("Admin get banners error:", error);
+      return res.status(500).json({ error: "Erro ao buscar banners" });
+    }
+  });
+
+  app.post("/admin/api/banners", requireAuth, async (req, res) => {
+    try {
+      const validationResult = createBannerSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+      const banner = await storage.createBanner(validationResult.data);
+      return res.status(201).json({ banner, message: "Banner criado com sucesso!" });
+    } catch (error) {
+      console.error("Admin create banner error:", error);
+      return res.status(500).json({ error: "Erro ao criar banner" });
+    }
+  });
+
+  app.put("/admin/api/banners/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validationResult = updateBannerSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+      const banner = await storage.updateBanner(id, validationResult.data);
+      if (!banner) {
+        return res.status(404).json({ error: "Banner nao encontrado" });
+      }
+      return res.json({ banner, message: "Banner atualizado com sucesso!" });
+    } catch (error) {
+      console.error("Admin update banner error:", error);
+      return res.status(500).json({ error: "Erro ao atualizar banner" });
+    }
+  });
+
+  app.delete("/admin/api/banners/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteBanner(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Banner nao encontrado" });
+      }
+      return res.json({ message: "Banner excluido com sucesso!" });
+    } catch (error) {
+      console.error("Admin delete banner error:", error);
+      return res.status(500).json({ error: "Erro ao excluir banner" });
+    }
+  });
+
+  app.post("/admin/api/banners/upload/image", requireAuth, uploadBanners.single("image"), (req: Request, res: Response) => {
+    if (!req.file) {
+      return res.status(400).json({ error: "Nenhuma imagem enviada" });
+    }
+    const imageUrl = `/uploads/banners/${req.file.filename}`;
+    return res.json({ imageUrl, message: "Imagem enviada com sucesso!" });
+  });
+
+  app.delete("/admin/api/banners/upload/image", requireAuth, (req: Request, res: Response) => {
+    const { imageUrl } = req.body;
+    if (!imageUrl) {
+      return res.status(400).json({ error: "URL da imagem nao fornecida" });
+    }
+    const filename = path.basename(imageUrl);
+    const filePath = path.join(uploadsBannersDir, filename);
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+    return res.json({ message: "Imagem removida com sucesso!" });
+  });
+
+  // Admin pages for partners and banners
+  app.get("/admin/parceiros", requireAuth, (req, res) => {
+    res.sendFile(path.join(process.cwd(), "server", "admin", "parceiros.html"));
+  });
+
+  app.get("/admin/parceiros/novo", requireAuth, (req, res) => {
+    res.sendFile(path.join(process.cwd(), "server", "admin", "parceiros-form.html"));
+  });
+
+  app.get("/admin/parceiros/editar/:id", requireAuth, (req, res) => {
+    res.sendFile(path.join(process.cwd(), "server", "admin", "parceiros-form.html"));
+  });
+
+  app.get("/admin/banners", requireAuth, (req, res) => {
+    res.sendFile(path.join(process.cwd(), "server", "admin", "banners.html"));
+  });
+
+  app.get("/admin/banners/novo", requireAuth, (req, res) => {
+    res.sendFile(path.join(process.cwd(), "server", "admin", "banners-form.html"));
+  });
+
+  app.get("/admin/banners/editar/:id", requireAuth, (req, res) => {
+    res.sendFile(path.join(process.cwd(), "server", "admin", "banners-form.html"));
   });
 }
 

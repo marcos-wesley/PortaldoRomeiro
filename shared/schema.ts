@@ -710,3 +710,80 @@ export const createAccommodationReviewSchema = z.object({
 
 export type AccommodationReview = typeof accommodationReviews.$inferSelect;
 export type CreateAccommodationReviewInput = z.infer<typeof createAccommodationReviewSchema>;
+
+// Parceiros (Partners)
+export const partners = pgTable("partners", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  logoUrl: text("logo_url"),
+  website: text("website"),
+  order: integer("order").default(0),
+  published: boolean("published").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const createPartnerSchema = z.object({
+  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  logoUrl: z.string().optional().nullable(),
+  website: z.string().optional().nullable(),
+  order: z.number().optional().default(0),
+  published: z.boolean().optional().default(true),
+});
+
+export const updatePartnerSchema = z.object({
+  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").optional(),
+  logoUrl: z.string().optional().nullable(),
+  website: z.string().optional().nullable(),
+  order: z.number().optional(),
+  published: z.boolean().optional(),
+});
+
+export type Partner = typeof partners.$inferSelect;
+export type CreatePartnerInput = z.infer<typeof createPartnerSchema>;
+export type UpdatePartnerInput = z.infer<typeof updatePartnerSchema>;
+
+// Banners de Publicidade (Ad Banners)
+export const banners = pgTable("banners", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  imageUrl: text("image_url"),
+  link: text("link"),
+  position: text("position").default("home"), // home, news, all
+  order: integer("order").default(0),
+  published: boolean("published").default(true),
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const createBannerSchema = z.object({
+  title: z.string().min(2, "Titulo deve ter pelo menos 2 caracteres"),
+  imageUrl: z.string().optional().nullable(),
+  link: z.string().optional().nullable(),
+  position: z.string().optional().default("home"),
+  order: z.number().optional().default(0),
+  published: z.boolean().optional().default(true),
+  startDate: z.string().optional().nullable(),
+  endDate: z.string().optional().nullable(),
+});
+
+export const updateBannerSchema = z.object({
+  title: z.string().min(2, "Titulo deve ter pelo menos 2 caracteres").optional(),
+  imageUrl: z.string().optional().nullable(),
+  link: z.string().optional().nullable(),
+  position: z.string().optional(),
+  order: z.number().optional(),
+  published: z.boolean().optional(),
+  startDate: z.string().optional().nullable(),
+  endDate: z.string().optional().nullable(),
+});
+
+export type Banner = typeof banners.$inferSelect;
+export type CreateBannerInput = z.infer<typeof createBannerSchema>;
+export type UpdateBannerInput = z.infer<typeof updateBannerSchema>;

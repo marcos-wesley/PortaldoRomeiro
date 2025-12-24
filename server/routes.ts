@@ -285,6 +285,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Partners Routes (Public API)
+  app.get("/api/partners", async (req, res) => {
+    try {
+      const partners = await storage.getAllPartners(true);
+      return res.json({ partners });
+    } catch (error) {
+      console.error("Get partners error:", error);
+      return res.status(500).json({ error: "Erro ao buscar parceiros" });
+    }
+  });
+
+  // Banners Routes (Public API)
+  app.get("/api/banners", async (req, res) => {
+    try {
+      const position = req.query.position as string | undefined;
+      const banners = await storage.getAllBanners(true, position);
+      return res.json({ banners });
+    } catch (error) {
+      console.error("Get banners error:", error);
+      return res.status(500).json({ error: "Erro ao buscar banners" });
+    }
+  });
+
   // Upload image for news
   app.post("/api/upload/image", async (req, res) => {
     try {
@@ -617,6 +640,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get accommodation reviews error:", error);
       return res.status(500).json({ error: "Erro ao buscar avaliacoes" });
+    }
+  });
+
+  // Partners Routes (public)
+  app.get("/api/partners", async (req, res) => {
+    try {
+      const partners = await storage.getAllPartners(true);
+      return res.json({ partners });
+    } catch (error) {
+      console.error("Get partners error:", error);
+      return res.status(500).json({ error: "Erro ao buscar parceiros" });
+    }
+  });
+
+  // Banners Routes (public)
+  app.get("/api/banners", async (req, res) => {
+    try {
+      const position = req.query.position as string | undefined;
+      const banners = await storage.getAllBanners(true, position);
+      return res.json({ banners });
+    } catch (error) {
+      console.error("Get banners error:", error);
+      return res.status(500).json({ error: "Erro ao buscar banners" });
     }
   });
 
