@@ -922,6 +922,36 @@ export function registerAdminRoutes(app: Express) {
       return res.status(500).json({ error: "Erro ao excluir empresa" });
     }
   });
+
+  app.get("/admin/api/businesses/:id/reviews", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const reviews = await storage.getBusinessReviews(id);
+      return res.json({ reviews });
+    } catch (error) {
+      console.error("Admin get reviews error:", error);
+      return res.status(500).json({ error: "Erro ao buscar avaliacoes" });
+    }
+  });
+
+  app.delete("/admin/api/businesses/:businessId/reviews/:reviewId", requireAuth, async (req, res) => {
+    try {
+      const { reviewId } = req.params;
+      const deleted = await storage.deleteBusinessReview(reviewId);
+      if (!deleted) {
+        return res.status(404).json({ error: "Avaliacao nao encontrada" });
+      }
+      return res.json({ message: "Avaliacao excluida com sucesso!" });
+    } catch (error) {
+      console.error("Admin delete review error:", error);
+      return res.status(500).json({ error: "Erro ao excluir avaliacao" });
+    }
+  });
+
+  app.get("/admin/empresas/:id/reviews", requireAuth, (_req, res) => {
+    const adminDir = path.join(process.cwd(), "server", "admin");
+    res.sendFile(path.join(adminDir, "empresas-reviews.html"));
+  });
 }
 
 function getPlaceholderPage(title: string, description: string): string {
