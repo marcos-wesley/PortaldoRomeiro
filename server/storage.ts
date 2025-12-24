@@ -1,6 +1,6 @@
-import { type User, type InsertUser, type UpdateProfileInput, users, type News, type InsertNews, type UpdateNewsInput, news, type Video, type InsertVideo, type UpdateVideoInput, videos, type Attraction, type InsertAttraction, type UpdateAttractionInput, attractions, type StaticPage, type InsertStaticPage, type UpdateStaticPageInput, staticPages } from "@shared/schema";
+import { type User, type InsertUser, type UpdateProfileInput, users, type News, type InsertNews, type UpdateNewsInput, news, type Video, type InsertVideo, type UpdateVideoInput, videos, type Attraction, type InsertAttraction, type UpdateAttractionInput, attractions, type StaticPage, type InsertStaticPage, type UpdateStaticPageInput, staticPages, type UsefulPhone, type CreateUsefulPhoneInput, type UpdateUsefulPhoneInput, usefulPhones, type PilgrimTip, type CreatePilgrimTipInput, type UpdatePilgrimTipInput, pilgrimTips, type Service, type CreateServiceInput, type UpdateServiceInput, services } from "@shared/schema";
 import { db } from "./db";
-import { eq, count, desc, ilike, or, and } from "drizzle-orm";
+import { eq, count, desc, ilike, or, and, asc } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -239,6 +239,111 @@ export class DatabaseStorage implements IStorage {
     }
     const result = await db.insert(staticPages).values({ pageKey, content }).returning();
     return result[0];
+  }
+
+  // Useful Phones CRUD
+  async getAllUsefulPhones(publishedOnly = false): Promise<UsefulPhone[]> {
+    if (publishedOnly) {
+      const result = await db.select().from(usefulPhones).where(eq(usefulPhones.published, true)).orderBy(asc(usefulPhones.order), desc(usefulPhones.createdAt));
+      return result;
+    }
+    return await db.select().from(usefulPhones).orderBy(asc(usefulPhones.order), desc(usefulPhones.createdAt));
+  }
+
+  async getUsefulPhoneById(id: string): Promise<UsefulPhone | undefined> {
+    const result = await db.select().from(usefulPhones).where(eq(usefulPhones.id, id));
+    return result[0];
+  }
+
+  async createUsefulPhone(data: CreateUsefulPhoneInput): Promise<UsefulPhone> {
+    const result = await db.insert(usefulPhones).values(data).returning();
+    return result[0];
+  }
+
+  async updateUsefulPhone(id: string, data: UpdateUsefulPhoneInput): Promise<UsefulPhone | undefined> {
+    const updateData: any = { ...data, updatedAt: new Date() };
+    const result = await db.update(usefulPhones).set(updateData).where(eq(usefulPhones.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteUsefulPhone(id: string): Promise<boolean> {
+    const result = await db.delete(usefulPhones).where(eq(usefulPhones.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getUsefulPhonesCount(): Promise<number> {
+    const result = await db.select({ count: count() }).from(usefulPhones);
+    return result[0]?.count ?? 0;
+  }
+
+  // Pilgrim Tips CRUD
+  async getAllPilgrimTips(publishedOnly = false): Promise<PilgrimTip[]> {
+    if (publishedOnly) {
+      const result = await db.select().from(pilgrimTips).where(eq(pilgrimTips.published, true)).orderBy(asc(pilgrimTips.order), desc(pilgrimTips.createdAt));
+      return result;
+    }
+    return await db.select().from(pilgrimTips).orderBy(asc(pilgrimTips.order), desc(pilgrimTips.createdAt));
+  }
+
+  async getPilgrimTipById(id: string): Promise<PilgrimTip | undefined> {
+    const result = await db.select().from(pilgrimTips).where(eq(pilgrimTips.id, id));
+    return result[0];
+  }
+
+  async createPilgrimTip(data: CreatePilgrimTipInput): Promise<PilgrimTip> {
+    const result = await db.insert(pilgrimTips).values(data).returning();
+    return result[0];
+  }
+
+  async updatePilgrimTip(id: string, data: UpdatePilgrimTipInput): Promise<PilgrimTip | undefined> {
+    const updateData: any = { ...data, updatedAt: new Date() };
+    const result = await db.update(pilgrimTips).set(updateData).where(eq(pilgrimTips.id, id)).returning();
+    return result[0];
+  }
+
+  async deletePilgrimTip(id: string): Promise<boolean> {
+    const result = await db.delete(pilgrimTips).where(eq(pilgrimTips.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getPilgrimTipsCount(): Promise<number> {
+    const result = await db.select({ count: count() }).from(pilgrimTips);
+    return result[0]?.count ?? 0;
+  }
+
+  // Services CRUD
+  async getAllServices(publishedOnly = false): Promise<Service[]> {
+    if (publishedOnly) {
+      const result = await db.select().from(services).where(eq(services.published, true)).orderBy(asc(services.order), desc(services.createdAt));
+      return result;
+    }
+    return await db.select().from(services).orderBy(asc(services.order), desc(services.createdAt));
+  }
+
+  async getServiceById(id: string): Promise<Service | undefined> {
+    const result = await db.select().from(services).where(eq(services.id, id));
+    return result[0];
+  }
+
+  async createService(data: CreateServiceInput): Promise<Service> {
+    const result = await db.insert(services).values(data).returning();
+    return result[0];
+  }
+
+  async updateService(id: string, data: UpdateServiceInput): Promise<Service | undefined> {
+    const updateData: any = { ...data, updatedAt: new Date() };
+    const result = await db.update(services).set(updateData).where(eq(services.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteService(id: string): Promise<boolean> {
+    const result = await db.delete(services).where(eq(services.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getServicesCount(): Promise<number> {
+    const result = await db.select({ count: count() }).from(services);
+    return result[0]?.count ?? 0;
   }
 }
 

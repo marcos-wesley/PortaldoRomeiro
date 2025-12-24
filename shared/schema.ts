@@ -282,3 +282,120 @@ export const updateStaticPageSchema = z.object({
 export type InsertStaticPage = z.infer<typeof insertStaticPageSchema>;
 export type StaticPage = typeof staticPages.$inferSelect;
 export type UpdateStaticPageInput = z.infer<typeof updateStaticPageSchema>;
+
+// Telefones Uteis (Useful Phones)
+export const usefulPhones = pgTable("useful_phones", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  phone: text("phone").notNull(),
+  category: text("category").default("geral"),
+  icon: text("icon"),
+  order: integer("order").default(0),
+  published: boolean("published").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const createUsefulPhoneSchema = z.object({
+  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  phone: z.string().min(8, "Telefone deve ter pelo menos 8 caracteres"),
+  category: z.string().optional().default("geral"),
+  icon: z.string().optional().nullable(),
+  order: z.number().optional().default(0),
+  published: z.boolean().optional().default(true),
+});
+
+export const updateUsefulPhoneSchema = z.object({
+  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").optional(),
+  phone: z.string().min(8, "Telefone deve ter pelo menos 8 caracteres").optional(),
+  category: z.string().optional(),
+  icon: z.string().optional().nullable(),
+  order: z.number().optional(),
+  published: z.boolean().optional(),
+});
+
+export type UsefulPhone = typeof usefulPhones.$inferSelect;
+export type CreateUsefulPhoneInput = z.infer<typeof createUsefulPhoneSchema>;
+export type UpdateUsefulPhoneInput = z.infer<typeof updateUsefulPhoneSchema>;
+
+// Dicas do Romeiro (Pilgrim Tips)
+export const pilgrimTips = pgTable("pilgrim_tips", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  icon: text("icon"),
+  order: integer("order").default(0),
+  published: boolean("published").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const createPilgrimTipSchema = z.object({
+  title: z.string().min(3, "Titulo deve ter pelo menos 3 caracteres"),
+  content: z.string().min(10, "Conteudo deve ter pelo menos 10 caracteres"),
+  icon: z.string().optional().nullable(),
+  order: z.number().optional().default(0),
+  published: z.boolean().optional().default(true),
+});
+
+export const updatePilgrimTipSchema = z.object({
+  title: z.string().min(3, "Titulo deve ter pelo menos 3 caracteres").optional(),
+  content: z.string().min(10, "Conteudo deve ter pelo menos 10 caracteres").optional(),
+  icon: z.string().optional().nullable(),
+  order: z.number().optional(),
+  published: z.boolean().optional(),
+});
+
+export type PilgrimTip = typeof pilgrimTips.$inferSelect;
+export type CreatePilgrimTipInput = z.infer<typeof createPilgrimTipSchema>;
+export type UpdatePilgrimTipInput = z.infer<typeof updatePilgrimTipSchema>;
+
+// Servicos (Services)
+export const services = pgTable("services", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  description: text("description"),
+  icon: text("icon"),
+  address: text("address"),
+  phone: text("phone"),
+  website: text("website"),
+  category: text("category").default("geral"),
+  order: integer("order").default(0),
+  published: boolean("published").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const createServiceSchema = z.object({
+  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  description: z.string().optional().nullable(),
+  icon: z.string().optional().nullable(),
+  address: z.string().optional().nullable(),
+  phone: z.string().optional().nullable(),
+  website: z.string().optional().nullable(),
+  category: z.string().optional().default("geral"),
+  order: z.number().optional().default(0),
+  published: z.boolean().optional().default(true),
+});
+
+export const updateServiceSchema = z.object({
+  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").optional(),
+  description: z.string().optional().nullable(),
+  icon: z.string().optional().nullable(),
+  address: z.string().optional().nullable(),
+  phone: z.string().optional().nullable(),
+  website: z.string().optional().nullable(),
+  category: z.string().optional(),
+  order: z.number().optional(),
+  published: z.boolean().optional(),
+});
+
+export type Service = typeof services.$inferSelect;
+export type CreateServiceInput = z.infer<typeof createServiceSchema>;
+export type UpdateServiceInput = z.infer<typeof updateServiceSchema>;
