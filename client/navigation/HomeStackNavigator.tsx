@@ -21,7 +21,7 @@ export type HomeStackParamList = {
   Roteiros: undefined;
   Info: undefined;
   Hospedagem: undefined;
-  HospedagemDetail: { id: string };
+  HospedagemDetail: { id: string; checkIn?: string; checkOut?: string };
   Servicos: undefined;
   Videos: undefined;
   VideoDetail: { id: string };

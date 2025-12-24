@@ -18,7 +18,7 @@ export type MaisStackParamList = {
   Roteiros: undefined;
   Restaurantes: undefined;
   Hospedagem: undefined;
-  HospedagemDetail: { id: string };
+  HospedagemDetail: { id: string; checkIn?: string; checkOut?: string };
   HorariosOnibus: undefined;
 };
 
