@@ -131,11 +131,17 @@ function SimpleBusinessCard({
     <Animated.View
       style={[styles.simpleCard, { backgroundColor: theme.backgroundDefault }, animatedStyle]}
     >
-      <Image
-        source={{ uri: business.logoUrl || undefined }}
-        style={styles.simpleCardLogo}
-        contentFit="cover"
-      />
+      {business.logoUrl ? (
+        <Image
+          source={{ uri: business.logoUrl }}
+          style={styles.simpleCardLogo}
+          contentFit="cover"
+        />
+      ) : (
+        <View style={[styles.simpleCardLogo, styles.logoPlaceholder, { backgroundColor: (category?.color || Colors.light.primary) + "20" }]}>
+          <Feather name={category?.icon as any || "briefcase"} size={24} color={category?.color || Colors.light.primary} />
+        </View>
+      )}
       <View style={styles.simpleCardContent}>
         <ThemedText style={styles.simpleCardName} numberOfLines={1}>
           {business.name}
@@ -216,14 +222,24 @@ function FeaturedBusinessCard({
           style={styles.featuredCardCover}
           contentFit="cover"
         />
-      ) : null}
+      ) : (
+        <View style={[styles.featuredCardCover, styles.coverPlaceholder, { backgroundColor: (category?.color || Colors.light.primary) + "15" }]}>
+          <Feather name={category?.icon as any || "briefcase"} size={48} color={category?.color || Colors.light.primary} />
+        </View>
+      )}
       <View style={styles.featuredCardBody}>
         <View style={styles.featuredCardHeader}>
-          <Image
-            source={{ uri: business.logoUrl || undefined }}
-            style={styles.featuredCardLogo}
-            contentFit="cover"
-          />
+          {business.logoUrl ? (
+            <Image
+              source={{ uri: business.logoUrl }}
+              style={styles.featuredCardLogo}
+              contentFit="cover"
+            />
+          ) : (
+            <View style={[styles.featuredCardLogo, styles.logoPlaceholder, { backgroundColor: (category?.color || Colors.light.primary) + "20" }]}>
+              <Feather name={category?.icon as any || "briefcase"} size={20} color={category?.color || Colors.light.primary} />
+            </View>
+          )}
           <View style={styles.featuredCardInfo}>
             <ThemedText style={styles.featuredCardName} numberOfLines={1}>
               {business.name}
@@ -517,6 +533,14 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: BorderRadius.md,
+  },
+  logoPlaceholder: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  coverPlaceholder: {
+    justifyContent: "center",
+    alignItems: "center",
   },
   simpleCardContent: {
     flex: 1,

@@ -343,18 +343,24 @@ export default function EmpresaDetailScreen({ route }: Props) {
           contentFit="cover"
         />
       ) : (
-        <View style={[styles.coverPlaceholder, { backgroundColor: theme.backgroundSecondary }]}>
-          <Feather name="image" size={48} color={theme.textSecondary} />
+        <View style={[styles.coverPlaceholder, { backgroundColor: (category?.color || Colors.light.primary) + "15" }]}>
+          <Feather name={category?.icon as any || "briefcase"} size={64} color={category?.color || Colors.light.primary} />
         </View>
       )}
 
       <View style={styles.content}>
         <View style={styles.header}>
-          <Image
-            source={{ uri: business.logoUrl || undefined }}
-            style={styles.logo}
-            contentFit="cover"
-          />
+          {business.logoUrl ? (
+            <Image
+              source={{ uri: business.logoUrl }}
+              style={styles.logo}
+              contentFit="cover"
+            />
+          ) : (
+            <View style={[styles.logo, styles.logoPlaceholder, { backgroundColor: (category?.color || Colors.light.primary) + "20" }]}>
+              <Feather name={category?.icon as any || "briefcase"} size={32} color={category?.color || Colors.light.primary} />
+            </View>
+          )}
           <View style={styles.headerInfo}>
             <ThemedText type="h3" style={styles.businessName}>{business.name}</ThemedText>
             <View style={styles.headerMeta}>
@@ -668,6 +674,10 @@ const styles = StyleSheet.create({
     height: 72,
     borderRadius: BorderRadius.lg,
     marginRight: Spacing.lg,
+  },
+  logoPlaceholder: {
+    justifyContent: "center",
+    alignItems: "center",
   },
   headerInfo: {
     flex: 1,
