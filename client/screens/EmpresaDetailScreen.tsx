@@ -180,7 +180,7 @@ export default function EmpresaDetailScreen({ route }: Props) {
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.backgroundRoot }}
       contentContainerStyle={{
-        paddingTop: headerHeight,
+        paddingTop: Spacing.lg,
         paddingBottom: insets.bottom + Spacing["3xl"],
       }}
       scrollIndicatorInsets={{ bottom: insets.bottom }}
