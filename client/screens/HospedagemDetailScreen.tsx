@@ -255,7 +255,7 @@ export default function HospedagemDetailScreen() {
     accommodation: AccommodationType; 
     availableRooms: RoomType[];
   }>({
-    queryKey: [`/api/accommodations/${id}/availability`, effectiveCheckIn, effectiveCheckOut],
+    queryKey: [`/api/accommodations/${id}/availability?checkIn=${effectiveCheckIn}&checkOut=${effectiveCheckOut}`],
   });
 
   const accommodation = data?.accommodation;
