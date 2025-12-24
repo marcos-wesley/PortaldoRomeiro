@@ -427,7 +427,7 @@ export default function HospedagemScreen() {
   const [filter, setFilter] = useState("todos");
 
   const { data: searchData, isLoading } = useQuery<{ accommodations: AccommodationWithRooms[] }>({
-    queryKey: ["/api/accommodations/search", checkIn, checkOut],
+    queryKey: [`/api/accommodations/search?checkIn=${checkIn}&checkOut=${checkOut}`],
   });
 
   const accommodations = useMemo(() => {
