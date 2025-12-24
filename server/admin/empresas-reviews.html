@@ -159,6 +159,16 @@
     let reviews = [];
     let reviewToDelete = null;
 
+    const categoryNames = {
+      'onde-comer': 'Onde Comer',
+      'onde-ficar': 'Onde Ficar',
+      'onde-comprar': 'Onde Comprar',
+      'construcao-reforma': 'Construcao e Reforma',
+      'diversao-lazer': 'Diversao e Lazer',
+      'para-seu-carro': 'Para seu Carro',
+      'para-sua-moto': 'Para sua Moto'
+    };
+
     async function loadBusiness() {
       try {
         const res = await fetch(`/admin/api/businesses/${businessId}`);
@@ -167,7 +177,7 @@
         const business = data.business;
         
         document.getElementById('businessName').textContent = business.name;
-        document.getElementById('businessCategory').textContent = business.categoryId;
+        document.getElementById('businessCategory').textContent = categoryNames[business.categoryId] || business.categoryId;
         document.getElementById('businessRating').textContent = business.rating ? parseFloat(business.rating).toFixed(1) : '0.0';
         document.getElementById('businessReviewCount').textContent = business.reviews || 0;
         
