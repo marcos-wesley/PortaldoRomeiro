@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quartos - Admin Portal do Romeiro</title>
+  <style>
+    :root {
+      --primary: #b22226;
+      --primary-dark: #8b1a1d;
+      --sidebar-bg: #1a1a2e;
+      --text-light: #e5e7eb;
+      --text-muted: #9ca3af;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8f9fa;
+      min-height: 100vh;
+      display: flex;
+    }
+    .sidebar {
+      width: 260px;
+      background: var(--sidebar-bg);
+      color: var(--text-light);
+      position: fixed;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-header { padding: 24px; border-bottom: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; }
+    .sidebar-header h1 { font-size: 18px; font-weight: 700; color: var(--primary); }
+    .sidebar-header p { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .sidebar nav { flex: 1; overflow-y: auto; padding: 16px 0; }
+    .nav-section { padding: 0 16px; margin-bottom: 16px; }
+    .nav-section-title { font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); padding: 0 8px; margin-bottom: 8px; }
+    .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; color: var(--text-muted); text-decoration: none; border-radius: 8px; margin-bottom: 4px; transition: all 0.2s; }
+    .nav-item:hover { background: #16213e; color: white; }
+    .nav-item.active { background: var(--primary); color: white; }
+    .sidebar-footer { margin-top: auto; padding: 16px; border-top: 1px solid rgba(255,255,255,0.1); flex-shrink: 0; }
+    .logout-btn { display: flex; align-items: center; gap: 8px; padding: 12px 16px; color: #ef4444; text-decoration: none; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+    .logout-btn:hover { background: rgba(239, 68, 68, 0.1); }
+    .main { flex: 1; margin-left: 260px; padding: 32px; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+    .header h2 { font-size: 24px; color: #1f2937; }
+    .header-subtitle { font-size: 14px; color: #6b7280; margin-top: 4px; }
+    .header-actions { display: flex; gap: 12px; align-items: center; }
+    .btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-secondary { background: #e5e7eb; color: #374151; }
+    .btn-secondary:hover { background: #d1d5db; }
+    .btn-danger { background: #ef4444; color: white; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .rooms-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+    .room-card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); overflow: hidden; }
+    .room-header { padding: 20px; border-bottom: 1px solid #e5e7eb; }
+    .room-name { font-size: 18px; font-weight: 600; color: #1f2937; margin-bottom: 4px; }
+    .room-type { font-size: 14px; color: #6b7280; }
+    .room-body { padding: 20px; }
+    .room-info { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
+    .room-info-item { display: flex; flex-direction: column; }
+    .room-info-label { font-size: 12px; color: #9ca3af; text-transform: uppercase; }
+    .room-info-value { font-size: 16px; font-weight: 500; color: #1f2937; }
+    .room-price { font-size: 24px; font-weight: 700; color: var(--primary); margin-bottom: 16px; }
+    .room-price span { font-size: 14px; font-weight: 400; color: #6b7280; }
+    .room-actions { display: flex; gap: 8px; }
+    .empty-state { text-align: center; padding: 64px 32px; color: #6b7280; background: white; border-radius: 12px; }
+    .empty-state h3 { color: #374151; margin-bottom: 8px; }
+    .loading { text-align: center; padding: 48px; color: #6b7280; }
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+    .modal-overlay.active { display: flex; }
+    .modal { background: white; border-radius: 12px; padding: 24px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .modal-header h3 { font-size: 18px; color: #1f2937; }
+    .modal-close { background: none; border: none; cursor: pointer; color: #6b7280; font-size: 24px; }
+    .modal-body { margin-bottom: 20px; color: #4b5563; }
+    .modal-actions { display: flex; gap: 12px; justify-content: flex-end; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-weight: 500; color: #374151; margin-bottom: 6px; font-size: 14px; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 14px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); }
+    .form-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .badge { display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+    .badge-success { background: #d1fae5; color: #059669; }
+    .badge-warning { background: #fef3c7; color: #d97706; }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h1>Portal do Romeiro</h1>
+      <p>Painel Administrativo</p>
+    </div>
+    <nav>
+      <div class="nav-section">
+        <div class="nav-section-title">Principal</div>
+        <a href="/admin/dashboard" class="nav-item">Dashboard</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Conteudo</div>
+        <a href="/admin/noticias" class="nav-item">Noticias</a>
+        <a href="/admin/videos" class="nav-item">Videos</a>
+        <a href="/admin/paginas" class="nav-item">Paginas</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Turismo</div>
+        <a href="/admin/pontos-turisticos" class="nav-item">Pontos Turisticos</a>
+        <a href="/admin/empresas" class="nav-item">Guia Comercial</a>
+        <a href="/admin/hospedagens" class="nav-item active">Hospedagens</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Romeiro</div>
+        <a href="/admin/telefones" class="nav-item">Telefones Uteis</a>
+        <a href="/admin/dicas" class="nav-item">Dicas do Romeiro</a>
+        <a href="/admin/servicos" class="nav-item">Servicos</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Sistema</div>
+        <a href="/admin/usuarios" class="nav-item">Usuarios</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="#" class="logout-btn" onclick="logout()">Sair</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="header">
+      <div>
+        <h2 id="pageTitle">Quartos</h2>
+        <p class="header-subtitle" id="accommodationName">Carregando...</p>
+      </div>
+      <div class="header-actions">
+        <a href="/admin/hospedagens" class="btn btn-secondary">Voltar</a>
+        <button class="btn btn-primary" onclick="openRoomModal()">+ Novo Quarto</button>
+      </div>
+    </div>
+
+    <div id="loading" class="loading">Carregando quartos...</div>
+    <div id="empty" class="empty-state" style="display: none;">
+      <h3>Nenhum quarto cadastrado</h3>
+      <p>Comece adicionando o primeiro quarto desta hospedagem.</p>
+    </div>
+    <div id="roomsGrid" class="rooms-grid" style="display: none;"></div>
+  </main>
+
+  <div id="roomModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle">Novo Quarto</h3>
+        <button class="modal-close" onclick="closeRoomModal()">&times;</button>
+      </div>
+      <form id="roomForm">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="roomName">Nome do Quarto *</label>
+            <input type="text" id="roomName" required placeholder="Ex: Quarto Standard">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="roomType">Tipo</label>
+              <select id="roomType">
+                <option value="standard">Standard</option>
+                <option value="superior">Superior</option>
+                <option value="luxo">Luxo</option>
+                <option value="suite">Suite</option>
+                <option value="familia">Familia</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="maxGuests">Max. Hospedes *</label>
+              <input type="number" id="maxGuests" required min="1" value="2">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="beds">Camas</label>
+              <input type="text" id="beds" placeholder="Ex: 1 casal, 2 solteiro">
+            </div>
+            <div class="form-group">
+              <label for="quantity">Quantidade *</label>
+              <input type="number" id="quantity" required min="1" value="1">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="pricePerNight">Preco por Noite (R$) *</label>
+              <input type="number" id="pricePerNight" required min="0" step="0.01" placeholder="150.00">
+            </div>
+            <div class="form-group">
+              <label for="published">Status</label>
+              <select id="published">
+                <option value="true">Publicado</option>
+                <option value="false">Rascunho</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="roomDescription">Descricao</label>
+            <textarea id="roomDescription" rows="3" placeholder="Descricao do quarto..."></textarea>
+          </div>
+          <div class="form-group">
+            <label for="roomAmenities">Comodidades</label>
+            <input type="text" id="roomAmenities" placeholder="wifi, ar-condicionado, tv (separado por virgula)">
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" onclick="closeRoomModal()">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="roomSubmitBtn">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="deleteModal" class="modal-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Confirmar Exclusao</h3>
+        <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Tem certeza que deseja excluir este quarto? Esta acao nao pode ser desfeita.</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" onclick="closeDeleteModal()">Cancelar</button>
+        <button class="btn btn-danger" onclick="confirmDelete()">Excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const accommodationId = window.location.pathname.split('/')[3];
+    let rooms = [];
+    let editingRoomId = null;
+    let deleteId = null;
+
+    async function loadAccommodation() {
+      try {
+        const response = await fetch(`/admin/api/accommodations/${accommodationId}`);
+        if (response.ok) {
+          const data = await response.json();
+          document.getElementById('accommodationName').textContent = data.accommodation.name;
+        }
+      } catch (e) {}
+    }
+
+    async function loadRooms() {
+      try {
+        const response = await fetch(`/admin/api/accommodations/${accommodationId}/rooms`);
+        if (!response.ok) throw new Error('Erro ao carregar');
+        const data = await response.json();
+        rooms = data.rooms || [];
+        renderRooms();
+      } catch (error) {
+        console.error('Erro:', error);
+        document.getElementById('loading').innerHTML = '<p style="color: #ef4444;">Erro ao carregar quartos</p>';
+      }
+    }
+
+    function formatPrice(cents) {
+      return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function renderRooms() {
+      const loading = document.getElementById('loading');
+      const empty = document.getElementById('empty');
+      const grid = document.getElementById('roomsGrid');
+
+      loading.style.display = 'none';
+
+      if (rooms.length === 0) {
+        empty.style.display = 'block';
+        grid.style.display = 'none';
+        return;
+      }
+
+      empty.style.display = 'none';
+      grid.style.display = 'grid';
+
+      grid.innerHTML = rooms.map(r => `
+        <div class="room-card">
+          <div class="room-header">
+            <div class="room-name">${r.name}</div>
+            <div class="room-type">${r.type || 'Standard'} - ${r.beds || 'Nao especificado'}</div>
+          </div>
+          <div class="room-body">
+            <div class="room-info">
+              <div class="room-info-item">
+                <span class="room-info-label">Max. Hospedes</span>
+                <span class="room-info-value">${r.maxGuests} pessoas</span>
+              </div>
+              <div class="room-info-item">
+                <span class="room-info-label">Quantidade</span>
+                <span class="room-info-value">${r.quantity} unidades</span>
+              </div>
+            </div>
+            <div class="room-price">
+              ${formatPrice(r.pricePerNight)} <span>/noite</span>
+            </div>
+            <div style="margin-bottom: 16px;">
+              <span class="badge ${r.published ? 'badge-success' : 'badge-warning'}">
+                ${r.published ? 'Publicado' : 'Rascunho'}
+              </span>
+            </div>
+            <div class="room-actions">
+              <button class="btn btn-secondary btn-sm" onclick="editRoom('${r.id}')">Editar</button>
+              <button class="btn btn-danger btn-sm" onclick="openDeleteModal('${r.id}')">Excluir</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function openRoomModal() {
+      editingRoomId = null;
+      document.getElementById('modalTitle').textContent = 'Novo Quarto';
+      document.getElementById('roomSubmitBtn').textContent = 'Salvar';
+      document.getElementById('roomForm').reset();
+      document.getElementById('published').value = 'true';
+      document.getElementById('roomModal').classList.add('active');
+    }
+
+    function closeRoomModal() {
+      editingRoomId = null;
+      document.getElementById('roomModal').classList.remove('active');
+    }
+
+    async function editRoom(id) {
+      editingRoomId = id;
+      const room = rooms.find(r => r.id === id);
+      if (!room) return;
+
+      document.getElementById('modalTitle').textContent = 'Editar Quarto';
+      document.getElementById('roomSubmitBtn').textContent = 'Atualizar';
+      document.getElementById('roomName').value = room.name;
+      document.getElementById('roomType').value = room.type || 'standard';
+      document.getElementById('maxGuests').value = room.maxGuests;
+      document.getElementById('beds').value = room.beds || '';
+      document.getElementById('quantity').value = room.quantity;
+      document.getElementById('pricePerNight').value = (room.pricePerNight / 100).toFixed(2);
+      document.getElementById('published').value = room.published ? 'true' : 'false';
+      document.getElementById('roomDescription').value = room.description || '';
+      
+      let amenities = [];
+      try { amenities = JSON.parse(room.amenities || '[]'); } catch(e) {}
+      document.getElementById('roomAmenities').value = amenities.join(', ');
+
+      document.getElementById('roomModal').classList.add('active');
+    }
+
+    document.getElementById('roomForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const amenitiesStr = document.getElementById('roomAmenities').value;
+      const amenities = amenitiesStr.split(',').map(a => a.trim()).filter(a => a);
+
+      const data = {
+        name: document.getElementById('roomName').value,
+        type: document.getElementById('roomType').value,
+        maxGuests: parseInt(document.getElementById('maxGuests').value),
+        beds: document.getElementById('beds').value || null,
+        quantity: parseInt(document.getElementById('quantity').value),
+        pricePerNight: Math.round(parseFloat(document.getElementById('pricePerNight').value) * 100),
+        published: document.getElementById('published').value === 'true',
+        description: document.getElementById('roomDescription').value || null,
+        amenities: JSON.stringify(amenities)
+      };
+
+      try {
+        let url, method;
+        if (editingRoomId) {
+          url = `/admin/api/rooms/${editingRoomId}`;
+          method = 'PUT';
+        } else {
+          url = `/admin/api/accommodations/${accommodationId}/rooms`;
+          method = 'POST';
+        }
+
+        const response = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (!response.ok) throw new Error('Erro ao salvar');
+        
+        closeRoomModal();
+        loadRooms();
+      } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao salvar quarto');
+      }
+    });
+
+    function openDeleteModal(id) {
+      deleteId = id;
+      document.getElementById('deleteModal').classList.add('active');
+    }
+
+    function closeDeleteModal() {
+      deleteId = null;
+      document.getElementById('deleteModal').classList.remove('active');
+    }
+
+    async function confirmDelete() {
+      if (!deleteId) return;
+      try {
+        const response = await fetch(`/admin/api/rooms/${deleteId}`, { method: 'DELETE' });
+        if (!response.ok) throw new Error('Erro ao excluir');
+        rooms = rooms.filter(r => r.id !== deleteId);
+        renderRooms();
+        closeDeleteModal();
+      } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao excluir quarto');
+      }
+    }
+
+    async function logout() {
+      await fetch('/admin/api/logout', { method: 'POST' });
+      window.location.href = '/admin';
+    }
+
+    loadAccommodation();
+    loadRooms();
+  </script>
+</body>
+</html>

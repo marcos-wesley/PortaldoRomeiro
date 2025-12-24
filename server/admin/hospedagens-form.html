@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hospedagem - Admin Portal do Romeiro</title>
+  <style>
+    :root {
+      --primary: #b22226;
+      --primary-dark: #8b1a1d;
+      --sidebar-bg: #1a1a2e;
+      --text-light: #e5e7eb;
+      --text-muted: #9ca3af;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8f9fa;
+      min-height: 100vh;
+      display: flex;
+    }
+    .sidebar {
+      width: 260px;
+      background: var(--sidebar-bg);
+      color: var(--text-light);
+      position: fixed;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-header {
+      padding: 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      flex-shrink: 0;
+    }
+    .sidebar-header h1 { font-size: 18px; font-weight: 700; color: var(--primary); }
+    .sidebar-header p { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .sidebar nav { flex: 1; overflow-y: auto; padding: 16px 0; }
+    .nav-section { padding: 0 16px; margin-bottom: 16px; }
+    .nav-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 0 8px;
+      margin-bottom: 8px;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      color: var(--text-muted);
+      text-decoration: none;
+      border-radius: 8px;
+      margin-bottom: 4px;
+      transition: all 0.2s;
+    }
+    .nav-item:hover { background: #16213e; color: white; }
+    .nav-item.active { background: var(--primary); color: white; }
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 16px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      flex-shrink: 0;
+    }
+    .logout-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      color: #ef4444;
+      text-decoration: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .logout-btn:hover { background: rgba(239, 68, 68, 0.1); }
+    .main { flex: 1; margin-left: 260px; padding: 32px; }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .header h2 { font-size: 24px; color: #1f2937; }
+    .header-actions { display: flex; gap: 12px; align-items: center; }
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-secondary { background: #e5e7eb; color: #374151; }
+    .btn-secondary:hover { background: #d1d5db; }
+    .form-container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      padding: 32px;
+    }
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+      display: block;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    .form-group textarea { resize: vertical; min-height: 100px; }
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    .form-row-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .form-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid #e5e7eb;
+    }
+    .checkbox-group {
+      display: flex;
+      gap: 24px;
+      margin-top: 8px;
+    }
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .checkbox-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #1f2937;
+      margin: 32px 0 16px;
+      padding-top: 24px;
+      border-top: 1px solid #e5e7eb;
+    }
+    .section-title:first-of-type {
+      margin-top: 0;
+      padding-top: 0;
+      border-top: none;
+    }
+    .amenities-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .amenity-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .amenity-item input { width: 16px; height: 16px; }
+    .hint {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+    .loading {
+      text-align: center;
+      padding: 48px;
+      color: #6b7280;
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h1>Portal do Romeiro</h1>
+      <p>Painel Administrativo</p>
+    </div>
+    <nav>
+      <div class="nav-section">
+        <div class="nav-section-title">Principal</div>
+        <a href="/admin/dashboard" class="nav-item">Dashboard</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Conteudo</div>
+        <a href="/admin/noticias" class="nav-item">Noticias</a>
+        <a href="/admin/videos" class="nav-item">Videos</a>
+        <a href="/admin/paginas" class="nav-item">Paginas</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Turismo</div>
+        <a href="/admin/pontos-turisticos" class="nav-item">Pontos Turisticos</a>
+        <a href="/admin/empresas" class="nav-item">Guia Comercial</a>
+        <a href="/admin/hospedagens" class="nav-item active">Hospedagens</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Romeiro</div>
+        <a href="/admin/telefones" class="nav-item">Telefones Uteis</a>
+        <a href="/admin/dicas" class="nav-item">Dicas do Romeiro</a>
+        <a href="/admin/servicos" class="nav-item">Servicos</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Sistema</div>
+        <a href="/admin/usuarios" class="nav-item">Usuarios</a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <a href="#" class="logout-btn" onclick="logout()">Sair</a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="header">
+      <h2 id="pageTitle">Nova Hospedagem</h2>
+      <div class="header-actions">
+        <a href="/admin/hospedagens" class="btn btn-secondary">Voltar</a>
+      </div>
+    </div>
+
+    <div id="loading" class="loading" style="display: none;">Carregando...</div>
+
+    <div class="form-container" id="formContainer">
+      <form id="accommodationForm">
+        <h3 class="section-title" style="margin-top: 0;">Informacoes Basicas</h3>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="name">Nome da Hospedagem *</label>
+            <input type="text" id="name" name="name" required placeholder="Ex: Hotel Divino Pai Eterno">
+          </div>
+          <div class="form-group">
+            <label for="type">Tipo *</label>
+            <select id="type" name="type" required>
+              <option value="">Selecione...</option>
+              <option value="hotel">Hotel</option>
+              <option value="pousada">Pousada</option>
+              <option value="hostel">Hostel</option>
+              <option value="apartamento">Apartamento</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="description">Descricao</label>
+          <textarea id="description" name="description" placeholder="Descricao da hospedagem..."></textarea>
+        </div>
+
+        <h3 class="section-title">Endereco</h3>
+        
+        <div class="form-group">
+          <label for="address">Endereco Completo</label>
+          <input type="text" id="address" name="address" placeholder="Ex: Av. Coronel Anacleto, 1500">
+        </div>
+
+        <div class="form-row-3">
+          <div class="form-group">
+            <label for="neighborhood">Bairro</label>
+            <input type="text" id="neighborhood" name="neighborhood" placeholder="Ex: Centro">
+          </div>
+          <div class="form-group">
+            <label for="city">Cidade</label>
+            <input type="text" id="city" name="city" value="Trindade" placeholder="Ex: Trindade">
+          </div>
+          <div class="form-group">
+            <label for="state">Estado</label>
+            <input type="text" id="state" name="state" value="GO" placeholder="GO">
+          </div>
+        </div>
+
+        <h3 class="section-title">Contato</h3>
+        
+        <div class="form-row-3">
+          <div class="form-group">
+            <label for="phone">Telefone</label>
+            <input type="tel" id="phone" name="phone" placeholder="(62) 3506-1234">
+          </div>
+          <div class="form-group">
+            <label for="whatsapp">WhatsApp</label>
+            <input type="tel" id="whatsapp" name="whatsapp" placeholder="62985061234">
+            <div class="hint">Apenas numeros, com DDD</div>
+          </div>
+          <div class="form-group">
+            <label for="email">E-mail</label>
+            <input type="email" id="email" name="email" placeholder="contato@hotel.com.br">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="website">Website</label>
+            <input type="url" id="website" name="website" placeholder="https://www.hotel.com.br">
+          </div>
+          <div class="form-group">
+            <label for="instagram">Instagram</label>
+            <input type="text" id="instagram" name="instagram" placeholder="@hotel">
+          </div>
+        </div>
+
+        <h3 class="section-title">Horarios</h3>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="checkInTime">Horario Check-in</label>
+            <input type="time" id="checkInTime" name="checkInTime" value="14:00">
+          </div>
+          <div class="form-group">
+            <label for="checkOutTime">Horario Check-out</label>
+            <input type="time" id="checkOutTime" name="checkOutTime" value="12:00">
+          </div>
+        </div>
+
+        <h3 class="section-title">Imagens</h3>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="logoUrl">URL do Logo</label>
+            <input type="url" id="logoUrl" name="logoUrl" placeholder="https://...">
+          </div>
+          <div class="form-group">
+            <label for="coverUrl">URL da Capa</label>
+            <input type="url" id="coverUrl" name="coverUrl" placeholder="https://...">
+          </div>
+        </div>
+
+        <h3 class="section-title">Comodidades</h3>
+        
+        <div class="amenities-grid">
+          <label class="amenity-item">
+            <input type="checkbox" name="amenities" value="wifi"> Wi-Fi
+          </label>
+          <label class="amenity-item">
+            <input type="checkbox" name="amenities" value="estacionamento"> Estacionamento
+          </label>
+          <label class="amenity-item">
+            <input type="checkbox" name="amenities" value="piscina"> Piscina
+          </label>
+          <label class="amenity-item">
+            <input type="checkbox" name="amenities" value="ar-condicionado"> Ar Condicionado
+          </label>
+          <label class="amenity-item">
+            <input type="checkbox" name="amenities" value="tv"> TV
+          </label>
+          <label class="amenity-item">
+            <input type="checkbox" name="amenities" value="restaurante"> Restaurante
+          </label>
+          <label class="amenity-item">
+            <input type="checkbox" name="amenities" value="cafe-da-manha"> Cafe da Manha
+          </label>
+          <label class="amenity-item">
+            <input type="checkbox" name="amenities" value="academia"> Academia
+          </label>
+          <label class="amenity-item">
+            <input type="checkbox" name="amenities" value="spa"> Spa
+          </label>
+          <label class="amenity-item">
+            <input type="checkbox" name="amenities" value="lavanderia"> Lavanderia
+          </label>
+          <label class="amenity-item">
+            <input type="checkbox" name="amenities" value="recepcao-24h"> Recepcao 24h
+          </label>
+          <label class="amenity-item">
+            <input type="checkbox" name="amenities" value="acessibilidade"> Acessibilidade
+          </label>
+          <label class="amenity-item">
+            <input type="checkbox" name="amenities" value="aceita-pets"> Aceita Pets
+          </label>
+          <label class="amenity-item">
+            <input type="checkbox" name="amenities" value="ventilador"> Ventilador
+          </label>
+          <label class="amenity-item">
+            <input type="checkbox" name="amenities" value="frigobar"> Frigobar
+          </label>
+          <label class="amenity-item">
+            <input type="checkbox" name="amenities" value="cofre"> Cofre
+          </label>
+        </div>
+
+        <h3 class="section-title">Configuracoes</h3>
+        
+        <div class="checkbox-group">
+          <label class="checkbox-item">
+            <input type="checkbox" id="published" name="published" checked>
+            <span>Publicado</span>
+          </label>
+          <label class="checkbox-item">
+            <input type="checkbox" id="featured" name="featured">
+            <span>Destaque</span>
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary" id="submitBtn">Salvar Hospedagem</button>
+          <a href="/admin/hospedagens" class="btn btn-secondary">Cancelar</a>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <script>
+    const isEdit = window.location.pathname.includes('/editar/');
+    const accommodationId = isEdit ? window.location.pathname.split('/editar/')[1] : null;
+
+    if (isEdit) {
+      document.getElementById('pageTitle').textContent = 'Editar Hospedagem';
+      document.getElementById('submitBtn').textContent = 'Atualizar Hospedagem';
+      loadAccommodation();
+    }
+
+    async function loadAccommodation() {
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('formContainer').style.display = 'none';
+
+      try {
+        const response = await fetch(`/admin/api/accommodations/${accommodationId}`);
+        if (!response.ok) throw new Error('Erro ao carregar');
+        const data = await response.json();
+        const acc = data.accommodation;
+
+        document.getElementById('name').value = acc.name || '';
+        document.getElementById('type').value = acc.type || '';
+        document.getElementById('description').value = acc.description || '';
+        document.getElementById('address').value = acc.address || '';
+        document.getElementById('neighborhood').value = acc.neighborhood || '';
+        document.getElementById('city').value = acc.city || '';
+        document.getElementById('phone').value = acc.phone || '';
+        document.getElementById('whatsapp').value = acc.whatsapp || '';
+        document.getElementById('email').value = acc.email || '';
+        document.getElementById('website').value = acc.website || '';
+        document.getElementById('instagram').value = acc.instagram || '';
+        document.getElementById('checkInTime').value = acc.checkInTime || '14:00';
+        document.getElementById('checkOutTime').value = acc.checkOutTime || '12:00';
+        document.getElementById('logoUrl').value = acc.logoUrl || '';
+        document.getElementById('coverUrl').value = acc.coverUrl || '';
+        document.getElementById('published').checked = acc.published;
+        document.getElementById('featured').checked = acc.featured;
+
+        let amenities = [];
+        try {
+          amenities = JSON.parse(acc.amenities || '[]');
+        } catch (e) {}
+        
+        document.querySelectorAll('input[name="amenities"]').forEach(cb => {
+          cb.checked = amenities.includes(cb.value);
+        });
+
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('formContainer').style.display = 'block';
+      } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao carregar hospedagem');
+        window.location.href = '/admin/hospedagens';
+      }
+    }
+
+    document.getElementById('accommodationForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const form = e.target;
+      const amenities = Array.from(document.querySelectorAll('input[name="amenities"]:checked')).map(cb => cb.value);
+
+      const data = {
+        name: form.name.value,
+        type: form.type.value,
+        description: form.description.value || null,
+        address: form.address.value || null,
+        neighborhood: form.neighborhood.value || null,
+        city: form.city.value || 'Trindade',
+        phone: form.phone.value || null,
+        whatsapp: form.whatsapp.value || null,
+        email: form.email.value || null,
+        website: form.website.value || null,
+        instagram: form.instagram.value || null,
+        checkInTime: form.checkInTime.value || '14:00',
+        checkOutTime: form.checkOutTime.value || '12:00',
+        logoUrl: form.logoUrl.value || null,
+        coverUrl: form.coverUrl.value || null,
+        amenities: JSON.stringify(amenities),
+        published: form.published.checked,
+        featured: form.featured.checked
+      };
+
+      try {
+        const url = isEdit ? `/admin/api/accommodations/${accommodationId}` : '/admin/api/accommodations';
+        const method = isEdit ? 'PUT' : 'POST';
+
+        const response = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+
+        if (!response.ok) throw new Error('Erro ao salvar');
+        
+        window.location.href = '/admin/hospedagens';
+      } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao salvar hospedagem');
+      }
+    });
+
+    async function logout() {
+      await fetch('/admin/api/logout', { method: 'POST' });
+      window.location.href = '/admin';
+    }
+  </script>
+</body>
+</html>

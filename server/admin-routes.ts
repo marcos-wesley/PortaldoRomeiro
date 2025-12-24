@@ -202,7 +202,23 @@ export function registerAdminRoutes(app: Express) {
   });
 
   app.get("/admin/hospedagens", requireAuth, (req, res) => {
-    res.send(getPlaceholderPage("Hospedagens", "Gerencie as hospedagens"));
+    const filePath = path.join(__dirname, "admin", "hospedagens.html");
+    res.sendFile(filePath);
+  });
+
+  app.get("/admin/hospedagens/nova", requireAuth, (req, res) => {
+    const formPath = path.join(__dirname, "admin", "hospedagens-form.html");
+    res.sendFile(formPath);
+  });
+
+  app.get("/admin/hospedagens/editar/:id", requireAuth, (req, res) => {
+    const formPath = path.join(__dirname, "admin", "hospedagens-form.html");
+    res.sendFile(formPath);
+  });
+
+  app.get("/admin/hospedagens/:id/quartos", requireAuth, (req, res) => {
+    const quartosPath = path.join(__dirname, "admin", "hospedagens-quartos.html");
+    res.sendFile(quartosPath);
   });
 
   app.get("/admin/eventos", requireAuth, (req, res) => {
