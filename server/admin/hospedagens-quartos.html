@@ -160,42 +160,30 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label for="roomType">Tipo</label>
-              <select id="roomType">
-                <option value="standard">Standard</option>
-                <option value="superior">Superior</option>
-                <option value="luxo">Luxo</option>
-                <option value="suite">Suite</option>
-                <option value="familia">Familia</option>
-              </select>
-            </div>
-            <div class="form-group">
               <label for="maxGuests">Max. Hospedes *</label>
               <input type="number" id="maxGuests" required min="1" value="2">
             </div>
-          </div>
-          <div class="form-row">
             <div class="form-group">
               <label for="beds">Camas</label>
               <input type="text" id="beds" placeholder="Ex: 1 casal, 2 solteiro">
             </div>
+          </div>
+          <div class="form-row">
             <div class="form-group">
               <label for="quantity">Quantidade *</label>
               <input type="number" id="quantity" required min="1" value="1">
             </div>
-          </div>
-          <div class="form-row">
             <div class="form-group">
               <label for="pricePerNight">Preco por Noite (R$) *</label>
               <input type="number" id="pricePerNight" required min="0" step="0.01" placeholder="150.00">
             </div>
-            <div class="form-group">
-              <label for="published">Status</label>
-              <select id="published">
-                <option value="true">Publicado</option>
-                <option value="false">Rascunho</option>
-              </select>
-            </div>
+          </div>
+          <div class="form-group">
+            <label for="published">Status</label>
+            <select id="published">
+              <option value="true">Publicado</option>
+              <option value="false">Rascunho</option>
+            </select>
           </div>
           <div class="form-group">
             <label for="roomDescription">Descricao</label>
@@ -283,7 +271,7 @@
         <div class="room-card">
           <div class="room-header">
             <div class="room-name">${r.name}</div>
-            <div class="room-type">${r.type || 'Standard'} - ${r.beds || 'Nao especificado'}</div>
+            <div class="room-type">${r.beds || 'Camas nao especificadas'}</div>
           </div>
           <div class="room-body">
             <div class="room-info">
@@ -335,7 +323,6 @@
       document.getElementById('modalTitle').textContent = 'Editar Quarto';
       document.getElementById('roomSubmitBtn').textContent = 'Atualizar';
       document.getElementById('roomName').value = room.name;
-      document.getElementById('roomType').value = room.type || 'standard';
       document.getElementById('maxGuests').value = room.maxGuests;
       document.getElementById('beds').value = room.beds || '';
       document.getElementById('quantity').value = room.quantity;
@@ -358,7 +345,6 @@
 
       const data = {
         name: document.getElementById('roomName').value,
-        type: document.getElementById('roomType').value,
         maxGuests: parseInt(document.getElementById('maxGuests').value),
         beds: document.getElementById('beds').value || null,
         quantity: parseInt(document.getElementById('quantity').value),
