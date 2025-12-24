@@ -515,6 +515,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Accommodation Routes (Public)
+  app.get("/api/accommodations", async (req, res) => {
+    try {
+      const accommodations = await storage.getAllAccommodations(true);
+      return res.json({ accommodations });
+    } catch (error) {
+      console.error("Get accommodations error:", error);
+      return res.status(500).json({ error: "Erro ao buscar hospedagens" });
+    }
+  });
+
+  app.get("/api/accommodations/search", async (req, res) => {
+    try {
+      const { checkIn, checkOut } = req.query;
+      
+      if (!checkIn || !checkOut) {
+        return res.status(400).json({ error: "Datas de check-in e check-out sao obrigatorias" });
+      }
+
+      const checkInDate = checkIn as string;
+      const checkOutDate = checkOut as string;
+
+      // Validate date format
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      if (!dateRegex.test(checkInDate) || !dateRegex.test(checkOutDate)) {
+        return res.status(400).json({ error: "Formato de data invalido. Use YYYY-MM-DD" });
+      }
+
+      // Validate checkIn is before checkOut
+      if (new Date(checkInDate) >= new Date(checkOutDate)) {
+        return res.status(400).json({ error: "Data de check-in deve ser anterior ao check-out" });
+      }
+
+      const accommodations = await storage.getAvailableAccommodations(checkInDate, checkOutDate);
+      return res.json({ accommodations, checkIn: checkInDate, checkOut: checkOutDate });
+    } catch (error) {
+      console.error("Search accommodations error:", error);
+      return res.status(500).json({ error: "Erro ao buscar hospedagens disponiveis" });
+    }
+  });
+
+  app.get("/api/accommodations/:accommodationId", async (req, res) => {
+    try {
+      const { accommodationId } = req.params;
+      const accommodation = await storage.getAccommodationById(accommodationId);
+      if (!accommodation || !accommodation.published) {
+        return res.status(404).json({ error: "Hospedagem nao encontrada" });
+      }
+      
+      // Get all rooms for this accommodation
+      const rooms = await storage.getRoomsByAccommodation(accommodationId, true);
+      
+      return res.json({ accommodation, rooms });
+    } catch (error) {
+      console.error("Get accommodation error:", error);
+      return res.status(500).json({ error: "Erro ao buscar hospedagem" });
+    }
+  });
+
+  app.get("/api/accommodations/:accommodationId/availability", async (req, res) => {
+    try {
+      const { accommodationId } = req.params;
+      const { checkIn, checkOut } = req.query;
+      
+      if (!checkIn || !checkOut) {
+        return res.status(400).json({ error: "Datas de check-in e check-out sao obrigatorias" });
+      }
+
+      const checkInDate = checkIn as string;
+      const checkOutDate = checkOut as string;
+
+      const accommodation = await storage.getAccommodationById(accommodationId);
+      if (!accommodation || !accommodation.published) {
+        return res.status(404).json({ error: "Hospedagem nao encontrada" });
+      }
+
+      const allRooms = await storage.getRoomsByAccommodation(accommodationId, true);
+      const availableRooms = [];
+
+      for (const room of allRooms) {
+        const isAvailable = await storage.checkRoomAvailability(room.id, checkInDate, checkOutDate);
+        if (isAvailable) {
+          availableRooms.push(room);
+        }
+      }
+
+      return res.json({ accommodation, availableRooms, checkIn: checkInDate, checkOut: checkOutDate });
+    } catch (error) {
+      console.error("Check accommodation availability error:", error);
+      return res.status(500).json({ error: "Erro ao verificar disponibilidade" });
+    }
+  });
+
+  // Accommodation Reviews Routes
+  app.get("/api/accommodations/:accommodationId/reviews", async (req, res) => {
+    try {
+      const { accommodationId } = req.params;
+      const reviews = await storage.getAccommodationReviews(accommodationId);
+      return res.json({ reviews });
+    } catch (error) {
+      console.error("Get accommodation reviews error:", error);
+      return res.status(500).json({ error: "Erro ao buscar avaliacoes" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

@@ -4,7 +4,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import multer from "multer";
 import { storage } from "./storage";
-import { createNewsSchema, updateNewsSchema, createVideoSchema, updateVideoSchema, createAttractionSchema, updateAttractionSchema, createUsefulPhoneSchema, updateUsefulPhoneSchema, createPilgrimTipSchema, updatePilgrimTipSchema, createServiceSchema, updateServiceSchema, createBusinessSchema, updateBusinessSchema } from "@shared/schema";
+import { createNewsSchema, updateNewsSchema, createVideoSchema, updateVideoSchema, createAttractionSchema, updateAttractionSchema, createUsefulPhoneSchema, updateUsefulPhoneSchema, createPilgrimTipSchema, updatePilgrimTipSchema, createServiceSchema, updateServiceSchema, createBusinessSchema, updateBusinessSchema, createAccommodationSchema, updateAccommodationSchema, createRoomSchema, updateRoomSchema, createRoomBlockedDateSchema } from "@shared/schema";
 import { fromError } from "zod-validation-error";
 
 const uploadsDir = path.join(process.cwd(), "server", "uploads", "empresas");
@@ -951,6 +951,228 @@ export function registerAdminRoutes(app: Express) {
   app.get("/admin/empresas/:id/reviews", requireAuth, (_req, res) => {
     const adminDir = path.join(process.cwd(), "server", "admin");
     res.sendFile(path.join(adminDir, "empresas-reviews.html"));
+  });
+
+  // Hospedagens (Accommodations) API
+  app.get("/admin/api/accommodations", requireAuth, async (req, res) => {
+    try {
+      const accommodations = await storage.getAllAccommodations();
+      return res.json({ accommodations });
+    } catch (error) {
+      console.error("Admin get accommodations error:", error);
+      return res.status(500).json({ error: "Erro ao buscar hospedagens" });
+    }
+  });
+
+  app.get("/admin/api/accommodations/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const accommodation = await storage.getAccommodationById(id);
+      if (!accommodation) {
+        return res.status(404).json({ error: "Hospedagem nao encontrada" });
+      }
+      return res.json({ accommodation });
+    } catch (error) {
+      console.error("Admin get accommodation error:", error);
+      return res.status(500).json({ error: "Erro ao buscar hospedagem" });
+    }
+  });
+
+  app.post("/admin/api/accommodations", requireAuth, async (req, res) => {
+    try {
+      const validationResult = createAccommodationSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+      const created = await storage.createAccommodation(validationResult.data);
+      return res.status(201).json({ accommodation: created, message: "Hospedagem criada com sucesso!" });
+    } catch (error) {
+      console.error("Admin create accommodation error:", error);
+      return res.status(500).json({ error: "Erro ao criar hospedagem" });
+    }
+  });
+
+  app.put("/admin/api/accommodations/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validationResult = updateAccommodationSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+      const updated = await storage.updateAccommodation(id, validationResult.data);
+      if (!updated) {
+        return res.status(404).json({ error: "Hospedagem nao encontrada" });
+      }
+      return res.json({ accommodation: updated, message: "Hospedagem atualizada com sucesso!" });
+    } catch (error) {
+      console.error("Admin update accommodation error:", error);
+      return res.status(500).json({ error: "Erro ao atualizar hospedagem" });
+    }
+  });
+
+  app.delete("/admin/api/accommodations/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteAccommodation(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Hospedagem nao encontrada" });
+      }
+      return res.json({ message: "Hospedagem excluida com sucesso!" });
+    } catch (error) {
+      console.error("Admin delete accommodation error:", error);
+      return res.status(500).json({ error: "Erro ao excluir hospedagem" });
+    }
+  });
+
+  // Rooms API
+  app.get("/admin/api/accommodations/:accommodationId/rooms", requireAuth, async (req, res) => {
+    try {
+      const { accommodationId } = req.params;
+      const rooms = await storage.getRoomsByAccommodation(accommodationId);
+      return res.json({ rooms });
+    } catch (error) {
+      console.error("Admin get rooms error:", error);
+      return res.status(500).json({ error: "Erro ao buscar quartos" });
+    }
+  });
+
+  app.get("/admin/api/rooms/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const room = await storage.getRoomById(id);
+      if (!room) {
+        return res.status(404).json({ error: "Quarto nao encontrado" });
+      }
+      return res.json({ room });
+    } catch (error) {
+      console.error("Admin get room error:", error);
+      return res.status(500).json({ error: "Erro ao buscar quarto" });
+    }
+  });
+
+  app.post("/admin/api/accommodations/:accommodationId/rooms", requireAuth, async (req, res) => {
+    try {
+      const { accommodationId } = req.params;
+      const validationResult = createRoomSchema.safeParse({
+        ...req.body,
+        accommodationId,
+      });
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+      const created = await storage.createRoom(validationResult.data);
+      return res.status(201).json({ room: created, message: "Quarto criado com sucesso!" });
+    } catch (error) {
+      console.error("Admin create room error:", error);
+      return res.status(500).json({ error: "Erro ao criar quarto" });
+    }
+  });
+
+  app.put("/admin/api/rooms/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validationResult = updateRoomSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+      const updated = await storage.updateRoom(id, validationResult.data);
+      if (!updated) {
+        return res.status(404).json({ error: "Quarto nao encontrado" });
+      }
+      return res.json({ room: updated, message: "Quarto atualizado com sucesso!" });
+    } catch (error) {
+      console.error("Admin update room error:", error);
+      return res.status(500).json({ error: "Erro ao atualizar quarto" });
+    }
+  });
+
+  app.delete("/admin/api/rooms/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteRoom(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Quarto nao encontrado" });
+      }
+      return res.json({ message: "Quarto excluido com sucesso!" });
+    } catch (error) {
+      console.error("Admin delete room error:", error);
+      return res.status(500).json({ error: "Erro ao excluir quarto" });
+    }
+  });
+
+  // Room Blocked Dates API
+  app.get("/admin/api/rooms/:roomId/blocked-dates", requireAuth, async (req, res) => {
+    try {
+      const { roomId } = req.params;
+      const blockedDates = await storage.getAllBlockedDatesForRoom(roomId);
+      return res.json({ blockedDates });
+    } catch (error) {
+      console.error("Admin get blocked dates error:", error);
+      return res.status(500).json({ error: "Erro ao buscar datas bloqueadas" });
+    }
+  });
+
+  app.post("/admin/api/rooms/:roomId/blocked-dates", requireAuth, async (req, res) => {
+    try {
+      const { roomId } = req.params;
+      const validationResult = createRoomBlockedDateSchema.safeParse({
+        ...req.body,
+        roomId,
+      });
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+      const created = await storage.blockRoomDate(validationResult.data);
+      return res.status(201).json({ blockedDate: created, message: "Data bloqueada com sucesso!" });
+    } catch (error) {
+      console.error("Admin block date error:", error);
+      return res.status(500).json({ error: "Erro ao bloquear data" });
+    }
+  });
+
+  app.delete("/admin/api/rooms/:roomId/blocked-dates/:date", requireAuth, async (req, res) => {
+    try {
+      const { roomId, date } = req.params;
+      const deleted = await storage.unblockRoomDate(roomId, date);
+      if (!deleted) {
+        return res.status(404).json({ error: "Data bloqueada nao encontrada" });
+      }
+      return res.json({ message: "Data desbloqueada com sucesso!" });
+    } catch (error) {
+      console.error("Admin unblock date error:", error);
+      return res.status(500).json({ error: "Erro ao desbloquear data" });
+    }
+  });
+
+  // Accommodation Reviews API
+  app.get("/admin/api/accommodations/:id/reviews", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const reviews = await storage.getAccommodationReviews(id);
+      return res.json({ reviews });
+    } catch (error) {
+      console.error("Admin get accommodation reviews error:", error);
+      return res.status(500).json({ error: "Erro ao buscar avaliacoes" });
+    }
+  });
+
+  app.delete("/admin/api/accommodations/:accommodationId/reviews/:reviewId", requireAuth, async (req, res) => {
+    try {
+      const { reviewId } = req.params;
+      const deleted = await storage.deleteAccommodationReview(reviewId);
+      if (!deleted) {
+        return res.status(404).json({ error: "Avaliacao nao encontrada" });
+      }
+      return res.json({ message: "Avaliacao excluida com sucesso!" });
+    } catch (error) {
+      console.error("Admin delete accommodation review error:", error);
+      return res.status(500).json({ error: "Erro ao excluir avaliacao" });
+    }
   });
 }
 
