@@ -3,7 +3,7 @@ import { randomBytes, pbkdf2Sync, timingSafeEqual } from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { storage } from "./storage";
-import { createNewsSchema, updateNewsSchema, createVideoSchema, updateVideoSchema, createAttractionSchema, updateAttractionSchema } from "@shared/schema";
+import { createNewsSchema, updateNewsSchema, createVideoSchema, updateVideoSchema, createAttractionSchema, updateAttractionSchema, createUsefulPhoneSchema, updateUsefulPhoneSchema, createPilgrimTipSchema, updatePilgrimTipSchema, createServiceSchema, updateServiceSchema } from "@shared/schema";
 import { fromError } from "zod-validation-error";
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
@@ -152,6 +152,21 @@ export function registerAdminRoutes(app: Express) {
   app.get("/admin/usuarios", requireAuth, (req, res) => {
     const usuariosPath = path.join(__dirname, "admin", "usuarios.html");
     res.sendFile(usuariosPath);
+  });
+
+  app.get("/admin/telefones", requireAuth, (req, res) => {
+    const telefonesPath = path.join(__dirname, "admin", "telefones.html");
+    res.sendFile(telefonesPath);
+  });
+
+  app.get("/admin/dicas", requireAuth, (req, res) => {
+    const dicasPath = path.join(__dirname, "admin", "dicas.html");
+    res.sendFile(dicasPath);
+  });
+
+  app.get("/admin/servicos", requireAuth, (req, res) => {
+    const servicosPath = path.join(__dirname, "admin", "servicos.html");
+    res.sendFile(servicosPath);
   });
 
   app.get("/admin/configuracoes", requireAuth, (req, res) => {
@@ -514,6 +529,225 @@ export function registerAdminRoutes(app: Express) {
     } catch (error) {
       console.error("Admin delete user error:", error);
       return res.status(500).json({ error: "Erro ao excluir usuario" });
+    }
+  });
+
+  // Useful Phones CRUD API
+  app.get("/admin/api/useful-phones", requireAuth, async (req, res) => {
+    try {
+      const phones = await storage.getAllUsefulPhones();
+      return res.json(phones);
+    } catch (error) {
+      console.error("Admin get useful phones error:", error);
+      return res.status(500).json({ error: "Erro ao buscar telefones" });
+    }
+  });
+
+  app.get("/admin/api/useful-phones/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const phone = await storage.getUsefulPhoneById(id);
+      if (!phone) {
+        return res.status(404).json({ error: "Telefone nao encontrado" });
+      }
+      return res.json(phone);
+    } catch (error) {
+      console.error("Admin get useful phone error:", error);
+      return res.status(500).json({ error: "Erro ao buscar telefone" });
+    }
+  });
+
+  app.post("/admin/api/useful-phones", requireAuth, async (req, res) => {
+    try {
+      const validationResult = createUsefulPhoneSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+      const created = await storage.createUsefulPhone(validationResult.data);
+      return res.status(201).json({ phone: created, message: "Telefone criado com sucesso!" });
+    } catch (error) {
+      console.error("Admin create useful phone error:", error);
+      return res.status(500).json({ error: "Erro ao criar telefone" });
+    }
+  });
+
+  app.put("/admin/api/useful-phones/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validationResult = updateUsefulPhoneSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+      const updated = await storage.updateUsefulPhone(id, validationResult.data);
+      if (!updated) {
+        return res.status(404).json({ error: "Telefone nao encontrado" });
+      }
+      return res.json({ phone: updated, message: "Telefone atualizado com sucesso!" });
+    } catch (error) {
+      console.error("Admin update useful phone error:", error);
+      return res.status(500).json({ error: "Erro ao atualizar telefone" });
+    }
+  });
+
+  app.delete("/admin/api/useful-phones/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteUsefulPhone(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Telefone nao encontrado" });
+      }
+      return res.json({ message: "Telefone excluido com sucesso!" });
+    } catch (error) {
+      console.error("Admin delete useful phone error:", error);
+      return res.status(500).json({ error: "Erro ao excluir telefone" });
+    }
+  });
+
+  // Pilgrim Tips CRUD API
+  app.get("/admin/api/pilgrim-tips", requireAuth, async (req, res) => {
+    try {
+      const tips = await storage.getAllPilgrimTips();
+      return res.json(tips);
+    } catch (error) {
+      console.error("Admin get pilgrim tips error:", error);
+      return res.status(500).json({ error: "Erro ao buscar dicas" });
+    }
+  });
+
+  app.get("/admin/api/pilgrim-tips/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const tip = await storage.getPilgrimTipById(id);
+      if (!tip) {
+        return res.status(404).json({ error: "Dica nao encontrada" });
+      }
+      return res.json(tip);
+    } catch (error) {
+      console.error("Admin get pilgrim tip error:", error);
+      return res.status(500).json({ error: "Erro ao buscar dica" });
+    }
+  });
+
+  app.post("/admin/api/pilgrim-tips", requireAuth, async (req, res) => {
+    try {
+      const validationResult = createPilgrimTipSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+      const created = await storage.createPilgrimTip(validationResult.data);
+      return res.status(201).json({ tip: created, message: "Dica criada com sucesso!" });
+    } catch (error) {
+      console.error("Admin create pilgrim tip error:", error);
+      return res.status(500).json({ error: "Erro ao criar dica" });
+    }
+  });
+
+  app.put("/admin/api/pilgrim-tips/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validationResult = updatePilgrimTipSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+      const updated = await storage.updatePilgrimTip(id, validationResult.data);
+      if (!updated) {
+        return res.status(404).json({ error: "Dica nao encontrada" });
+      }
+      return res.json({ tip: updated, message: "Dica atualizada com sucesso!" });
+    } catch (error) {
+      console.error("Admin update pilgrim tip error:", error);
+      return res.status(500).json({ error: "Erro ao atualizar dica" });
+    }
+  });
+
+  app.delete("/admin/api/pilgrim-tips/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deletePilgrimTip(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Dica nao encontrada" });
+      }
+      return res.json({ message: "Dica excluida com sucesso!" });
+    } catch (error) {
+      console.error("Admin delete pilgrim tip error:", error);
+      return res.status(500).json({ error: "Erro ao excluir dica" });
+    }
+  });
+
+  // Services CRUD API
+  app.get("/admin/api/services", requireAuth, async (req, res) => {
+    try {
+      const servicesList = await storage.getAllServices();
+      return res.json(servicesList);
+    } catch (error) {
+      console.error("Admin get services error:", error);
+      return res.status(500).json({ error: "Erro ao buscar servicos" });
+    }
+  });
+
+  app.get("/admin/api/services/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const service = await storage.getServiceById(id);
+      if (!service) {
+        return res.status(404).json({ error: "Servico nao encontrado" });
+      }
+      return res.json(service);
+    } catch (error) {
+      console.error("Admin get service error:", error);
+      return res.status(500).json({ error: "Erro ao buscar servico" });
+    }
+  });
+
+  app.post("/admin/api/services", requireAuth, async (req, res) => {
+    try {
+      const validationResult = createServiceSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+      const created = await storage.createService(validationResult.data);
+      return res.status(201).json({ service: created, message: "Servico criado com sucesso!" });
+    } catch (error) {
+      console.error("Admin create service error:", error);
+      return res.status(500).json({ error: "Erro ao criar servico" });
+    }
+  });
+
+  app.put("/admin/api/services/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validationResult = updateServiceSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+      const updated = await storage.updateService(id, validationResult.data);
+      if (!updated) {
+        return res.status(404).json({ error: "Servico nao encontrado" });
+      }
+      return res.json({ service: updated, message: "Servico atualizado com sucesso!" });
+    } catch (error) {
+      console.error("Admin update service error:", error);
+      return res.status(500).json({ error: "Erro ao atualizar servico" });
+    }
+  });
+
+  app.delete("/admin/api/services/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteService(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Servico nao encontrado" });
+      }
+      return res.json({ message: "Servico excluido com sucesso!" });
+    } catch (error) {
+      console.error("Admin delete service error:", error);
+      return res.status(500).json({ error: "Erro ao excluir servico" });
     }
   });
 }
