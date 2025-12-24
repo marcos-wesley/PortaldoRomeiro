@@ -8,13 +8,44 @@ import { createNewsSchema, updateNewsSchema, createVideoSchema, updateVideoSchem
 import { fromError } from "zod-validation-error";
 
 const uploadsDir = path.join(process.cwd(), "server", "uploads", "empresas");
+const uploadsHospedagensDir = path.join(process.cwd(), "server", "uploads", "hospedagens");
+const uploadsQuartosDir = path.join(process.cwd(), "server", "uploads", "quartos");
+
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
+}
+if (!fs.existsSync(uploadsHospedagensDir)) {
+  fs.mkdirSync(uploadsHospedagensDir, { recursive: true });
+}
+if (!fs.existsSync(uploadsQuartosDir)) {
+  fs.mkdirSync(uploadsQuartosDir, { recursive: true });
 }
 
 const imageStorage = multer.diskStorage({
   destination: (_req, _file, cb) => {
     cb(null, uploadsDir);
+  },
+  filename: (_req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname);
+    cb(null, uniqueSuffix + ext);
+  },
+});
+
+const hospedagensStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, uploadsHospedagensDir);
+  },
+  filename: (_req, file, cb) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const ext = path.extname(file.originalname);
+    cb(null, uniqueSuffix + ext);
+  },
+});
+
+const quartosStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    cb(null, uploadsQuartosDir);
   },
   filename: (_req, file, cb) => {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
@@ -34,6 +65,22 @@ const imageFilter = (_req: Request, file: Express.Multer.File, cb: multer.FileFi
 
 const upload = multer({
   storage: imageStorage,
+  fileFilter: imageFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
+});
+
+const uploadHospedagens = multer({
+  storage: hospedagensStorage,
+  fileFilter: imageFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024,
+  },
+});
+
+const uploadQuartos = multer({
+  storage: quartosStorage,
   fileFilter: imageFilter,
   limits: {
     fileSize: 5 * 1024 * 1024,
@@ -147,6 +194,106 @@ export function registerAdminRoutes(app: Express) {
       const filename = url.split("/").pop();
       if (filename) {
         const filePath = path.join(uploadsDir, filename);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Erro ao deletar imagem:", error);
+      res.status(500).json({ error: "Erro ao deletar imagem" });
+    }
+  });
+
+  // Upload endpoints for hospedagens
+  app.use("/uploads/hospedagens", express.static(uploadsHospedagensDir));
+
+  app.post("/admin/api/hospedagens/upload/image", requireAuth, uploadHospedagens.single("image"), (req: Request, res: Response) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "Nenhuma imagem enviada" });
+      }
+      const imageUrl = `/uploads/hospedagens/${req.file.filename}`;
+      res.json({ success: true, url: imageUrl, filename: req.file.filename });
+    } catch (error) {
+      console.error("Erro no upload:", error);
+      res.status(500).json({ error: "Erro ao fazer upload da imagem" });
+    }
+  });
+
+  app.post("/admin/api/hospedagens/upload/images", requireAuth, uploadHospedagens.array("images", 10), (req: Request, res: Response) => {
+    try {
+      const files = req.files as Express.Multer.File[];
+      if (!files || files.length === 0) {
+        return res.status(400).json({ error: "Nenhuma imagem enviada" });
+      }
+      const urls = files.map((file) => `/uploads/hospedagens/${file.filename}`);
+      res.json({ success: true, urls });
+    } catch (error) {
+      console.error("Erro no upload:", error);
+      res.status(500).json({ error: "Erro ao fazer upload das imagens" });
+    }
+  });
+
+  app.delete("/admin/api/hospedagens/upload/image", requireAuth, (req: Request, res: Response) => {
+    try {
+      const { url } = req.body;
+      if (!url) {
+        return res.status(400).json({ error: "URL da imagem nao fornecida" });
+      }
+      const filename = url.split("/").pop();
+      if (filename) {
+        const filePath = path.join(uploadsHospedagensDir, filename);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Erro ao deletar imagem:", error);
+      res.status(500).json({ error: "Erro ao deletar imagem" });
+    }
+  });
+
+  // Upload endpoints for quartos
+  app.use("/uploads/quartos", express.static(uploadsQuartosDir));
+
+  app.post("/admin/api/quartos/upload/image", requireAuth, uploadQuartos.single("image"), (req: Request, res: Response) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "Nenhuma imagem enviada" });
+      }
+      const imageUrl = `/uploads/quartos/${req.file.filename}`;
+      res.json({ success: true, url: imageUrl, filename: req.file.filename });
+    } catch (error) {
+      console.error("Erro no upload:", error);
+      res.status(500).json({ error: "Erro ao fazer upload da imagem" });
+    }
+  });
+
+  app.post("/admin/api/quartos/upload/images", requireAuth, uploadQuartos.array("images", 10), (req: Request, res: Response) => {
+    try {
+      const files = req.files as Express.Multer.File[];
+      if (!files || files.length === 0) {
+        return res.status(400).json({ error: "Nenhuma imagem enviada" });
+      }
+      const urls = files.map((file) => `/uploads/quartos/${file.filename}`);
+      res.json({ success: true, urls });
+    } catch (error) {
+      console.error("Erro no upload:", error);
+      res.status(500).json({ error: "Erro ao fazer upload das imagens" });
+    }
+  });
+
+  app.delete("/admin/api/quartos/upload/image", requireAuth, (req: Request, res: Response) => {
+    try {
+      const { url } = req.body;
+      if (!url) {
+        return res.status(400).json({ error: "URL da imagem nao fornecida" });
+      }
+      const filename = url.split("/").pop();
+      if (filename) {
+        const filePath = path.join(uploadsQuartosDir, filename);
         if (fs.existsSync(filePath)) {
           fs.unlinkSync(filePath);
         }
