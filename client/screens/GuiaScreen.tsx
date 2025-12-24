@@ -24,6 +24,7 @@ import { useNavigation } from "@react-navigation/native";
 
 interface Business {
   id: string;
+  accommodationId?: string;
   name: string;
   description: string;
   category: string;
@@ -49,6 +50,7 @@ interface Business {
   delivery?: boolean | null;
   deliveryUrl?: string | null;
   published?: boolean | null;
+  isAccommodation?: boolean;
 }
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -316,11 +318,50 @@ export default function GuiaScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  const { data: businessesData, isLoading } = useQuery<{ businesses: Business[] }>({
+  const { data: businessesData, isLoading: isLoadingBusinesses } = useQuery<{ businesses: Business[] }>({
     queryKey: ["/api/businesses"],
   });
 
-  const businesses = businessesData?.businesses || [];
+  // Fetch accommodations for "Onde Ficar" category
+  const { data: accommodationsData, isLoading: isLoadingAccommodations } = useQuery<{ accommodations: any[] }>({
+    queryKey: ["/api/accommodations"],
+  });
+
+  // Transform accommodations to Business format
+  const accommodationsAsBusinesses: Business[] = useMemo(() => {
+    const accommodations = accommodationsData?.accommodations || [];
+    return accommodations.map((acc) => ({
+      id: `accommodation-${acc.id}`,
+      accommodationId: acc.id,
+      name: acc.name,
+      description: acc.description || "",
+      category: acc.type === "hotel" ? "Hotel" : acc.type === "pousada" ? "Pousada" : "Hostel",
+      categoryId: "onde-ficar",
+      address: acc.address || "",
+      neighborhood: acc.neighborhood || "",
+      city: acc.city || "Trindade",
+      phone: acc.phone,
+      whatsapp: acc.whatsapp,
+      website: acc.website,
+      instagram: acc.instagram,
+      logoUrl: acc.logoUrl,
+      coverUrl: acc.coverUrl,
+      rating: acc.rating,
+      reviews: acc.reviewsCount,
+      featured: acc.featured,
+      isAccommodation: true,
+    }));
+  }, [accommodationsData]);
+
+  const isLoading = isLoadingBusinesses || isLoadingAccommodations;
+
+  // Combine businesses with accommodations (filtering out onde-ficar businesses to avoid duplicates)
+  const businesses = useMemo(() => {
+    const businessList = businessesData?.businesses || [];
+    // Filter out businesses from "onde-ficar" category since we use accommodations for that
+    const filteredBusinesses = businessList.filter(b => b.categoryId !== "onde-ficar");
+    return [...filteredBusinesses, ...accommodationsAsBusinesses];
+  }, [businessesData, accommodationsAsBusinesses]);
 
   const allCategories: BusinessCategory = { id: "all", name: "Todos", icon: "grid", color: Colors.light.primary };
 
@@ -343,7 +384,11 @@ export default function GuiaScreen() {
   const regularBusinesses = filteredBusinesses.filter(b => !b.featured);
 
   const handleBusinessPress = (business: Business) => {
-    navigation.navigate("EmpresaDetail", { businessId: business.id });
+    if (business.isAccommodation && business.accommodationId) {
+      navigation.navigate("HospedagemDetail", { id: business.accommodationId });
+    } else {
+      navigation.navigate("EmpresaDetail", { businessId: business.id });
+    }
   };
 
   const handleCategorySelect = (categoryId: string) => {

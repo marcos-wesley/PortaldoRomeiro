@@ -2,12 +2,14 @@ import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import GuiaScreen from "@/screens/GuiaScreen";
 import EmpresaDetailScreen from "@/screens/EmpresaDetailScreen";
+import HospedagemDetailScreen from "@/screens/HospedagemDetailScreen";
 import { AuthAwareHeader } from "@/components/AuthAwareHeader";
 import { useTheme } from "@/hooks/useTheme";
 
 export type GuiaStackParamList = {
   Guia: undefined;
   EmpresaDetail: { businessId: string };
+  HospedagemDetail: { id: string; checkIn?: string; checkOut?: string };
 };
 
 const Stack = createNativeStackNavigator<GuiaStackParamList>();
@@ -36,6 +38,13 @@ export default function GuiaStackNavigator() {
         component={EmpresaDetailScreen}
         options={{
           headerTitle: "Detalhes",
+        }}
+      />
+      <Stack.Screen
+        name="HospedagemDetail"
+        component={HospedagemDetailScreen}
+        options={{
+          headerTitle: "Hospedagem",
         }}
       />
     </Stack.Navigator>
