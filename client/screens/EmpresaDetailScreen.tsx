@@ -15,10 +15,39 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Colors } from "@/constants/theme";
-import { businessesData, businessCategories, Business } from "@/lib/data";
-import { getApiUrl, apiRequest } from "@/lib/query-client";
+import { businessCategories } from "@/lib/data";
+import { apiRequest } from "@/lib/query-client";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { GuiaStackParamList } from "@/navigation/GuiaStackNavigator";
+
+interface Business {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  categoryId: string;
+  address: string;
+  neighborhood: string;
+  city: string;
+  phone?: string | null;
+  whatsapp?: string | null;
+  website?: string | null;
+  instagram?: string | null;
+  facebook?: string | null;
+  hours?: string | null;
+  priceRange?: string | null;
+  logoUrl?: string | null;
+  coverUrl?: string | null;
+  gallery?: string[] | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  rating?: string | null;
+  reviews?: number | null;
+  featured?: boolean | null;
+  delivery?: boolean | null;
+  deliveryUrl?: string | null;
+  published?: boolean | null;
+}
 
 interface BusinessReview {
   id: string;
@@ -168,8 +197,6 @@ function ReviewCard({ review }: { review: BusinessReview }) {
 
 export default function EmpresaDetailScreen({ route }: Props) {
   const { businessId } = route.params;
-  const business = businessesData.find(b => b.id === businessId);
-  const category = businessCategories.find(c => c.id === business?.categoryId);
   
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
@@ -182,8 +209,16 @@ export default function EmpresaDetailScreen({ route }: Props) {
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewComment, setReviewComment] = useState("");
 
+  const { data: businessData, isLoading: businessLoading } = useQuery<{ business: Business }>({
+    queryKey: [`/api/businesses/${businessId}`],
+  });
+
+  const business = businessData?.business;
+  const category = businessCategories.find(c => c.id === business?.categoryId);
+
   const { data: reviewsData, isLoading: reviewsLoading } = useQuery<{ reviews: BusinessReview[] }>({
     queryKey: [`/api/businesses/${businessId}/reviews`],
+    enabled: !!business,
   });
 
   const createReviewMutation = useMutation({
@@ -192,6 +227,7 @@ export default function EmpresaDetailScreen({ route }: Props) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/businesses/${businessId}/reviews`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/businesses/${businessId}`] });
       setShowReviewForm(false);
       setReviewName("");
       setReviewRating(0);
@@ -223,6 +259,15 @@ export default function EmpresaDetailScreen({ route }: Props) {
     setSelectedImageIndex(index);
     setGalleryModalVisible(true);
   };
+
+  if (businessLoading) {
+    return (
+      <View style={[styles.emptyState, { backgroundColor: theme.backgroundRoot }]}>
+        <ActivityIndicator size="large" color={Colors.light.primary} />
+        <ThemedText type="body" secondary style={{ marginTop: Spacing.md }}>Carregando...</ThemedText>
+      </View>
+    );
+  }
 
   if (!business) {
     return (
@@ -306,7 +351,7 @@ export default function EmpresaDetailScreen({ route }: Props) {
       <View style={styles.content}>
         <View style={styles.header}>
           <Image
-            source={{ uri: business.logoUrl }}
+            source={{ uri: business.logoUrl || undefined }}
             style={styles.logo}
             contentFit="cover"
           />
@@ -322,7 +367,7 @@ export default function EmpresaDetailScreen({ route }: Props) {
               {business.rating ? (
                 <View style={styles.ratingBadge}>
                   <Feather name="star" size={14} color="#F59E0B" />
-                  <ThemedText style={styles.ratingText}>{business.rating.toFixed(1)}</ThemedText>
+                  <ThemedText style={styles.ratingText}>{parseFloat(business.rating).toFixed(1)}</ThemedText>
                   {business.reviews ? (
                     <ThemedText type="caption" secondary>({business.reviews})</ThemedText>
                   ) : null}

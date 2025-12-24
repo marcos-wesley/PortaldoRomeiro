@@ -1,4 +1,4 @@
-import { ScrollView, View, StyleSheet, Pressable, TextInput, Linking, Platform } from "react-native";
+import { ScrollView, View, StyleSheet, Pressable, TextInput, Linking, Platform, ActivityIndicator } from "react-native";
 import { useState, useMemo } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
@@ -11,15 +11,45 @@ import Animated, {
   withSpring,
   WithSpringConfig,
 } from "react-native-reanimated";
+import { useQuery } from "@tanstack/react-query";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Colors, Typography } from "@/constants/theme";
-import { businessCategories, businessesData, Business, BusinessCategory } from "@/lib/data";
+import { businessCategories, BusinessCategory } from "@/lib/data";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { GuiaStackParamList } from "@/navigation/GuiaStackNavigator";
 import { useNavigation } from "@react-navigation/native";
+
+interface Business {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  categoryId: string;
+  address: string;
+  neighborhood: string;
+  city: string;
+  phone?: string | null;
+  whatsapp?: string | null;
+  website?: string | null;
+  instagram?: string | null;
+  facebook?: string | null;
+  hours?: string | null;
+  priceRange?: string | null;
+  logoUrl?: string | null;
+  coverUrl?: string | null;
+  gallery?: string[] | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  rating?: string | null;
+  reviews?: number | null;
+  featured?: boolean | null;
+  delivery?: boolean | null;
+  deliveryUrl?: string | null;
+  published?: boolean | null;
+}
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -102,7 +132,7 @@ function SimpleBusinessCard({
       style={[styles.simpleCard, { backgroundColor: theme.backgroundDefault }, animatedStyle]}
     >
       <Image
-        source={{ uri: business.logoUrl }}
+        source={{ uri: business.logoUrl || undefined }}
         style={styles.simpleCardLogo}
         contentFit="cover"
       />
@@ -190,7 +220,7 @@ function FeaturedBusinessCard({
       <View style={styles.featuredCardBody}>
         <View style={styles.featuredCardHeader}>
           <Image
-            source={{ uri: business.logoUrl }}
+            source={{ uri: business.logoUrl || undefined }}
             style={styles.featuredCardLogo}
             contentFit="cover"
           />
@@ -207,14 +237,14 @@ function FeaturedBusinessCard({
           {business.rating ? (
             <View style={styles.ratingBadge}>
               <Feather name="star" size={12} color="#F59E0B" />
-              <ThemedText style={styles.ratingText}>{business.rating.toFixed(1)}</ThemedText>
+              <ThemedText style={styles.ratingText}>{parseFloat(business.rating).toFixed(1)}</ThemedText>
             </View>
           ) : null}
         </View>
 
-        {business.shortDescription ? (
+        {business.description ? (
           <ThemedText type="small" secondary style={styles.featuredCardDescription} numberOfLines={2}>
-            {business.shortDescription}
+            {business.description}
           </ThemedText>
         ) : null}
 
@@ -270,10 +300,16 @@ export default function GuiaScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
+  const { data: businessesData, isLoading } = useQuery<{ businesses: Business[] }>({
+    queryKey: ["/api/businesses"],
+  });
+
+  const businesses = businessesData?.businesses || [];
+
   const allCategories: BusinessCategory = { id: "all", name: "Todos", icon: "grid", color: Colors.light.primary };
 
   const filteredBusinesses = useMemo(() => {
-    return businessesData.filter(business => {
+    return businesses.filter(business => {
       const matchesSearch = searchQuery === "" || 
         business.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         business.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -285,7 +321,7 @@ export default function GuiaScreen() {
       
       return matchesSearch && matchesCategory;
     });
-  }, [searchQuery, selectedCategory]);
+  }, [businesses, searchQuery, selectedCategory]);
 
   const featuredBusinesses = filteredBusinesses.filter(b => b.featured);
   const regularBusinesses = filteredBusinesses.filter(b => !b.featured);
@@ -352,7 +388,24 @@ export default function GuiaScreen() {
         ))}
       </ScrollView>
 
-      {featuredBusinesses.length > 0 ? (
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.light.primary} />
+          <ThemedText type="body" secondary style={{ marginTop: Spacing.md }}>Carregando empresas...</ThemedText>
+        </View>
+      ) : filteredBusinesses.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Feather name="briefcase" size={48} color={theme.textSecondary} />
+          <ThemedText type="h4" style={{ marginTop: Spacing.lg, textAlign: "center" }}>
+            {businesses.length === 0 ? "Nenhuma empresa cadastrada" : "Nenhuma empresa encontrada"}
+          </ThemedText>
+          <ThemedText type="body" secondary style={{ marginTop: Spacing.sm, textAlign: "center" }}>
+            {businesses.length === 0 ? "As empresas serao exibidas aqui quando forem cadastradas no painel administrativo." : "Tente buscar com outras palavras ou selecione outra categoria."}
+          </ThemedText>
+        </View>
+      ) : null}
+
+      {!isLoading && featuredBusinesses.length > 0 ? (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Feather name="star" size={18} color="#F59E0B" />
@@ -369,7 +422,7 @@ export default function GuiaScreen() {
         </View>
       ) : null}
 
-      {regularBusinesses.length > 0 ? (
+      {!isLoading && regularBusinesses.length > 0 ? (
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Feather name="briefcase" size={18} color={Colors.light.primary} />
@@ -386,16 +439,6 @@ export default function GuiaScreen() {
               />
             ))}
           </View>
-        </View>
-      ) : null}
-
-      {filteredBusinesses.length === 0 ? (
-        <View style={styles.emptyState}>
-          <Feather name="search" size={48} color={theme.textSecondary} />
-          <ThemedText type="h4" style={styles.emptyTitle}>Nenhum resultado</ThemedText>
-          <ThemedText type="small" secondary style={styles.emptyText}>
-            Tente buscar por outro termo ou categoria
-          </ThemedText>
         </View>
       ) : null}
     </ScrollView>
@@ -596,5 +639,16 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     textAlign: "center",
+  },
+  loadingContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: Spacing["4xl"],
+  },
+  emptyContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: Spacing["4xl"],
+    paddingHorizontal: Spacing.xl,
   },
 });

@@ -457,6 +457,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Business Routes (Public)
+  app.get("/api/businesses", async (req, res) => {
+    try {
+      const businesses = await storage.getAllBusinesses(true);
+      return res.json({ businesses });
+    } catch (error) {
+      console.error("Get businesses error:", error);
+      return res.status(500).json({ error: "Erro ao buscar empresas" });
+    }
+  });
+
+  app.get("/api/businesses/:businessId", async (req, res) => {
+    try {
+      const { businessId } = req.params;
+      const business = await storage.getBusinessById(businessId);
+      if (!business || !business.published) {
+        return res.status(404).json({ error: "Empresa nao encontrada" });
+      }
+      return res.json({ business });
+    } catch (error) {
+      console.error("Get business error:", error);
+      return res.status(500).json({ error: "Erro ao buscar empresa" });
+    }
+  });
+
   // Business Reviews Routes
   app.get("/api/businesses/:businessId/reviews", async (req, res) => {
     try {
