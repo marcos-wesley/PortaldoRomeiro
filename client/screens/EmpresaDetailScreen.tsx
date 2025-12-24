@@ -1,4 +1,4 @@
-import { ScrollView, View, StyleSheet, Pressable, Linking, Platform, Modal, Dimensions } from "react-native";
+import { ScrollView, View, StyleSheet, Pressable, Linking, Platform, Modal, Dimensions, TextInput, ActivityIndicator, Alert } from "react-native";
 import { useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
@@ -10,13 +10,25 @@ import Animated, {
   withSpring,
   WithSpringConfig,
 } from "react-native-reanimated";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Colors } from "@/constants/theme";
 import { businessesData, businessCategories, Business } from "@/lib/data";
+import { getApiUrl, apiRequest } from "@/lib/query-client";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { GuiaStackParamList } from "@/navigation/GuiaStackNavigator";
+
+interface BusinessReview {
+  id: string;
+  businessId: string;
+  userId?: string | null;
+  userName: string;
+  rating: number;
+  comment?: string | null;
+  createdAt: string;
+}
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -111,6 +123,49 @@ function InfoRow({
   );
 }
 
+function StarRating({ rating, size = 16, onSelect }: { rating: number; size?: number; onSelect?: (r: number) => void }) {
+  return (
+    <View style={{ flexDirection: "row", gap: 4 }}>
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Pressable key={star} onPress={() => onSelect?.(star)} disabled={!onSelect}>
+          <Feather
+            name={star <= rating ? "star" : "star"}
+            size={size}
+            color={star <= rating ? "#F59E0B" : "#D1D5DB"}
+            style={{ opacity: star <= rating ? 1 : 0.5 }}
+          />
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
+function ReviewCard({ review }: { review: BusinessReview }) {
+  const { theme } = useTheme();
+  const date = new Date(review.createdAt);
+  const formattedDate = `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1).toString().padStart(2, "0")}/${date.getFullYear()}`;
+
+  return (
+    <View style={[styles.reviewCard, { backgroundColor: theme.backgroundDefault }]}>
+      <View style={styles.reviewHeader}>
+        <View style={styles.reviewAvatar}>
+          <ThemedText style={styles.reviewAvatarText}>
+            {review.userName.charAt(0).toUpperCase()}
+          </ThemedText>
+        </View>
+        <View style={styles.reviewInfo}>
+          <ThemedText type="body" style={{ fontWeight: "600" }}>{review.userName}</ThemedText>
+          <ThemedText type="caption" secondary>{formattedDate}</ThemedText>
+        </View>
+        <StarRating rating={review.rating} size={14} />
+      </View>
+      {review.comment ? (
+        <ThemedText style={styles.reviewComment}>{review.comment}</ThemedText>
+      ) : null}
+    </View>
+  );
+}
+
 export default function EmpresaDetailScreen({ route }: Props) {
   const { businessId } = route.params;
   const business = businessesData.find(b => b.id === businessId);
@@ -119,8 +174,50 @@ export default function EmpresaDetailScreen({ route }: Props) {
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const { theme } = useTheme();
+  const queryClient = useQueryClient();
   const [galleryModalVisible, setGalleryModalVisible] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewName, setReviewName] = useState("");
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
+
+  const { data: reviewsData, isLoading: reviewsLoading } = useQuery<{ reviews: BusinessReview[] }>({
+    queryKey: [`/api/businesses/${businessId}/reviews`],
+  });
+
+  const createReviewMutation = useMutation({
+    mutationFn: async (data: { userName: string; rating: number; comment?: string }) => {
+      return apiRequest("POST", `/api/businesses/${businessId}/reviews`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/businesses/${businessId}/reviews`] });
+      setShowReviewForm(false);
+      setReviewName("");
+      setReviewRating(0);
+      setReviewComment("");
+      Alert.alert("Sucesso", "Sua avaliacao foi enviada com sucesso!");
+    },
+    onError: () => {
+      Alert.alert("Erro", "Nao foi possivel enviar sua avaliacao. Tente novamente.");
+    },
+  });
+
+  const handleSubmitReview = () => {
+    if (!reviewName.trim()) {
+      Alert.alert("Atencao", "Por favor, informe seu nome.");
+      return;
+    }
+    if (reviewRating === 0) {
+      Alert.alert("Atencao", "Por favor, selecione uma nota.");
+      return;
+    }
+    createReviewMutation.mutate({
+      userName: reviewName.trim(),
+      rating: reviewRating,
+      comment: reviewComment.trim() || undefined,
+    });
+  };
 
   const openGalleryImage = (index: number) => {
     setSelectedImageIndex(index);
@@ -373,6 +470,89 @@ export default function EmpresaDetailScreen({ route }: Props) {
             </ScrollView>
           </View>
         ) : null}
+
+        <View style={styles.section}>
+          <View style={styles.reviewsHeader}>
+            <ThemedText type="h4" style={styles.sectionTitle}>Avaliacoes</ThemedText>
+            <Pressable 
+              style={[styles.addReviewButton, { backgroundColor: Colors.light.primary }]}
+              onPress={() => setShowReviewForm(!showReviewForm)}
+            >
+              <Feather name={showReviewForm ? "x" : "plus"} size={16} color="#FFFFFF" />
+              <ThemedText style={styles.addReviewButtonText}>
+                {showReviewForm ? "Cancelar" : "Avaliar"}
+              </ThemedText>
+            </Pressable>
+          </View>
+
+          {showReviewForm ? (
+            <View style={[styles.reviewFormCard, { backgroundColor: theme.backgroundDefault }]}>
+              <ThemedText type="body" style={{ marginBottom: Spacing.sm, fontWeight: "600" }}>
+                Deixe sua avaliacao
+              </ThemedText>
+              
+              <View style={styles.reviewFormField}>
+                <ThemedText type="caption" secondary style={{ marginBottom: Spacing.xs }}>Seu nome</ThemedText>
+                <TextInput
+                  style={[styles.reviewInput, { backgroundColor: theme.backgroundRoot, color: theme.text }]}
+                  placeholder="Digite seu nome"
+                  placeholderTextColor={theme.textSecondary}
+                  value={reviewName}
+                  onChangeText={setReviewName}
+                />
+              </View>
+
+              <View style={styles.reviewFormField}>
+                <ThemedText type="caption" secondary style={{ marginBottom: Spacing.xs }}>Nota</ThemedText>
+                <StarRating rating={reviewRating} size={28} onSelect={setReviewRating} />
+              </View>
+
+              <View style={styles.reviewFormField}>
+                <ThemedText type="caption" secondary style={{ marginBottom: Spacing.xs }}>Comentario (opcional)</ThemedText>
+                <TextInput
+                  style={[styles.reviewInput, styles.reviewTextarea, { backgroundColor: theme.backgroundRoot, color: theme.text }]}
+                  placeholder="Conte sua experiencia..."
+                  placeholderTextColor={theme.textSecondary}
+                  value={reviewComment}
+                  onChangeText={setReviewComment}
+                  multiline
+                  numberOfLines={3}
+                />
+              </View>
+
+              <Pressable 
+                style={[styles.submitReviewButton, { backgroundColor: Colors.light.primary }]}
+                onPress={handleSubmitReview}
+                disabled={createReviewMutation.isPending}
+              >
+                {createReviewMutation.isPending ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <ThemedText style={styles.submitReviewButtonText}>Enviar Avaliacao</ThemedText>
+                )}
+              </Pressable>
+            </View>
+          ) : null}
+
+          {reviewsLoading ? (
+            <View style={styles.reviewsLoading}>
+              <ActivityIndicator size="small" color={Colors.light.primary} />
+            </View>
+          ) : reviewsData?.reviews && reviewsData.reviews.length > 0 ? (
+            <View style={styles.reviewsList}>
+              {reviewsData.reviews.map((review) => (
+                <ReviewCard key={review.id} review={review} />
+              ))}
+            </View>
+          ) : (
+            <View style={[styles.noReviewsCard, { backgroundColor: theme.backgroundDefault }]}>
+              <Feather name="message-square" size={32} color={theme.textSecondary} />
+              <ThemedText type="body" secondary style={{ marginTop: Spacing.sm, textAlign: "center" }}>
+                Nenhuma avaliacao ainda. Seja o primeiro a avaliar!
+              </ThemedText>
+            </View>
+          )}
+        </View>
       </View>
 
       <Modal
@@ -602,5 +782,94 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 14,
     fontWeight: "500",
+  },
+  reviewsHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
+  addReviewButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.md,
+    gap: Spacing.xs,
+  },
+  addReviewButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  reviewFormCard: {
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+    marginBottom: Spacing.md,
+  },
+  reviewFormField: {
+    marginBottom: Spacing.md,
+  },
+  reviewInput: {
+    padding: Spacing.md,
+    borderRadius: BorderRadius.md,
+    fontSize: 14,
+  },
+  reviewTextarea: {
+    minHeight: 80,
+    textAlignVertical: "top",
+  },
+  submitReviewButton: {
+    paddingVertical: Spacing.md,
+    borderRadius: BorderRadius.md,
+    alignItems: "center",
+    marginTop: Spacing.sm,
+  },
+  submitReviewButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  reviewsLoading: {
+    padding: Spacing.xl,
+    alignItems: "center",
+  },
+  reviewsList: {
+    gap: Spacing.md,
+  },
+  reviewCard: {
+    padding: Spacing.lg,
+    borderRadius: BorderRadius.lg,
+  },
+  reviewHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: Spacing.sm,
+  },
+  reviewAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.light.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: Spacing.sm,
+  },
+  reviewAvatarText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  reviewInfo: {
+    flex: 1,
+  },
+  reviewComment: {
+    lineHeight: 22,
+    marginTop: Spacing.xs,
+  },
+  noReviewsCard: {
+    padding: Spacing.xl,
+    borderRadius: BorderRadius.lg,
+    alignItems: "center",
   },
 });

@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "node:http";
 import { randomBytes, pbkdf2Sync, timingSafeEqual } from "node:crypto";
-import { registerUserSchema, loginUserSchema, updateProfileSchema, createNewsSchema, updateNewsSchema, createVideoSchema, updateVideoSchema, createAttractionSchema, updateAttractionSchema } from "@shared/schema";
+import { registerUserSchema, loginUserSchema, updateProfileSchema, createNewsSchema, updateNewsSchema, createVideoSchema, updateVideoSchema, createAttractionSchema, updateAttractionSchema, createBusinessReviewSchema } from "@shared/schema";
 import { storage } from "./storage";
 import { fromError } from "zod-validation-error";
 import * as fs from "node:fs";
@@ -454,6 +454,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Update static page error:", error);
       return res.status(500).json({ error: "Erro ao atualizar conteudo" });
+    }
+  });
+
+  // Business Reviews Routes
+  app.get("/api/businesses/:businessId/reviews", async (req, res) => {
+    try {
+      const { businessId } = req.params;
+      const reviews = await storage.getBusinessReviews(businessId);
+      return res.json({ reviews });
+    } catch (error) {
+      console.error("Get business reviews error:", error);
+      return res.status(500).json({ error: "Erro ao buscar avaliacoes" });
+    }
+  });
+
+  app.post("/api/businesses/:businessId/reviews", async (req, res) => {
+    try {
+      const { businessId } = req.params;
+      const validationResult = createBusinessReviewSchema.safeParse({
+        ...req.body,
+        businessId,
+      });
+
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+
+      const review = await storage.createBusinessReview(validationResult.data);
+      return res.status(201).json({ review, message: "Avaliacao enviada com sucesso!" });
+    } catch (error) {
+      console.error("Create business review error:", error);
+      return res.status(500).json({ error: "Erro ao enviar avaliacao" });
     }
   });
 

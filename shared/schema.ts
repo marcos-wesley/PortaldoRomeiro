@@ -496,3 +496,26 @@ export const updateBusinessSchema = z.object({
 export type Business = typeof businesses.$inferSelect;
 export type CreateBusinessInput = z.infer<typeof createBusinessSchema>;
 export type UpdateBusinessInput = z.infer<typeof updateBusinessSchema>;
+
+export const businessReviews = pgTable("business_reviews", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  businessId: varchar("business_id").notNull(),
+  userId: varchar("user_id"),
+  userName: text("user_name").notNull(),
+  rating: integer("rating").notNull(),
+  comment: text("comment"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const createBusinessReviewSchema = z.object({
+  businessId: z.string(),
+  userId: z.string().optional().nullable(),
+  userName: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  rating: z.number().min(1).max(5),
+  comment: z.string().optional().nullable(),
+});
+
+export type BusinessReview = typeof businessReviews.$inferSelect;
+export type CreateBusinessReviewInput = z.infer<typeof createBusinessReviewSchema>;
