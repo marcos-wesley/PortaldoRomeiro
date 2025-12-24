@@ -55,6 +55,8 @@
     .btn-sm { padding: 6px 12px; font-size: 12px; }
     .rooms-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
     .room-card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); overflow: hidden; }
+    .room-image { width: 100%; height: 180px; overflow: hidden; }
+    .room-image img { width: 100%; height: 100%; object-fit: cover; }
     .room-header { padding: 20px; border-bottom: 1px solid #e5e7eb; }
     .room-name { font-size: 18px; font-weight: 600; color: #1f2937; margin-bottom: 4px; }
     .room-type { font-size: 14px; color: #6b7280; }
@@ -193,6 +195,18 @@
             <label for="roomAmenities">Comodidades</label>
             <input type="text" id="roomAmenities" placeholder="wifi, ar-condicionado, tv (separado por virgula)">
           </div>
+          <div class="form-group">
+            <label for="roomSize">Tamanho (m2)</label>
+            <input type="number" id="roomSize" min="1" placeholder="Ex: 25">
+          </div>
+          <div class="form-group">
+            <label for="roomImageUrl">Foto Principal (URL)</label>
+            <input type="text" id="roomImageUrl" placeholder="https://exemplo.com/foto.jpg">
+          </div>
+          <div class="form-group">
+            <label for="roomGallery">Galeria de Fotos (URLs separadas por virgula)</label>
+            <textarea id="roomGallery" rows="2" placeholder="https://url1.jpg, https://url2.jpg"></textarea>
+          </div>
         </div>
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" onclick="closeRoomModal()">Cancelar</button>
@@ -251,6 +265,21 @@
       return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
+    function formatBeds(bedsJson) {
+      if (!bedsJson) return 'Nao especificado';
+      try {
+        const beds = JSON.parse(bedsJson);
+        if (!Array.isArray(beds)) return bedsJson;
+        return beds.map(b => {
+          const qty = b.quantity || 1;
+          const type = b.type || 'cama';
+          return `${qty} ${type}`;
+        }).join(', ');
+      } catch(e) {
+        return bedsJson;
+      }
+    }
+
     function renderRooms() {
       const loading = document.getElementById('loading');
       const empty = document.getElementById('empty');
@@ -269,9 +298,10 @@
 
       grid.innerHTML = rooms.map(r => `
         <div class="room-card">
+          ${r.imageUrl ? `<div class="room-image"><img src="${r.imageUrl}" alt="${r.name}"></div>` : ''}
           <div class="room-header">
             <div class="room-name">${r.name}</div>
-            <div class="room-type">${r.beds || 'Camas nao especificadas'}</div>
+            <div class="room-type">${formatBeds(r.beds)}</div>
           </div>
           <div class="room-body">
             <div class="room-info">
@@ -283,6 +313,7 @@
                 <span class="room-info-label">Quantidade</span>
                 <span class="room-info-value">${r.quantity} unidades</span>
               </div>
+              ${r.size ? `<div class="room-info-item"><span class="room-info-label">Tamanho</span><span class="room-info-value">${r.size} m2</span></div>` : ''}
             </div>
             <div class="room-price">
               ${formatPrice(r.pricePerNight)} <span>/noite</span>
@@ -324,11 +355,17 @@
       document.getElementById('roomSubmitBtn').textContent = 'Atualizar';
       document.getElementById('roomName').value = room.name;
       document.getElementById('maxGuests').value = room.maxGuests;
-      document.getElementById('beds').value = room.beds || '';
+      document.getElementById('beds').value = formatBeds(room.beds);
       document.getElementById('quantity').value = room.quantity;
       document.getElementById('pricePerNight').value = (room.pricePerNight / 100).toFixed(2);
       document.getElementById('published').value = room.published ? 'true' : 'false';
       document.getElementById('roomDescription').value = room.description || '';
+      document.getElementById('roomSize').value = room.size || '';
+      document.getElementById('roomImageUrl').value = room.imageUrl || '';
+      
+      let gallery = [];
+      try { gallery = JSON.parse(room.gallery || '[]'); } catch(e) {}
+      document.getElementById('roomGallery').value = gallery.join(', ');
       
       let amenities = [];
       try { amenities = JSON.parse(room.amenities || '[]'); } catch(e) {}
@@ -342,6 +379,11 @@
 
       const amenitiesStr = document.getElementById('roomAmenities').value;
       const amenities = amenitiesStr.split(',').map(a => a.trim()).filter(a => a);
+      
+      const galleryStr = document.getElementById('roomGallery').value;
+      const gallery = galleryStr.split(',').map(a => a.trim()).filter(a => a);
+      
+      const sizeValue = document.getElementById('roomSize').value;
 
       const data = {
         name: document.getElementById('roomName').value,
@@ -351,6 +393,9 @@
         pricePerNight: Math.round(parseFloat(document.getElementById('pricePerNight').value) * 100),
         published: document.getElementById('published').value === 'true',
         description: document.getElementById('roomDescription').value || null,
+        size: sizeValue ? parseInt(sizeValue) : null,
+        imageUrl: document.getElementById('roomImageUrl').value || null,
+        gallery: JSON.stringify(gallery),
         amenities: JSON.stringify(amenities)
       };
 
