@@ -35,12 +35,29 @@ if (Platform.OS !== "web") {
   }
 }
 
-function NativeMapView({ attraction, userLocation }: { 
+function NativeMapView({ attraction, userLocation, onOpenExternal }: { 
   attraction: Attraction; 
   userLocation: { latitude: number; longitude: number } | null;
+  onOpenExternal: () => void;
 }) {
+  const { theme } = useTheme();
+  
   if (!MapViewComponent || !MarkerComponent) {
-    return null;
+    return (
+      <View style={styles.mapErrorContainer}>
+        <Feather name="map" size={48} color={Colors.light.primary} />
+        <ThemedText type="body" style={{ marginTop: Spacing.md, textAlign: "center", paddingHorizontal: Spacing.xl }}>
+          Mapa nao disponivel. Clique abaixo para abrir no aplicativo de mapas.
+        </ThemedText>
+        <Pressable 
+          onPress={onOpenExternal}
+          style={[styles.primaryActionButton, { backgroundColor: Colors.light.primary, marginTop: Spacing.lg }]}
+        >
+          <Feather name="external-link" size={18} color="#FFFFFF" />
+          <ThemedText style={styles.primaryActionButtonText}>Abrir no Google Maps</ThemedText>
+        </Pressable>
+      </View>
+    );
   }
   
   return (
@@ -652,6 +669,7 @@ function AttractionDetailModal({
               <NativeMapView 
                 attraction={attraction} 
                 userLocation={userLocation}
+                onOpenExternal={handleDirections}
               />
             )
           ) : (
