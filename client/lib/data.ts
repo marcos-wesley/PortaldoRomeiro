@@ -366,7 +366,6 @@ export interface Business {
 
 export const businessCategories: BusinessCategory[] = [
   { id: "onde-comer", name: "Onde Comer", icon: "coffee", color: "#F97316" },
-  { id: "onde-ficar", name: "Onde Ficar", icon: "home", color: "#4169E1" },
   { id: "onde-comprar", name: "Onde Comprar", icon: "shopping-bag", color: "#10B981" },
   { id: "construcao", name: "Construcao e Reforma", icon: "tool", color: "#8B5CF6" },
   { id: "diversao", name: "Diversao e Lazer", icon: "smile", color: "#EC4899" },
