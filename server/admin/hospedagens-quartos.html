@@ -87,6 +87,19 @@
     .badge { display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; }
     .badge-success { background: #d1fae5; color: #059669; }
     .badge-warning { background: #fef3c7; color: #d97706; }
+    .image-upload-area { border: 2px dashed #d1d5db; border-radius: 8px; padding: 16px; text-align: center; cursor: pointer; transition: all 0.2s; background: #fafafa; }
+    .image-upload-area:hover { border-color: var(--primary); background: #fff5f5; }
+    .image-upload-area.has-image { border-style: solid; border-color: var(--primary); }
+    .image-upload-area input[type="file"] { display: none; }
+    .upload-icon { font-size: 24px; color: #9ca3af; margin-bottom: 4px; }
+    .upload-text { color: #6b7280; font-size: 12px; }
+    .upload-text strong { color: var(--primary); }
+    .image-preview { max-width: 100%; max-height: 120px; border-radius: 8px; object-fit: cover; }
+    .gallery-container { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .gallery-item { position: relative; width: 80px; height: 60px; }
+    .gallery-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
+    .gallery-item .remove-btn { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%; background: #ef4444; color: white; border: none; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+    .uploading { opacity: 0.6; pointer-events: none; }
   </style>
 </head>
 <body>
@@ -200,12 +213,24 @@
             <input type="number" id="roomSize" min="1" placeholder="Ex: 25">
           </div>
           <div class="form-group">
-            <label for="roomImageUrl">Foto Principal (URL)</label>
-            <input type="text" id="roomImageUrl" placeholder="https://exemplo.com/foto.jpg">
+            <label>Foto Principal</label>
+            <div class="image-upload-area" id="roomImageUploadArea" onclick="document.getElementById('roomImageFile').click()">
+              <input type="file" id="roomImageFile" accept="image/*" onchange="uploadRoomImage(this)">
+              <input type="hidden" id="roomImageUrl">
+              <div id="roomImagePreviewContainer">
+                <div class="upload-icon">+</div>
+                <div class="upload-text"><strong>Clique</strong> para enviar foto</div>
+              </div>
+            </div>
           </div>
           <div class="form-group">
-            <label for="roomGallery">Galeria de Fotos (URLs separadas por virgula)</label>
-            <textarea id="roomGallery" rows="2" placeholder="https://url1.jpg, https://url2.jpg"></textarea>
+            <label>Galeria de Fotos</label>
+            <div class="image-upload-area" id="roomGalleryUploadArea" onclick="document.getElementById('roomGalleryFiles').click()">
+              <input type="file" id="roomGalleryFiles" accept="image/*" multiple onchange="uploadRoomGalleryImages(this)">
+              <div class="upload-icon">+</div>
+              <div class="upload-text"><strong>Clique</strong> para adicionar fotos</div>
+            </div>
+            <div class="gallery-container" id="roomGalleryContainer"></div>
           </div>
         </div>
         <div class="modal-actions">
@@ -332,18 +357,33 @@
       `).join('');
     }
 
+    let roomGalleryUrls = [];
+
     function openRoomModal() {
       editingRoomId = null;
+      roomGalleryUrls = [];
       document.getElementById('modalTitle').textContent = 'Novo Quarto';
       document.getElementById('roomSubmitBtn').textContent = 'Salvar';
       document.getElementById('roomForm').reset();
       document.getElementById('published').value = 'true';
+      document.getElementById('roomImageUrl').value = '';
+      resetRoomImagePreview();
+      renderRoomGallery();
       document.getElementById('roomModal').classList.add('active');
     }
 
     function closeRoomModal() {
       editingRoomId = null;
+      roomGalleryUrls = [];
       document.getElementById('roomModal').classList.remove('active');
+    }
+
+    function resetRoomImagePreview() {
+      document.getElementById('roomImagePreviewContainer').innerHTML = `
+        <div class="upload-icon">+</div>
+        <div class="upload-text"><strong>Clique</strong> para enviar foto</div>
+      `;
+      document.getElementById('roomImageUploadArea').classList.remove('has-image');
     }
 
     async function editRoom(id) {
@@ -363,9 +403,17 @@
       document.getElementById('roomSize').value = room.size || '';
       document.getElementById('roomImageUrl').value = room.imageUrl || '';
       
-      let gallery = [];
-      try { gallery = JSON.parse(room.gallery || '[]'); } catch(e) {}
-      document.getElementById('roomGallery').value = gallery.join(', ');
+      // Show existing image
+      if (room.imageUrl) {
+        showRoomImagePreview(room.imageUrl);
+      } else {
+        resetRoomImagePreview();
+      }
+      
+      // Load gallery
+      roomGalleryUrls = [];
+      try { roomGalleryUrls = JSON.parse(room.gallery || '[]'); } catch(e) {}
+      renderRoomGallery();
       
       let amenities = [];
       try { amenities = JSON.parse(room.amenities || '[]'); } catch(e) {}
@@ -374,14 +422,92 @@
       document.getElementById('roomModal').classList.add('active');
     }
 
+    async function uploadRoomImage(input) {
+      const file = input.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const area = document.getElementById('roomImageUploadArea');
+      area.classList.add('uploading');
+
+      try {
+        const response = await fetch('/admin/api/quartos/upload/image', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) throw new Error('Erro no upload');
+        
+        const data = await response.json();
+        document.getElementById('roomImageUrl').value = data.url;
+        showRoomImagePreview(data.url);
+      } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao enviar imagem');
+      } finally {
+        area.classList.remove('uploading');
+      }
+    }
+
+    function showRoomImagePreview(url) {
+      document.getElementById('roomImagePreviewContainer').innerHTML = `<img src="${url}" class="image-preview" alt="Preview">`;
+      document.getElementById('roomImageUploadArea').classList.add('has-image');
+    }
+
+    async function uploadRoomGalleryImages(input) {
+      const files = input.files;
+      if (!files || files.length === 0) return;
+
+      const area = document.getElementById('roomGalleryUploadArea');
+      area.classList.add('uploading');
+
+      try {
+        for (const file of files) {
+          const formData = new FormData();
+          formData.append('image', file);
+
+          const response = await fetch('/admin/api/quartos/upload/image', {
+            method: 'POST',
+            body: formData
+          });
+
+          if (!response.ok) throw new Error('Erro no upload');
+          
+          const data = await response.json();
+          roomGalleryUrls.push(data.url);
+        }
+        renderRoomGallery();
+      } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao enviar imagens');
+      } finally {
+        area.classList.remove('uploading');
+        input.value = '';
+      }
+    }
+
+    function renderRoomGallery() {
+      const container = document.getElementById('roomGalleryContainer');
+      container.innerHTML = roomGalleryUrls.map((url, index) => `
+        <div class="gallery-item">
+          <img src="${url}" alt="Gallery ${index + 1}">
+          <button type="button" class="remove-btn" onclick="removeRoomGalleryImage(${index})">×</button>
+        </div>
+      `).join('');
+    }
+
+    function removeRoomGalleryImage(index) {
+      roomGalleryUrls.splice(index, 1);
+      renderRoomGallery();
+    }
+
     document.getElementById('roomForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const amenitiesStr = document.getElementById('roomAmenities').value;
       const amenities = amenitiesStr.split(',').map(a => a.trim()).filter(a => a);
-      
-      const galleryStr = document.getElementById('roomGallery').value;
-      const gallery = galleryStr.split(',').map(a => a.trim()).filter(a => a);
       
       const sizeValue = document.getElementById('roomSize').value;
 
@@ -395,7 +521,7 @@
         description: document.getElementById('roomDescription').value || null,
         size: sizeValue ? parseInt(sizeValue) : null,
         imageUrl: document.getElementById('roomImageUrl').value || null,
-        gallery: JSON.stringify(gallery),
+        gallery: JSON.stringify(roomGalleryUrls),
         amenities: JSON.stringify(amenities)
       };
 
