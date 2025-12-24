@@ -16,13 +16,35 @@
       width: 260px;
       background: #1a1a2e;
       color: white;
-      padding: 24px;
       position: fixed;
       height: 100vh;
-      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
     }
-    .sidebar h1 { color: #b22226; font-size: 18px; margin-bottom: 4px; }
-    .sidebar > p { color: #9ca3af; font-size: 12px; margin-bottom: 32px; }
+    .sidebar-header {
+      padding: 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      flex-shrink: 0;
+    }
+    .sidebar-header h1 { color: #b22226; font-size: 18px; margin-bottom: 4px; }
+    .sidebar-header p { color: #9ca3af; font-size: 12px; }
+    .sidebar nav {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 0;
+    }
+    .nav-section {
+      padding: 0 16px;
+      margin-bottom: 16px;
+    }
+    .nav-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #9ca3af;
+      padding: 0 8px;
+      margin-bottom: 8px;
+    }
     .nav-item {
       display: block;
       padding: 12px 16px;
@@ -33,6 +55,23 @@
     }
     .nav-item:hover { background: #16213e; color: white; }
     .nav-item.active { background: #b22226; color: white; }
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 16px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      flex-shrink: 0;
+    }
+    .logout-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      color: #ef4444;
+      text-decoration: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .logout-btn:hover { background: rgba(239, 68, 68, 0.1); }
     .main {
       flex: 1;
       margin-left: 260px;
@@ -135,17 +174,45 @@
 </head>
 <body>
   <aside class="sidebar">
-    <h1>Portal do Romeiro</h1>
-    <p>Painel Administrativo</p>
-    <a href="/admin/dashboard" class="nav-item">Dashboard</a>
-    <a href="/admin/noticias" class="nav-item">Noticias</a>
-    <a href="/admin/videos" class="nav-item">Videos</a>
-    <a href="/admin/hospedagens" class="nav-item">Hospedagens</a>
-    <a href="/admin/eventos" class="nav-item">Eventos</a>
-    <a href="/admin/oracoes" class="nav-item">Oracoes</a>
-    <a href="/admin/pontos-turisticos" class="nav-item active">Pontos Turisticos</a>
-    <a href="/admin/usuarios" class="nav-item">Usuarios</a>
-    <a href="/admin/configuracoes" class="nav-item">Configuracoes</a>
+    <div class="sidebar-header">
+      <h1>Portal do Romeiro</h1>
+      <p>Painel Administrativo</p>
+    </div>
+    
+    <nav>
+      <div class="nav-section">
+        <div class="nav-section-title">Principal</div>
+        <a href="/admin/dashboard" class="nav-item">Dashboard</a>
+      </div>
+      
+      <div class="nav-section">
+        <div class="nav-section-title">Conteudo</div>
+        <a href="/admin/noticias" class="nav-item">Noticias</a>
+        <a href="/admin/videos" class="nav-item">Videos</a>
+        <a href="/admin/hospedagens" class="nav-item">Hospedagens</a>
+        <a href="/admin/eventos" class="nav-item">Eventos</a>
+        <a href="/admin/oracoes" class="nav-item">Oracoes</a>
+        <a href="/admin/pontos-turisticos" class="nav-item active">Pontos Turisticos</a>
+        <a href="/admin/paginas" class="nav-item">Paginas Estaticas</a>
+      </div>
+      
+      <div class="nav-section">
+        <div class="nav-section-title">Usuarios</div>
+        <a href="/admin/usuarios" class="nav-item">Usuarios</a>
+      </div>
+      
+      <div class="nav-section">
+        <div class="nav-section-title">Configuracoes</div>
+        <a href="/admin/configuracoes" class="nav-item">Configuracoes</a>
+      </div>
+    </nav>
+    
+    <div class="sidebar-footer">
+      <a class="logout-btn" onclick="fetch('/admin/api/logout', {method:'POST'}).then(()=>location.href='/admin')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        <span>Sair</span>
+      </a>
+    </div>
   </aside>
 
   <main class="main">
