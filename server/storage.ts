@@ -9,6 +9,8 @@ export interface IStorage {
   updateUser(id: string, data: UpdateProfileInput): Promise<User | undefined>;
   updateUserAvatar(id: string, avatarUrl: string): Promise<User | undefined>;
   getUsersCount(): Promise<number>;
+  getAllUsers(): Promise<User[]>;
+  deleteUser(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -48,6 +50,16 @@ export class DatabaseStorage implements IStorage {
   async getUsersCount(): Promise<number> {
     const result = await db.select({ count: count() }).from(users);
     return result[0]?.count ?? 0;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    const result = await db.select().from(users).orderBy(desc(users.createdAt));
+    return result;
+  }
+
+  async deleteUser(id: string): Promise<boolean> {
+    const result = await db.delete(users).where(eq(users.id, id)).returning();
+    return result.length > 0;
   }
 
   async getAllNews(publishedOnly = false): Promise<News[]> {

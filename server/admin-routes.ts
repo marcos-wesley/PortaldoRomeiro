@@ -150,7 +150,8 @@ export function registerAdminRoutes(app: Express) {
   });
 
   app.get("/admin/usuarios", requireAuth, (req, res) => {
-    res.send(getPlaceholderPage("Usuarios", "Gerencie os usuarios do app"));
+    const usuariosPath = path.join(__dirname, "admin", "usuarios.html");
+    res.sendFile(usuariosPath);
   });
 
   app.get("/admin/configuracoes", requireAuth, (req, res) => {
@@ -466,6 +467,53 @@ export function registerAdminRoutes(app: Express) {
     } catch (error) {
       console.error("Admin delete attraction error:", error);
       return res.status(500).json({ error: "Erro ao excluir ponto turistico" });
+    }
+  });
+
+  // Users API (list and delete only - users register through the app)
+  app.get("/admin/api/users", requireAuth, async (req, res) => {
+    try {
+      const allUsers = await storage.getAllUsers();
+      // Remove password from response for security
+      const sanitizedUsers = allUsers.map(({ password, ...user }) => user);
+      return res.json(sanitizedUsers);
+    } catch (error) {
+      console.error("Admin get users error:", error);
+      return res.status(500).json({ error: "Erro ao buscar usuarios" });
+    }
+  });
+
+  app.get("/admin/api/users/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const user = await storage.getUser(id);
+      
+      if (!user) {
+        return res.status(404).json({ error: "Usuario nao encontrado" });
+      }
+
+      // Remove password from response
+      const { password, ...sanitizedUser } = user;
+      return res.json(sanitizedUser);
+    } catch (error) {
+      console.error("Admin get user error:", error);
+      return res.status(500).json({ error: "Erro ao buscar usuario" });
+    }
+  });
+
+  app.delete("/admin/api/users/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteUser(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ error: "Usuario nao encontrado" });
+      }
+
+      return res.json({ message: "Usuario excluido com sucesso!" });
+    } catch (error) {
+      console.error("Admin delete user error:", error);
+      return res.status(500).json({ error: "Erro ao excluir usuario" });
     }
   });
 }
