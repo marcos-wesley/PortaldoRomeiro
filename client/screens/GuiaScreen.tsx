@@ -234,7 +234,7 @@ function FeaturedBusinessCard({
               </ThemedText>
             </View>
           </View>
-          {business.rating ? (
+          {business.rating && parseFloat(business.rating) > 0 ? (
             <View style={styles.ratingBadge}>
               <Feather name="star" size={12} color="#F59E0B" />
               <ThemedText style={styles.ratingText}>{parseFloat(business.rating).toFixed(1)}</ThemedText>

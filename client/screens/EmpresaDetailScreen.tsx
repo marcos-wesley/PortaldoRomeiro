@@ -364,11 +364,11 @@ export default function EmpresaDetailScreen({ route }: Props) {
                   {business.category}
                 </ThemedText>
               </View>
-              {business.rating ? (
+              {business.rating && parseFloat(business.rating) > 0 ? (
                 <View style={styles.ratingBadge}>
                   <Feather name="star" size={14} color="#F59E0B" />
                   <ThemedText style={styles.ratingText}>{parseFloat(business.rating).toFixed(1)}</ThemedText>
-                  {business.reviews ? (
+                  {business.reviews && business.reviews > 0 ? (
                     <ThemedText type="caption" secondary>({business.reviews})</ThemedText>
                   ) : null}
                 </View>
