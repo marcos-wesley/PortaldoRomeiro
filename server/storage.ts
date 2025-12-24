@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type UpdateProfileInput, users, type News, type InsertNews, type UpdateNewsInput, news, type Video, type InsertVideo, type UpdateVideoInput, videos, type Attraction, type InsertAttraction, type UpdateAttractionInput, attractions, type StaticPage, type InsertStaticPage, type UpdateStaticPageInput, staticPages, type UsefulPhone, type CreateUsefulPhoneInput, type UpdateUsefulPhoneInput, usefulPhones, type PilgrimTip, type CreatePilgrimTipInput, type UpdatePilgrimTipInput, pilgrimTips, type Service, type CreateServiceInput, type UpdateServiceInput, services } from "@shared/schema";
+import { type User, type InsertUser, type UpdateProfileInput, users, type News, type InsertNews, type UpdateNewsInput, news, type Video, type InsertVideo, type UpdateVideoInput, videos, type Attraction, type InsertAttraction, type UpdateAttractionInput, attractions, type StaticPage, type InsertStaticPage, type UpdateStaticPageInput, staticPages, type UsefulPhone, type CreateUsefulPhoneInput, type UpdateUsefulPhoneInput, usefulPhones, type PilgrimTip, type CreatePilgrimTipInput, type UpdatePilgrimTipInput, pilgrimTips, type Service, type CreateServiceInput, type UpdateServiceInput, services, type Business, type CreateBusinessInput, type UpdateBusinessInput, businesses } from "@shared/schema";
 import { db } from "./db";
 import { eq, count, desc, ilike, or, and, asc } from "drizzle-orm";
 
@@ -343,6 +343,41 @@ export class DatabaseStorage implements IStorage {
 
   async getServicesCount(): Promise<number> {
     const result = await db.select({ count: count() }).from(services);
+    return result[0]?.count ?? 0;
+  }
+
+  // Businesses (Guia Comercial) CRUD
+  async getAllBusinesses(publishedOnly = false): Promise<Business[]> {
+    if (publishedOnly) {
+      const result = await db.select().from(businesses).where(eq(businesses.published, true)).orderBy(desc(businesses.createdAt));
+      return result;
+    }
+    return await db.select().from(businesses).orderBy(desc(businesses.createdAt));
+  }
+
+  async getBusinessById(id: string): Promise<Business | undefined> {
+    const result = await db.select().from(businesses).where(eq(businesses.id, id));
+    return result[0];
+  }
+
+  async createBusiness(data: CreateBusinessInput): Promise<Business> {
+    const result = await db.insert(businesses).values(data).returning();
+    return result[0];
+  }
+
+  async updateBusiness(id: string, data: UpdateBusinessInput): Promise<Business | undefined> {
+    const updateData: any = { ...data, updatedAt: new Date() };
+    const result = await db.update(businesses).set(updateData).where(eq(businesses.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteBusiness(id: string): Promise<boolean> {
+    const result = await db.delete(businesses).where(eq(businesses.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getBusinessesCount(): Promise<number> {
+    const result = await db.select({ count: count() }).from(businesses);
     return result[0]?.count ?? 0;
   }
 }

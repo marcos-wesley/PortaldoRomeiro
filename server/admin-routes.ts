@@ -3,7 +3,7 @@ import { randomBytes, pbkdf2Sync, timingSafeEqual } from "node:crypto";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { storage } from "./storage";
-import { createNewsSchema, updateNewsSchema, createVideoSchema, updateVideoSchema, createAttractionSchema, updateAttractionSchema, createUsefulPhoneSchema, updateUsefulPhoneSchema, createPilgrimTipSchema, updatePilgrimTipSchema, createServiceSchema, updateServiceSchema } from "@shared/schema";
+import { createNewsSchema, updateNewsSchema, createVideoSchema, updateVideoSchema, createAttractionSchema, updateAttractionSchema, createUsefulPhoneSchema, updateUsefulPhoneSchema, createPilgrimTipSchema, updatePilgrimTipSchema, createServiceSchema, updateServiceSchema, createBusinessSchema, updateBusinessSchema } from "@shared/schema";
 import { fromError } from "zod-validation-error";
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
@@ -167,6 +167,21 @@ export function registerAdminRoutes(app: Express) {
   app.get("/admin/servicos", requireAuth, (req, res) => {
     const servicosPath = path.join(__dirname, "admin", "servicos.html");
     res.sendFile(servicosPath);
+  });
+
+  app.get("/admin/empresas", requireAuth, (req, res) => {
+    const empresasPath = path.join(__dirname, "admin", "empresas.html");
+    res.sendFile(empresasPath);
+  });
+
+  app.get("/admin/empresas/nova", requireAuth, (req, res) => {
+    const formPath = path.join(__dirname, "admin", "empresas-form.html");
+    res.sendFile(formPath);
+  });
+
+  app.get("/admin/empresas/editar/:id", requireAuth, (req, res) => {
+    const formPath = path.join(__dirname, "admin", "empresas-form.html");
+    res.sendFile(formPath);
   });
 
   app.get("/admin/configuracoes", requireAuth, (req, res) => {
@@ -748,6 +763,79 @@ export function registerAdminRoutes(app: Express) {
     } catch (error) {
       console.error("Admin delete service error:", error);
       return res.status(500).json({ error: "Erro ao excluir servico" });
+    }
+  });
+
+  // Empresas (Guia Comercial) API
+  app.get("/admin/api/businesses", requireAuth, async (req, res) => {
+    try {
+      const businesses = await storage.getAllBusinesses();
+      return res.json({ businesses });
+    } catch (error) {
+      console.error("Admin get businesses error:", error);
+      return res.status(500).json({ error: "Erro ao buscar empresas" });
+    }
+  });
+
+  app.get("/admin/api/businesses/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const business = await storage.getBusinessById(id);
+      if (!business) {
+        return res.status(404).json({ error: "Empresa nao encontrada" });
+      }
+      return res.json({ business });
+    } catch (error) {
+      console.error("Admin get business error:", error);
+      return res.status(500).json({ error: "Erro ao buscar empresa" });
+    }
+  });
+
+  app.post("/admin/api/businesses", requireAuth, async (req, res) => {
+    try {
+      const validationResult = createBusinessSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+      const created = await storage.createBusiness(validationResult.data);
+      return res.status(201).json({ business: created, message: "Empresa criada com sucesso!" });
+    } catch (error) {
+      console.error("Admin create business error:", error);
+      return res.status(500).json({ error: "Erro ao criar empresa" });
+    }
+  });
+
+  app.put("/admin/api/businesses/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validationResult = updateBusinessSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+      const updated = await storage.updateBusiness(id, validationResult.data);
+      if (!updated) {
+        return res.status(404).json({ error: "Empresa nao encontrada" });
+      }
+      return res.json({ business: updated, message: "Empresa atualizada com sucesso!" });
+    } catch (error) {
+      console.error("Admin update business error:", error);
+      return res.status(500).json({ error: "Erro ao atualizar empresa" });
+    }
+  });
+
+  app.delete("/admin/api/businesses/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteBusiness(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Empresa nao encontrada" });
+      }
+      return res.json({ message: "Empresa excluida com sucesso!" });
+    } catch (error) {
+      console.error("Admin delete business error:", error);
+      return res.status(500).json({ error: "Erro ao excluir empresa" });
     }
   });
 }
