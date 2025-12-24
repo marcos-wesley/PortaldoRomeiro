@@ -399,3 +399,100 @@ export const updateServiceSchema = z.object({
 export type Service = typeof services.$inferSelect;
 export type CreateServiceInput = z.infer<typeof createServiceSchema>;
 export type UpdateServiceInput = z.infer<typeof updateServiceSchema>;
+
+// Empresas (Guia Comercial / Businesses)
+export const businesses = pgTable("businesses", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  category: text("category").notNull(),
+  categoryId: text("category_id").notNull(),
+  logoUrl: text("logo_url"),
+  coverUrl: text("cover_url"),
+  description: text("description"),
+  shortDescription: text("short_description"),
+  address: text("address"),
+  neighborhood: text("neighborhood"),
+  city: text("city"),
+  phone: text("phone"),
+  whatsapp: text("whatsapp"),
+  website: text("website"),
+  instagram: text("instagram"),
+  facebook: text("facebook"),
+  hours: text("hours"),
+  priceRange: text("price_range"),
+  rating: text("rating"),
+  reviews: integer("reviews").default(0),
+  featured: boolean("featured").default(false),
+  gallery: text("gallery"),
+  latitude: text("latitude"),
+  longitude: text("longitude"),
+  delivery: boolean("delivery").default(false),
+  deliveryUrl: text("delivery_url"),
+  published: boolean("published").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const createBusinessSchema = z.object({
+  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  category: z.string().min(1, "Categoria é obrigatória"),
+  categoryId: z.string().min(1, "Categoria é obrigatória"),
+  logoUrl: z.string().optional().nullable(),
+  coverUrl: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
+  shortDescription: z.string().optional().nullable(),
+  address: z.string().optional().nullable(),
+  neighborhood: z.string().optional().nullable(),
+  city: z.string().optional().nullable(),
+  phone: z.string().optional().nullable(),
+  whatsapp: z.string().optional().nullable(),
+  website: z.string().optional().nullable(),
+  instagram: z.string().optional().nullable(),
+  facebook: z.string().optional().nullable(),
+  hours: z.string().optional().nullable(),
+  priceRange: z.string().optional().nullable(),
+  rating: z.string().optional().nullable(),
+  reviews: z.number().optional().default(0),
+  featured: z.boolean().optional().default(false),
+  gallery: z.string().optional().nullable(),
+  latitude: z.string().optional().nullable(),
+  longitude: z.string().optional().nullable(),
+  delivery: z.boolean().optional().default(false),
+  deliveryUrl: z.string().optional().nullable(),
+  published: z.boolean().optional().default(true),
+});
+
+export const updateBusinessSchema = z.object({
+  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").optional(),
+  category: z.string().optional(),
+  categoryId: z.string().optional(),
+  logoUrl: z.string().optional().nullable(),
+  coverUrl: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
+  shortDescription: z.string().optional().nullable(),
+  address: z.string().optional().nullable(),
+  neighborhood: z.string().optional().nullable(),
+  city: z.string().optional().nullable(),
+  phone: z.string().optional().nullable(),
+  whatsapp: z.string().optional().nullable(),
+  website: z.string().optional().nullable(),
+  instagram: z.string().optional().nullable(),
+  facebook: z.string().optional().nullable(),
+  hours: z.string().optional().nullable(),
+  priceRange: z.string().optional().nullable(),
+  rating: z.string().optional().nullable(),
+  reviews: z.number().optional(),
+  featured: z.boolean().optional(),
+  gallery: z.string().optional().nullable(),
+  latitude: z.string().optional().nullable(),
+  longitude: z.string().optional().nullable(),
+  delivery: z.boolean().optional(),
+  deliveryUrl: z.string().optional().nullable(),
+  published: z.boolean().optional(),
+});
+
+export type Business = typeof businesses.$inferSelect;
+export type CreateBusinessInput = z.infer<typeof createBusinessSchema>;
+export type UpdateBusinessInput = z.infer<typeof updateBusinessSchema>;
