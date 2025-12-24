@@ -78,11 +78,9 @@ function CategoryChip({
 }
 
 function SimpleBusinessCard({ 
-  business, 
-  onPress 
+  business
 }: { 
-  business: Business; 
-  onPress: () => void;
+  business: Business;
 }) {
   const { theme } = useTheme();
   const scale = useSharedValue(1);
@@ -92,11 +90,15 @@ function SimpleBusinessCard({
     transform: [{ scale: scale.value }],
   }));
 
+  const handleWhatsApp = () => {
+    if (business.whatsapp) {
+      const url = `https://wa.me/${business.whatsapp}`;
+      Linking.openURL(url).catch(() => {});
+    }
+  };
+
   return (
-    <AnimatedPressable
-      onPress={onPress}
-      onPressIn={() => { scale.value = withSpring(0.98, springConfig); }}
-      onPressOut={() => { scale.value = withSpring(1, springConfig); }}
+    <Animated.View
       style={[styles.simpleCard, { backgroundColor: theme.backgroundDefault }, animatedStyle]}
     >
       <Image
@@ -122,10 +124,17 @@ function SimpleBusinessCard({
           </ThemedText>
         </View>
       </View>
-      <View style={[styles.simpleCardAction, { backgroundColor: Colors.light.primary }]}>
-        <Feather name="chevron-right" size={20} color="#FFFFFF" />
-      </View>
-    </AnimatedPressable>
+      {business.whatsapp ? (
+        <Pressable 
+          onPress={handleWhatsApp}
+          onPressIn={() => { scale.value = withSpring(0.95, springConfig); }}
+          onPressOut={() => { scale.value = withSpring(1, springConfig); }}
+          style={[styles.simpleCardAction, { backgroundColor: "#25D366" }]}
+        >
+          <Feather name="message-circle" size={20} color="#FFFFFF" />
+        </Pressable>
+      ) : null}
+    </Animated.View>
   );
 }
 
@@ -374,7 +383,6 @@ export default function GuiaScreen() {
               <SimpleBusinessCard
                 key={business.id}
                 business={business}
-                onPress={() => handleBusinessPress(business)}
               />
             ))}
           </View>
