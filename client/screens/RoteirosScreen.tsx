@@ -391,12 +391,7 @@ function AttractionDetailModal({
             style={styles.modalHeroGradient}
           >
             <View style={[styles.modalHeader, { paddingTop: insets.top + Spacing.sm }]}>
-              <Pressable 
-                onPress={onClose}
-                style={[styles.modalBackButton, { backgroundColor: "rgba(255,255,255,0.9)" }]}
-              >
-                <Feather name="arrow-left" size={20} color={theme.text} />
-              </Pressable>
+              <View style={{ flex: 1 }} />
               <View style={styles.modalHeaderActions}>
                 <Pressable 
                   onPress={handleShare}
