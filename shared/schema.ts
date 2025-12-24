@@ -519,3 +519,194 @@ export const createBusinessReviewSchema = z.object({
 
 export type BusinessReview = typeof businessReviews.$inferSelect;
 export type CreateBusinessReviewInput = z.infer<typeof createBusinessReviewSchema>;
+
+// Hospedagens (Accommodations - Hotels/Pousadas)
+export const accommodations = pgTable("accommodations", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  type: text("type").notNull(), // hotel, pousada, hostel
+  description: text("description"),
+  address: text("address"),
+  neighborhood: text("neighborhood"),
+  city: text("city").default("Trindade"),
+  phone: text("phone"),
+  whatsapp: text("whatsapp"),
+  email: text("email"),
+  website: text("website"),
+  instagram: text("instagram"),
+  checkInTime: text("check_in_time").default("14:00"),
+  checkOutTime: text("check_out_time").default("12:00"),
+  logoUrl: text("logo_url"),
+  coverUrl: text("cover_url"),
+  gallery: text("gallery"), // JSON array of image URLs
+  latitude: text("latitude"),
+  longitude: text("longitude"),
+  rating: text("rating"),
+  reviewsCount: integer("reviews_count").default(0),
+  amenities: text("amenities"), // JSON array: wifi, pool, parking, breakfast, ac, tv, etc
+  policies: text("policies"), // Cancellation policies, rules, etc
+  featured: boolean("featured").default(false),
+  published: boolean("published").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const createAccommodationSchema = z.object({
+  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  type: z.enum(["hotel", "pousada", "hostel"]),
+  description: z.string().optional().nullable(),
+  address: z.string().optional().nullable(),
+  neighborhood: z.string().optional().nullable(),
+  city: z.string().optional().default("Trindade"),
+  phone: z.string().optional().nullable(),
+  whatsapp: z.string().optional().nullable(),
+  email: z.string().email().optional().nullable(),
+  website: z.string().optional().nullable(),
+  instagram: z.string().optional().nullable(),
+  checkInTime: z.string().optional().default("14:00"),
+  checkOutTime: z.string().optional().default("12:00"),
+  logoUrl: z.string().optional().nullable(),
+  coverUrl: z.string().optional().nullable(),
+  gallery: z.string().optional().nullable(),
+  latitude: z.string().optional().nullable(),
+  longitude: z.string().optional().nullable(),
+  amenities: z.string().optional().nullable(),
+  policies: z.string().optional().nullable(),
+  featured: z.boolean().optional().default(false),
+  published: z.boolean().optional().default(true),
+});
+
+export const updateAccommodationSchema = z.object({
+  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").optional(),
+  type: z.enum(["hotel", "pousada", "hostel"]).optional(),
+  description: z.string().optional().nullable(),
+  address: z.string().optional().nullable(),
+  neighborhood: z.string().optional().nullable(),
+  city: z.string().optional(),
+  phone: z.string().optional().nullable(),
+  whatsapp: z.string().optional().nullable(),
+  email: z.string().email().optional().nullable(),
+  website: z.string().optional().nullable(),
+  instagram: z.string().optional().nullable(),
+  checkInTime: z.string().optional(),
+  checkOutTime: z.string().optional(),
+  logoUrl: z.string().optional().nullable(),
+  coverUrl: z.string().optional().nullable(),
+  gallery: z.string().optional().nullable(),
+  latitude: z.string().optional().nullable(),
+  longitude: z.string().optional().nullable(),
+  rating: z.string().optional().nullable(),
+  reviewsCount: z.number().optional(),
+  amenities: z.string().optional().nullable(),
+  policies: z.string().optional().nullable(),
+  featured: z.boolean().optional(),
+  published: z.boolean().optional(),
+});
+
+export type Accommodation = typeof accommodations.$inferSelect;
+export type CreateAccommodationInput = z.infer<typeof createAccommodationSchema>;
+export type UpdateAccommodationInput = z.infer<typeof updateAccommodationSchema>;
+
+// Quartos (Rooms)
+export const rooms = pgTable("rooms", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  accommodationId: varchar("accommodation_id").notNull(),
+  name: text("name").notNull(), // Quarto Standard, Suite Master, etc
+  description: text("description"),
+  maxGuests: integer("max_guests").default(2),
+  beds: text("beds"), // JSON: [{type: "casal", quantity: 1}, {type: "solteiro", quantity: 1}]
+  size: integer("size"), // m2
+  pricePerNight: integer("price_per_night").notNull(), // Price in cents
+  amenities: text("amenities"), // JSON array: ac, tv, minibar, safe, balcony, etc
+  imageUrl: text("image_url"),
+  gallery: text("gallery"), // JSON array of image URLs
+  quantity: integer("quantity").default(1), // How many rooms of this type exist
+  published: boolean("published").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const createRoomSchema = z.object({
+  accommodationId: z.string(),
+  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  description: z.string().optional().nullable(),
+  maxGuests: z.number().min(1).optional().default(2),
+  beds: z.string().optional().nullable(),
+  size: z.number().optional().nullable(),
+  pricePerNight: z.number().min(1, "Preco deve ser maior que zero"),
+  amenities: z.string().optional().nullable(),
+  imageUrl: z.string().optional().nullable(),
+  gallery: z.string().optional().nullable(),
+  quantity: z.number().min(1).optional().default(1),
+  published: z.boolean().optional().default(true),
+});
+
+export const updateRoomSchema = z.object({
+  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").optional(),
+  description: z.string().optional().nullable(),
+  maxGuests: z.number().min(1).optional(),
+  beds: z.string().optional().nullable(),
+  size: z.number().optional().nullable(),
+  pricePerNight: z.number().min(1).optional(),
+  amenities: z.string().optional().nullable(),
+  imageUrl: z.string().optional().nullable(),
+  gallery: z.string().optional().nullable(),
+  quantity: z.number().min(1).optional(),
+  published: z.boolean().optional(),
+});
+
+export type Room = typeof rooms.$inferSelect;
+export type CreateRoomInput = z.infer<typeof createRoomSchema>;
+export type UpdateRoomInput = z.infer<typeof updateRoomSchema>;
+
+// Datas Bloqueadas/Reservadas (Room Blocked Dates)
+export const roomBlockedDates = pgTable("room_blocked_dates", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  roomId: varchar("room_id").notNull(),
+  date: text("date").notNull(), // YYYY-MM-DD format
+  reason: text("reason"), // reserva, manutencao, bloqueio_manual
+  bookedQuantity: integer("booked_quantity").default(1), // How many rooms are booked
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const createRoomBlockedDateSchema = z.object({
+  roomId: z.string(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data deve estar no formato YYYY-MM-DD"),
+  reason: z.string().optional().nullable(),
+  bookedQuantity: z.number().min(1).optional().default(1),
+});
+
+export type RoomBlockedDate = typeof roomBlockedDates.$inferSelect;
+export type CreateRoomBlockedDateInput = z.infer<typeof createRoomBlockedDateSchema>;
+
+// Avaliacoes de Hospedagem (Accommodation Reviews)
+export const accommodationReviews = pgTable("accommodation_reviews", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  accommodationId: varchar("accommodation_id").notNull(),
+  userId: varchar("user_id"),
+  userName: text("user_name").notNull(),
+  rating: integer("rating").notNull(),
+  comment: text("comment"),
+  stayDate: text("stay_date"), // Month/Year of stay
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const createAccommodationReviewSchema = z.object({
+  accommodationId: z.string(),
+  userId: z.string().optional().nullable(),
+  userName: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  rating: z.number().min(1).max(5),
+  comment: z.string().optional().nullable(),
+  stayDate: z.string().optional().nullable(),
+});
+
+export type AccommodationReview = typeof accommodationReviews.$inferSelect;
+export type CreateAccommodationReviewInput = z.infer<typeof createAccommodationReviewSchema>;

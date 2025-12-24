@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type UpdateProfileInput, users, type News, type InsertNews, type UpdateNewsInput, news, type Video, type InsertVideo, type UpdateVideoInput, videos, type Attraction, type InsertAttraction, type UpdateAttractionInput, attractions, type StaticPage, type InsertStaticPage, type UpdateStaticPageInput, staticPages, type UsefulPhone, type CreateUsefulPhoneInput, type UpdateUsefulPhoneInput, usefulPhones, type PilgrimTip, type CreatePilgrimTipInput, type UpdatePilgrimTipInput, pilgrimTips, type Service, type CreateServiceInput, type UpdateServiceInput, services, type Business, type CreateBusinessInput, type UpdateBusinessInput, businesses, type BusinessReview, type CreateBusinessReviewInput, businessReviews } from "@shared/schema";
+import { type User, type InsertUser, type UpdateProfileInput, users, type News, type InsertNews, type UpdateNewsInput, news, type Video, type InsertVideo, type UpdateVideoInput, videos, type Attraction, type InsertAttraction, type UpdateAttractionInput, attractions, type StaticPage, type InsertStaticPage, type UpdateStaticPageInput, staticPages, type UsefulPhone, type CreateUsefulPhoneInput, type UpdateUsefulPhoneInput, usefulPhones, type PilgrimTip, type CreatePilgrimTipInput, type UpdatePilgrimTipInput, pilgrimTips, type Service, type CreateServiceInput, type UpdateServiceInput, services, type Business, type CreateBusinessInput, type UpdateBusinessInput, businesses, type BusinessReview, type CreateBusinessReviewInput, businessReviews, type Accommodation, type CreateAccommodationInput, type UpdateAccommodationInput, accommodations, type Room, type CreateRoomInput, type UpdateRoomInput, rooms, type RoomBlockedDate, type CreateRoomBlockedDateInput, roomBlockedDates, type AccommodationReview, type CreateAccommodationReviewInput, accommodationReviews } from "@shared/schema";
 import { db } from "./db";
 import { eq, count, desc, ilike, or, and, asc } from "drizzle-orm";
 
@@ -419,6 +419,198 @@ export class DatabaseStorage implements IStorage {
         rating: null,
         reviews: 0 
       }).where(eq(businesses.id, businessId));
+    }
+    
+    return result.length > 0;
+  }
+
+  // Accommodation methods
+  async getAllAccommodations(publishedOnly = false): Promise<Accommodation[]> {
+    if (publishedOnly) {
+      return await db.select().from(accommodations).where(eq(accommodations.published, true)).orderBy(desc(accommodations.featured), asc(accommodations.name));
+    }
+    return await db.select().from(accommodations).orderBy(desc(accommodations.createdAt));
+  }
+
+  async getAccommodationById(id: string): Promise<Accommodation | undefined> {
+    const result = await db.select().from(accommodations).where(eq(accommodations.id, id));
+    return result[0];
+  }
+
+  async createAccommodation(data: CreateAccommodationInput): Promise<Accommodation> {
+    const result = await db.insert(accommodations).values(data).returning();
+    return result[0];
+  }
+
+  async updateAccommodation(id: string, data: UpdateAccommodationInput): Promise<Accommodation | undefined> {
+    const updateData: any = { ...data, updatedAt: new Date() };
+    const result = await db.update(accommodations).set(updateData).where(eq(accommodations.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteAccommodation(id: string): Promise<boolean> {
+    // Delete all rooms first
+    await db.delete(rooms).where(eq(rooms.accommodationId, id));
+    const result = await db.delete(accommodations).where(eq(accommodations.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getAccommodationsCount(): Promise<number> {
+    const result = await db.select({ count: count() }).from(accommodations);
+    return result[0]?.count ?? 0;
+  }
+
+  // Room methods
+  async getRoomsByAccommodation(accommodationId: string, publishedOnly = false): Promise<Room[]> {
+    if (publishedOnly) {
+      return await db.select().from(rooms).where(and(eq(rooms.accommodationId, accommodationId), eq(rooms.published, true))).orderBy(asc(rooms.pricePerNight));
+    }
+    return await db.select().from(rooms).where(eq(rooms.accommodationId, accommodationId)).orderBy(asc(rooms.pricePerNight));
+  }
+
+  async getRoomById(id: string): Promise<Room | undefined> {
+    const result = await db.select().from(rooms).where(eq(rooms.id, id));
+    return result[0];
+  }
+
+  async createRoom(data: CreateRoomInput): Promise<Room> {
+    const result = await db.insert(rooms).values(data).returning();
+    return result[0];
+  }
+
+  async updateRoom(id: string, data: UpdateRoomInput): Promise<Room | undefined> {
+    const updateData: any = { ...data, updatedAt: new Date() };
+    const result = await db.update(rooms).set(updateData).where(eq(rooms.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteRoom(id: string): Promise<boolean> {
+    // Delete blocked dates for this room
+    await db.delete(roomBlockedDates).where(eq(roomBlockedDates.roomId, id));
+    const result = await db.delete(rooms).where(eq(rooms.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Room availability methods
+  async getBlockedDatesForRoom(roomId: string, startDate: string, endDate: string): Promise<RoomBlockedDate[]> {
+    return await db.select().from(roomBlockedDates)
+      .where(and(
+        eq(roomBlockedDates.roomId, roomId),
+        // Date is between startDate and endDate
+      ))
+      .orderBy(asc(roomBlockedDates.date));
+  }
+
+  async getAllBlockedDatesForRoom(roomId: string): Promise<RoomBlockedDate[]> {
+    return await db.select().from(roomBlockedDates)
+      .where(eq(roomBlockedDates.roomId, roomId))
+      .orderBy(asc(roomBlockedDates.date));
+  }
+
+  async blockRoomDate(data: CreateRoomBlockedDateInput): Promise<RoomBlockedDate> {
+    const result = await db.insert(roomBlockedDates).values(data).returning();
+    return result[0];
+  }
+
+  async unblockRoomDate(roomId: string, date: string): Promise<boolean> {
+    const result = await db.delete(roomBlockedDates)
+      .where(and(eq(roomBlockedDates.roomId, roomId), eq(roomBlockedDates.date, date)))
+      .returning();
+    return result.length > 0;
+  }
+
+  async checkRoomAvailability(roomId: string, checkIn: string, checkOut: string): Promise<boolean> {
+    const room = await this.getRoomById(roomId);
+    if (!room) return false;
+
+    // Get all dates between checkIn and checkOut (excluding checkOut day)
+    const dates: string[] = [];
+    let current = new Date(checkIn);
+    const end = new Date(checkOut);
+    while (current < end) {
+      dates.push(current.toISOString().split('T')[0]);
+      current.setDate(current.getDate() + 1);
+    }
+
+    // Check if any of these dates have all rooms booked
+    for (const date of dates) {
+      const blocked = await db.select().from(roomBlockedDates)
+        .where(and(eq(roomBlockedDates.roomId, roomId), eq(roomBlockedDates.date, date)));
+      
+      const totalBooked = blocked.reduce((sum, b) => sum + (b.bookedQuantity || 1), 0);
+      if (totalBooked >= (room.quantity || 1)) {
+        return false; // Room fully booked on this date
+      }
+    }
+    return true;
+  }
+
+  async getAvailableAccommodations(checkIn: string, checkOut: string): Promise<(Accommodation & { availableRooms: Room[] })[]> {
+    const allAccommodations = await this.getAllAccommodations(true);
+    const result: (Accommodation & { availableRooms: Room[] })[] = [];
+
+    for (const accommodation of allAccommodations) {
+      const allRooms = await this.getRoomsByAccommodation(accommodation.id, true);
+      const availableRooms: Room[] = [];
+
+      for (const room of allRooms) {
+        const isAvailable = await this.checkRoomAvailability(room.id, checkIn, checkOut);
+        if (isAvailable) {
+          availableRooms.push(room);
+        }
+      }
+
+      if (availableRooms.length > 0) {
+        result.push({ ...accommodation, availableRooms });
+      }
+    }
+
+    return result;
+  }
+
+  // Accommodation Reviews
+  async getAccommodationReviews(accommodationId: string): Promise<AccommodationReview[]> {
+    return await db.select().from(accommodationReviews)
+      .where(eq(accommodationReviews.accommodationId, accommodationId))
+      .orderBy(desc(accommodationReviews.createdAt));
+  }
+
+  async createAccommodationReview(data: CreateAccommodationReviewInput): Promise<AccommodationReview> {
+    const result = await db.insert(accommodationReviews).values(data).returning();
+    
+    // Update accommodation rating
+    const reviews = await this.getAccommodationReviews(data.accommodationId);
+    if (reviews.length > 0) {
+      const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+      await db.update(accommodations).set({ 
+        rating: avgRating.toFixed(1),
+        reviewsCount: reviews.length 
+      }).where(eq(accommodations.id, data.accommodationId));
+    }
+    
+    return result[0];
+  }
+
+  async deleteAccommodationReview(id: string): Promise<boolean> {
+    const review = await db.select().from(accommodationReviews).where(eq(accommodationReviews.id, id));
+    if (!review[0]) return false;
+    
+    const accommodationId = review[0].accommodationId;
+    const result = await db.delete(accommodationReviews).where(eq(accommodationReviews.id, id)).returning();
+    
+    // Recalculate rating
+    const reviews = await this.getAccommodationReviews(accommodationId);
+    if (reviews.length > 0) {
+      const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+      await db.update(accommodations).set({ 
+        rating: avgRating.toFixed(1),
+        reviewsCount: reviews.length 
+      }).where(eq(accommodations.id, accommodationId));
+    } else {
+      await db.update(accommodations).set({ 
+        rating: null,
+        reviewsCount: 0 
+      }).where(eq(accommodations.id, accommodationId));
     }
     
     return result.length > 0;
