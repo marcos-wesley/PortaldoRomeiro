@@ -7,6 +7,7 @@ import RegisterScreen from "@/screens/RegisterScreen";
 import ForgotPasswordScreen from "@/screens/ForgotPasswordScreen";
 import ProfileScreen from "@/screens/ProfileScreen";
 import NotificationsScreen from "@/screens/NotificationsScreen";
+import SearchScreen from "@/screens/SearchScreen";
 import AdminNotificationsScreen from "@/screens/AdminNotificationsScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,6 +17,7 @@ export type RootStackParamList = {
   Main: undefined;
   Profile: undefined;
   Notifications: undefined;
+  Search: undefined;
   AdminNotifications: undefined;
   Login: undefined;
   Register: undefined;
@@ -60,6 +62,15 @@ export default function RootStackNavigator() {
             options={{ 
               headerTitle: "Notificacoes",
               presentation: "modal",
+            }}
+          />
+          <Stack.Screen
+            name="Search"
+            component={SearchScreen}
+            options={{ 
+              headerShown: false,
+              presentation: "modal",
+              animation: "slide_from_bottom",
             }}
           />
           <Stack.Screen

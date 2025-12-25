@@ -80,7 +80,17 @@ export function AppHeader({
 
       <View style={styles.rightSection}>
         <Pressable 
-          onPress={onSearchPress} 
+          onPress={() => {
+            if (onSearchPress) {
+              onSearchPress();
+            } else {
+              try {
+                (nav as any).navigate("Search");
+              } catch {
+                (navigation as any)?.navigate?.("Search");
+              }
+            }
+          }} 
           style={({ pressed }) => [styles.iconButton, pressed && styles.iconButtonPressed]}
         >
           <Feather name="search" size={22} color={theme.headerIconColor} />
