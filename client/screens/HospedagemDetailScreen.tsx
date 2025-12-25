@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { ScrollView, View, StyleSheet, Pressable, Linking, ActivityIndicator, TextInput } from "react-native";
+import { ScrollView, View, StyleSheet, Pressable, Linking, ActivityIndicator, TextInput, Modal, Dimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useRoute, RouteProp } from "@react-navigation/native";
@@ -314,6 +314,8 @@ export default function HospedagemDetailScreen() {
   const [reviewName, setReviewName] = useState("");
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewComment, setReviewComment] = useState("");
+  const [galleryModalVisible, setGalleryModalVisible] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const { data, isLoading, error } = useQuery<{ 
     accommodation: AccommodationType; 
@@ -325,6 +327,7 @@ export default function HospedagemDetailScreen() {
   const accommodation = data?.accommodation;
   const rooms = data?.availableRooms || [];
   const amenities = parseJSON<string>(accommodation?.amenities || null);
+  const gallery = parseJSON<string>(accommodation?.gallery || null);
   const rating = accommodation?.rating ? parseFloat(accommodation.rating) : 0;
 
   const { data: reviewsData, isLoading: reviewsLoading } = useQuery<{ reviews: AccommodationReview[] }>({
@@ -483,6 +486,33 @@ export default function HospedagemDetailScreen() {
             </>
           ) : null}
 
+          {gallery.length > 0 ? (
+            <>
+              <ThemedText type="h4" style={styles.sectionTitle}>Galeria de Fotos</ThemedText>
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.galleryContainer}
+              >
+                {gallery.map((imageUrl, index) => (
+                  <Pressable 
+                    key={index} 
+                    onPress={() => {
+                      setSelectedImageIndex(index);
+                      setGalleryModalVisible(true);
+                    }}
+                  >
+                    <Image
+                      source={{ uri: imageUrl }}
+                      style={styles.galleryImage}
+                      contentFit="cover"
+                    />
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </>
+          ) : null}
+
           {rooms.length > 0 ? (
             <>
               <ThemedText type="h4" style={styles.sectionTitle}>
@@ -628,6 +658,47 @@ export default function HospedagemDetailScreen() {
           </View>
         </View>
       ) : null}
+
+      <Modal
+        visible={galleryModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setGalleryModalVisible(false)}
+      >
+        <View style={styles.galleryModalOverlay}>
+          <Pressable 
+            style={styles.galleryModalClose}
+            onPress={() => setGalleryModalVisible(false)}
+          >
+            <View style={styles.galleryModalCloseButton}>
+              <Feather name="x" size={24} color="#FFFFFF" />
+            </View>
+          </Pressable>
+          
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            contentOffset={{ x: selectedImageIndex * Dimensions.get("window").width, y: 0 }}
+          >
+            {gallery.map((imageUrl, index) => (
+              <View key={index} style={styles.galleryModalImageContainer}>
+                <Image
+                  source={{ uri: imageUrl }}
+                  style={styles.galleryModalImage}
+                  contentFit="contain"
+                />
+              </View>
+            ))}
+          </ScrollView>
+
+          <View style={[styles.galleryModalFooter, { paddingBottom: insets.bottom + Spacing.md }]}>
+            <ThemedText style={styles.galleryModalCounter}>
+              {selectedImageIndex + 1} / {gallery.length}
+            </ThemedText>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -990,5 +1061,55 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+  },
+  galleryContainer: {
+    gap: Spacing.sm,
+    paddingVertical: Spacing.sm,
+  },
+  galleryImage: {
+    width: 140,
+    height: 100,
+    borderRadius: BorderRadius.md,
+  },
+  galleryModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.95)",
+    justifyContent: "center",
+  },
+  galleryModalClose: {
+    position: "absolute",
+    top: 50,
+    right: 20,
+    zIndex: 10,
+  },
+  galleryModalCloseButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  galleryModalImageContainer: {
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height * 0.7,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  galleryModalImage: {
+    width: "100%",
+    height: "100%",
+  },
+  galleryModalFooter: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    alignItems: "center",
+    paddingTop: Spacing.md,
+  },
+  galleryModalCounter: {
+    color: "#FFFFFF",
+    fontSize: 14,
   },
 });
