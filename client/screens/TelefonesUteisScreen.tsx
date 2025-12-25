@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import { ScrollView, View, StyleSheet, Pressable, Linking, TextInput, Platform } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useHeaderHeight } from "@react-navigation/elements";
 import { Feather } from "@expo/vector-icons";
 import Animated, {
   useAnimatedStyle,
@@ -82,7 +81,6 @@ function CategoryHeader({ category, count }: CategoryHeaderProps) {
 
 export default function TelefonesUteisScreen() {
   const insets = useSafeAreaInsets();
-  const headerHeight = useHeaderHeight();
   const { theme } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -139,7 +137,7 @@ export default function TelefonesUteisScreen() {
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.backgroundRoot }}
       contentContainerStyle={{
-        paddingTop: headerHeight,
+        paddingTop: 0,
         paddingBottom: insets.bottom + Spacing.xl,
         paddingHorizontal: Spacing.lg,
       }}

@@ -8,7 +8,6 @@ import {
   Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -200,7 +199,6 @@ function SectionHeader({ title, icon, color }: { title: string; icon: string; co
 
 export default function DicasRomeiroScreen() {
   const insets = useSafeAreaInsets();
-  const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
   const { theme } = useTheme();
 
@@ -257,7 +255,7 @@ export default function DicasRomeiroScreen() {
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.backgroundRoot }}
       contentContainerStyle={{
-        paddingTop: headerHeight,
+        paddingTop: 0,
         paddingBottom: tabBarHeight + Spacing.xl,
       }}
       scrollIndicatorInsets={{ bottom: insets.bottom }}
