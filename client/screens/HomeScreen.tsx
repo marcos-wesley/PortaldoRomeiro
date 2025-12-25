@@ -958,6 +958,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xl,
     paddingHorizontal: Spacing.lg,
     marginTop: Spacing.xl,
+    marginBottom: Spacing.xl,
   },
   partnersSectionHeader: {
     flexDirection: "row",
