@@ -178,6 +178,8 @@ function configureExpoAndLanding(app: express.Application) {
   );
   const landingPageTemplate = fs.readFileSync(templatePath, "utf-8");
   const appName = getAppName();
+  
+  const publicLandingPath = path.resolve(process.cwd(), "server", "public", "index.html");
 
   log("Serving static Expo files with dynamic manifest routing");
 
@@ -196,6 +198,9 @@ function configureExpoAndLanding(app: express.Application) {
     }
 
     if (req.path === "/") {
+      if (fs.existsSync(publicLandingPath)) {
+        return res.sendFile(publicLandingPath);
+      }
       return serveLandingPage({
         req,
         res,
@@ -210,6 +215,7 @@ function configureExpoAndLanding(app: express.Application) {
   app.use("/assets", express.static(path.resolve(process.cwd(), "assets")));
   app.use("/uploads", express.static(path.resolve(process.cwd(), "uploads")));
   app.use("/uploads", express.static(path.resolve(process.cwd(), "server", "uploads")));
+  app.use(express.static(path.resolve(process.cwd(), "server", "public")));
   app.use(express.static(path.resolve(process.cwd(), "static-build")));
 
   log("Expo routing: Checking expo-platform header on / and /manifest");
