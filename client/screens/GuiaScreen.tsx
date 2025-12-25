@@ -1,5 +1,5 @@
 import { ScrollView, View, StyleSheet, Pressable, TextInput, Linking, Platform, ActivityIndicator } from "react-native";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
@@ -21,7 +21,7 @@ import { Spacing, BorderRadius, Colors, Typography } from "@/constants/theme";
 import { businessCategories, BusinessCategory } from "@/lib/data";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { GuiaStackParamList } from "@/navigation/GuiaStackNavigator";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 
 interface Business {
   id: string;
@@ -309,13 +309,21 @@ function FeaturedBusinessCard({
 
 export default function GuiaScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<GuiaStackParamList>>();
+  const route = useRoute<RouteProp<GuiaStackParamList, "Guia">>();
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
   const tabBarHeight = useBottomTabBarHeight();
   const { theme } = useTheme();
   
+  const initialCategory = route.params?.initialCategory;
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(initialCategory || null);
+
+  useEffect(() => {
+    if (initialCategory) {
+      setSelectedCategory(initialCategory);
+    }
+  }, [initialCategory]);
 
   const { data: businessesData, isLoading } = useQuery<{ businesses: Business[] }>({
     queryKey: ["/api/businesses"],

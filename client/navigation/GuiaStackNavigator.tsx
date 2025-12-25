@@ -7,7 +7,7 @@ import { AuthAwareHeader } from "@/components/AuthAwareHeader";
 import { useTheme } from "@/hooks/useTheme";
 
 export type GuiaStackParamList = {
-  Guia: undefined;
+  Guia: { initialCategory?: string } | undefined;
   EmpresaDetail: { businessId: string };
   HospedagemDetail: { id: string; checkIn?: string; checkOut?: string };
 };

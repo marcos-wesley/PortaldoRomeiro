@@ -34,11 +34,10 @@ const VibrantColors = {
 const menuItems = [
   { id: "1", icon: "book-open", title: "Historia do Santuario", screen: "Historia", color: VibrantColors.purple },
   { id: "2", icon: "map-pin", title: "Pontos Turisticos", screen: "Roteiros", color: VibrantColors.teal },
-  { id: "3", icon: "coffee", title: "Restaurantes", screen: "Restaurantes", color: VibrantColors.coral },
+  { id: "3", icon: "coffee", title: "Restaurantes", screen: "GuiaRestaurantes", color: VibrantColors.coral },
   { id: "4", icon: "home", title: "Hospedagens", screen: "Hospedagem", color: VibrantColors.blue },
-  { id: "5", icon: "truck", title: "Horarios de Onibus", screen: "HorariosOnibus", color: VibrantColors.pink },
-  { id: "6", icon: "help-circle", title: "Dicas do Romeiro", screen: "DicasRomeiro", color: VibrantColors.cyan },
-  { id: "7", icon: "phone", title: "Telefones Uteis", screen: "TelefonesUteis", color: VibrantColors.gray },
+  { id: "5", icon: "help-circle", title: "Dicas do Romeiro", screen: "DicasRomeiro", color: VibrantColors.cyan },
+  { id: "6", icon: "phone", title: "Telefones Uteis", screen: "TelefonesUteis", color: VibrantColors.gray },
 ];
 
 
@@ -82,7 +81,14 @@ export default function MaisScreen() {
 
   const handleNavigate = (screen: string) => {
     try {
-      navigation.navigate(screen as any);
+      if (screen === "GuiaRestaurantes") {
+        navigation.getParent()?.navigate("Guia", { 
+          screen: "Guia", 
+          params: { initialCategory: "onde-comer" } 
+        });
+      } else {
+        navigation.navigate(screen as any);
+      }
     } catch (e) {
       // Screen might not exist yet
     }
