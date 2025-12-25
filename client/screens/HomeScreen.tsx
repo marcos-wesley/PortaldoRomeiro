@@ -202,7 +202,7 @@ function HeroBanner({ news, onPress }: { news: NewsItem; onPress: () => void }) 
         imageStyle={styles.heroBannerImage}
       >
         <LinearGradient
-          colors={["transparent", "rgba(0,0,0,0.7)"]}
+          colors={["transparent", "transparent"]}
           style={styles.heroGradient}
         >
           <View style={[styles.categoryBadge, { backgroundColor: categoryColor }]}>
@@ -256,7 +256,7 @@ function FeaturedNewsCard({ news, onPress }: { news: NewsItem; onPress: () => vo
     >
       <Image source={{ uri: imageUrl }} style={styles.featuredNewsImage} contentFit="cover" />
       <LinearGradient
-        colors={["transparent", "rgba(0,0,0,0.8)"]}
+        colors={["transparent", "transparent"]}
         style={styles.featuredNewsGradient}
       >
         <View style={styles.featuredNewsBadge}>
