@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Moderacao de Avaliacoes - Admin Portal do Romeiro</title>
+  <title>Moderacao de Avaliacoes - Hospedagem - Admin Portal do Romeiro</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -33,13 +33,15 @@
     .header h2 { font-size: 24px; color: #1f2937; }
     .back-btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; background: #6b7280; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; text-decoration: none; transition: background 0.2s; }
     .back-btn:hover { background: #4b5563; }
-    .business-info { background: white; border-radius: 12px; padding: 20px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); display: flex; gap: 16px; align-items: center; }
-    .business-logo { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; background: #f3f4f6; }
-    .business-details h3 { font-size: 18px; color: #1f2937; margin-bottom: 4px; }
-    .business-details p { color: #6b7280; font-size: 14px; }
+    .accommodation-info { background: white; border-radius: 12px; padding: 20px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); display: flex; gap: 16px; align-items: center; }
+    .accommodation-logo { width: 60px; height: 60px; border-radius: 8px; object-fit: cover; background: #f3f4f6; }
+    .accommodation-details h3 { font-size: 18px; color: #1f2937; margin-bottom: 4px; }
+    .accommodation-details p { color: #6b7280; font-size: 14px; }
     .rating-badge { display: inline-flex; align-items: center; gap: 4px; background: #fef3c7; color: #92400e; padding: 4px 10px; border-radius: 20px; font-size: 13px; font-weight: 500; margin-top: 8px; }
     .reviews-grid { display: flex; flex-direction: column; gap: 16px; }
     .review-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .review-card.pending { border-left: 4px solid #f59e0b; }
+    .review-card.approved { border-left: 4px solid #10b981; }
     .review-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
     .review-user { display: flex; align-items: center; gap: 12px; }
     .review-avatar { width: 44px; height: 44px; border-radius: 50%; background: #b22226; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 18px; }
@@ -55,8 +57,6 @@
     .delete-btn { padding: 8px 16px; background: #fee2e2; color: #dc2626; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; display: flex; align-items: center; gap: 6px; transition: background 0.2s; }
     .delete-btn:hover { background: #fecaca; }
     .review-comment { color: #374151; line-height: 1.6; font-size: 14px; margin-top: 8px; padding-top: 12px; border-top: 1px solid #f3f4f6; }
-    .review-card.pending { border-left: 4px solid #f59e0b; }
-    .review-card.approved { border-left: 4px solid #10b981; }
     .status-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 500; margin-left: 8px; }
     .status-badge.pending { background: #fef3c7; color: #92400e; }
     .status-badge.approved { background: #d1fae5; color: #059669; }
@@ -103,7 +103,8 @@
         <a href="/admin/telefones" class="nav-item">Telefones Uteis</a>
         <a href="/admin/dicas" class="nav-item">Dicas do Romeiro</a>
         <a href="/admin/servicos" class="nav-item">Servicos</a>
-        <a href="/admin/empresas" class="nav-item active">Guia Comercial</a>
+        <a href="/admin/empresas" class="nav-item">Guia Comercial</a>
+        <a href="/admin/hospedagens" class="nav-item active">Hospedagens</a>
       </div>
       <div class="nav-section">
         <div class="nav-section-title">Sistema</div>
@@ -115,21 +116,21 @@
   <main class="main">
     <div class="header">
       <h2>Moderacao de Avaliacoes</h2>
-      <a href="/admin/empresas" class="back-btn">
+      <a href="/admin/hospedagens" class="back-btn">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
         Voltar
       </a>
     </div>
 
-    <div id="businessInfo" class="business-info" style="display: none;">
-      <img id="businessLogo" class="business-logo" src="" alt="">
-      <div class="business-details">
-        <h3 id="businessName"></h3>
-        <p id="businessCategory"></p>
+    <div id="accommodationInfo" class="accommodation-info" style="display: none;">
+      <img id="accommodationLogo" class="accommodation-logo" src="" alt="">
+      <div class="accommodation-details">
+        <h3 id="accommodationName"></h3>
+        <p id="accommodationType"></p>
         <div class="rating-badge">
-          <span id="businessRating">0.0</span>
+          <span id="accommodationRating">0.0</span>
           <span>&#9733;</span>
-          <span>(<span id="businessReviewCount">0</span> avaliacoes)</span>
+          <span>(<span id="accommodationReviewCount">0</span> avaliacoes)</span>
         </div>
       </div>
     </div>
@@ -145,7 +146,7 @@
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
       </svg>
       <h3>Nenhuma avaliacao</h3>
-      <p>Esta empresa ainda nao recebeu avaliacoes dos usuarios.</p>
+      <p>Esta hospedagem ainda nao recebeu avaliacoes dos usuarios.</p>
     </div>
   </main>
 
@@ -163,41 +164,39 @@
   <div id="toast" class="toast"></div>
 
   <script>
-    const businessId = window.location.pathname.split('/')[3];
+    const accommodationId = window.location.pathname.split('/')[3];
     let reviews = [];
     let reviewToDelete = null;
 
-    const categoryNames = {
-      'onde-comer': 'Onde Comer',
-      'onde-ficar': 'Onde Ficar',
-      'onde-comprar': 'Onde Comprar',
-      'construcao-reforma': 'Construcao e Reforma',
-      'diversao-lazer': 'Diversao e Lazer',
-      'para-seu-carro': 'Para seu Carro',
-      'para-sua-moto': 'Para sua Moto'
+    const typeNames = {
+      'hotel': 'Hotel',
+      'pousada': 'Pousada',
+      'hostel': 'Hostel'
     };
 
-    async function loadBusiness() {
+    async function loadAccommodation() {
       try {
-        const res = await fetch(`/admin/api/businesses/${businessId}`);
-        if (!res.ok) throw new Error('Empresa nao encontrada');
+        const res = await fetch(`/admin/api/accommodations/${accommodationId}`);
+        if (!res.ok) throw new Error('Hospedagem nao encontrada');
         const data = await res.json();
-        const business = data.business;
+        const accommodation = data.accommodation;
         
-        document.getElementById('businessName').textContent = business.name;
-        document.getElementById('businessCategory').textContent = categoryNames[business.categoryId] || business.categoryId;
-        document.getElementById('businessRating').textContent = business.rating ? parseFloat(business.rating).toFixed(1) : '0.0';
-        document.getElementById('businessReviewCount').textContent = business.reviews || 0;
+        document.getElementById('accommodationName').textContent = accommodation.name;
+        document.getElementById('accommodationType').textContent = typeNames[accommodation.type] || accommodation.type;
+        document.getElementById('accommodationRating').textContent = accommodation.rating ? parseFloat(accommodation.rating).toFixed(1) : '0.0';
+        document.getElementById('accommodationReviewCount').textContent = accommodation.reviewsCount || 0;
         
-        if (business.logoUrl) {
-          document.getElementById('businessLogo').src = business.logoUrl;
+        if (accommodation.logoUrl) {
+          document.getElementById('accommodationLogo').src = accommodation.logoUrl;
+        } else if (accommodation.coverUrl) {
+          document.getElementById('accommodationLogo').src = accommodation.coverUrl;
         } else {
-          document.getElementById('businessLogo').src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60"%3E%3Crect fill="%23f3f4f6" width="60" height="60"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-size="24"%3E' + business.name.charAt(0).toUpperCase() + '%3C/text%3E%3C/svg%3E';
+          document.getElementById('accommodationLogo').src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60"%3E%3Crect fill="%23f3f4f6" width="60" height="60"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%239ca3af" font-size="24"%3E' + accommodation.name.charAt(0).toUpperCase() + '%3C/text%3E%3C/svg%3E';
         }
         
-        document.getElementById('businessInfo').style.display = 'flex';
+        document.getElementById('accommodationInfo').style.display = 'flex';
       } catch (error) {
-        console.error('Error loading business:', error);
+        console.error('Error loading accommodation:', error);
       }
     }
 
@@ -207,7 +206,7 @@
         document.getElementById('reviewsList').style.display = 'none';
         document.getElementById('emptyState').style.display = 'none';
         
-        const res = await fetch(`/admin/api/businesses/${businessId}/reviews`);
+        const res = await fetch(`/admin/api/accommodations/${accommodationId}/reviews`);
         if (!res.ok) throw new Error('Erro ao carregar avaliacoes');
         
         const data = await res.json();
@@ -270,14 +269,14 @@
 
     async function approveReview(reviewId) {
       try {
-        const res = await fetch(`/admin/api/businesses/${businessId}/reviews/${reviewId}/approve`, {
+        const res = await fetch(`/admin/api/accommodations/${accommodationId}/reviews/${reviewId}/approve`, {
           method: 'POST'
         });
         
         if (!res.ok) throw new Error('Erro ao aprovar');
         
         showToast('Avaliacao aprovada com sucesso!', 'success');
-        loadBusiness();
+        loadAccommodation();
         loadReviews();
       } catch (error) {
         console.error('Error approving review:', error);
@@ -299,7 +298,7 @@
       if (!reviewToDelete) return;
       
       try {
-        const res = await fetch(`/admin/api/businesses/${businessId}/reviews/${reviewToDelete}`, {
+        const res = await fetch(`/admin/api/accommodations/${accommodationId}/reviews/${reviewToDelete}`, {
           method: 'DELETE'
         });
         
@@ -307,7 +306,7 @@
         
         closeDeleteModal();
         showToast('Avaliacao excluida com sucesso!', 'success');
-        loadBusiness();
+        loadAccommodation();
         loadReviews();
       } catch (error) {
         console.error('Error deleting review:', error);
@@ -322,7 +321,7 @@
       setTimeout(() => { toast.className = 'toast'; }, 3000);
     }
 
-    loadBusiness();
+    loadAccommodation();
     loadReviews();
   </script>
 </body>

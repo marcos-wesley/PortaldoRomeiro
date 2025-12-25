@@ -598,8 +598,8 @@ export class DatabaseStorage implements IStorage {
     const accommodationId = review[0].accommodationId;
     const result = await db.delete(accommodationReviews).where(eq(accommodationReviews.id, id)).returning();
     
-    // Recalculate rating
-    const reviews = await this.getAccommodationReviews(accommodationId);
+    // Recalculate rating only from approved reviews
+    const reviews = await this.getApprovedAccommodationReviews(accommodationId);
     if (reviews.length > 0) {
       const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
       await db.update(accommodations).set({ 
@@ -614,6 +614,60 @@ export class DatabaseStorage implements IStorage {
     }
     
     return result.length > 0;
+  }
+
+  async getApprovedAccommodationReviews(accommodationId: string): Promise<AccommodationReview[]> {
+    return await db.select().from(accommodationReviews)
+      .where(and(eq(accommodationReviews.accommodationId, accommodationId), eq(accommodationReviews.approved, true)))
+      .orderBy(desc(accommodationReviews.createdAt));
+  }
+
+  async approveAccommodationReview(id: string): Promise<AccommodationReview | undefined> {
+    const result = await db.update(accommodationReviews)
+      .set({ approved: true })
+      .where(eq(accommodationReviews.id, id))
+      .returning();
+    
+    if (result[0]) {
+      // Recalculate rating from approved reviews
+      const reviews = await this.getApprovedAccommodationReviews(result[0].accommodationId);
+      if (reviews.length > 0) {
+        const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+        await db.update(accommodations).set({ 
+          rating: avgRating.toFixed(1),
+          reviewsCount: reviews.length 
+        }).where(eq(accommodations.id, result[0].accommodationId));
+      }
+    }
+    
+    return result[0];
+  }
+
+  async approveBusinessReview(id: string): Promise<BusinessReview | undefined> {
+    const result = await db.update(businessReviews)
+      .set({ approved: true })
+      .where(eq(businessReviews.id, id))
+      .returning();
+    
+    if (result[0]) {
+      // Recalculate rating from approved reviews
+      const reviews = await this.getApprovedBusinessReviews(result[0].businessId);
+      if (reviews.length > 0) {
+        const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+        await db.update(businesses).set({ 
+          rating: avgRating.toFixed(1),
+          reviews: reviews.length 
+        }).where(eq(businesses.id, result[0].businessId));
+      }
+    }
+    
+    return result[0];
+  }
+
+  async getApprovedBusinessReviews(businessId: string): Promise<BusinessReview[]> {
+    return await db.select().from(businessReviews)
+      .where(and(eq(businessReviews.businessId, businessId), eq(businessReviews.approved, true)))
+      .orderBy(desc(businessReviews.createdAt));
   }
 
   // Partners

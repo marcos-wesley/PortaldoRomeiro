@@ -552,6 +552,7 @@ export const businessReviews = pgTable("business_reviews", {
   userName: text("user_name").notNull(),
   rating: integer("rating").notNull(),
   comment: text("comment"),
+  approved: boolean("approved").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -753,6 +754,7 @@ export const accommodationReviews = pgTable("accommodation_reviews", {
   rating: integer("rating").notNull(),
   comment: text("comment"),
   stayDate: text("stay_date"), // Month/Year of stay
+  approved: boolean("approved").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

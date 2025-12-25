@@ -1,10 +1,11 @@
 import { useState, useMemo } from "react";
-import { ScrollView, View, StyleSheet, Pressable, Linking, ActivityIndicator } from "react-native";
+import { ScrollView, View, StyleSheet, Pressable, Linking, ActivityIndicator, TextInput } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/query-client";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -61,6 +62,18 @@ type AccommodationType = {
   policies: string | null;
   featured: boolean | null;
 };
+
+interface AccommodationReview {
+  id: string;
+  accommodationId: string;
+  userId?: string | null;
+  userName: string;
+  rating: number;
+  comment?: string | null;
+  stayDate?: string | null;
+  approved?: boolean | null;
+  createdAt: string;
+}
 
 function parseJSON<T>(str: string | null): T[] {
   if (!str) return [];
@@ -119,6 +132,49 @@ function calculateNights(checkIn: string, checkOut: string): number {
   const end = new Date(checkOut);
   const diffTime = Math.abs(end.getTime() - start.getTime());
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+}
+
+function StarRating({ rating, size = 16, onSelect }: { rating: number; size?: number; onSelect?: (r: number) => void }) {
+  return (
+    <View style={{ flexDirection: "row", gap: 4 }}>
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Pressable key={star} onPress={() => onSelect?.(star)} disabled={!onSelect}>
+          <Feather
+            name={star <= rating ? "star" : "star"}
+            size={size}
+            color={star <= rating ? "#F59E0B" : "#D1D5DB"}
+            style={{ opacity: star <= rating ? 1 : 0.5 }}
+          />
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
+function ReviewCard({ review }: { review: AccommodationReview }) {
+  const { theme } = useTheme();
+  const date = new Date(review.createdAt);
+  const formattedDate = `${date.getDate().toString().padStart(2, "0")}/${(date.getMonth() + 1).toString().padStart(2, "0")}/${date.getFullYear()}`;
+
+  return (
+    <View style={[styles.reviewCard, { backgroundColor: theme.backgroundDefault }]}>
+      <View style={styles.reviewHeader}>
+        <View style={styles.reviewAvatar}>
+          <ThemedText style={styles.reviewAvatarText}>
+            {review.userName.charAt(0).toUpperCase()}
+          </ThemedText>
+        </View>
+        <View style={styles.reviewInfo}>
+          <ThemedText type="body" style={{ fontWeight: "600" }}>{review.userName}</ThemedText>
+          <ThemedText type="caption" secondary>{formattedDate}</ThemedText>
+        </View>
+        <StarRating rating={review.rating} size={14} />
+      </View>
+      {review.comment ? (
+        <ThemedText style={styles.reviewComment}>{review.comment}</ThemedText>
+      ) : null}
+    </View>
+  );
 }
 
 function RoomCard({ 
@@ -241,6 +297,7 @@ export default function HospedagemDetailScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const route = useRoute<HospedagemDetailRouteProp>();
+  const queryClient = useQueryClient();
   
   const { id, checkIn, checkOut } = route.params;
   const today = new Date();
@@ -250,6 +307,11 @@ export default function HospedagemDetailScreen() {
   const effectiveCheckIn = checkIn || today.toISOString().split("T")[0];
   const effectiveCheckOut = checkOut || tomorrow.toISOString().split("T")[0];
   const nights = calculateNights(effectiveCheckIn, effectiveCheckOut);
+
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewName, setReviewName] = useState("");
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState("");
 
   const { data, isLoading, error } = useQuery<{ 
     accommodation: AccommodationType; 
@@ -262,6 +324,33 @@ export default function HospedagemDetailScreen() {
   const rooms = data?.availableRooms || [];
   const amenities = parseJSON<string>(accommodation?.amenities || null);
   const rating = accommodation?.rating ? parseFloat(accommodation.rating) : 0;
+
+  const { data: reviewsData, isLoading: reviewsLoading } = useQuery<{ reviews: AccommodationReview[] }>({
+    queryKey: [`/api/accommodations/${id}/reviews`],
+    enabled: !!accommodation,
+  });
+
+  const createReviewMutation = useMutation({
+    mutationFn: async (data: { userName: string; rating: number; comment?: string }) => {
+      return apiRequest("POST", `/api/accommodations/${id}/reviews`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/accommodations/${id}/reviews`] });
+      setShowReviewForm(false);
+      setReviewName("");
+      setReviewRating(0);
+      setReviewComment("");
+    },
+  });
+
+  const handleSubmitReview = () => {
+    if (!reviewName.trim() || reviewRating === 0) return;
+    createReviewMutation.mutate({
+      userName: reviewName.trim(),
+      rating: reviewRating,
+      comment: reviewComment.trim() || undefined,
+    });
+  };
 
   const handleContact = (room?: RoomType) => {
     if (!accommodation) return;
@@ -417,6 +506,89 @@ export default function HospedagemDetailScreen() {
               </ThemedText>
             </View>
           )}
+
+          <View style={styles.section}>
+            <View style={styles.reviewsHeader}>
+              <ThemedText type="h4" style={styles.sectionTitle}>Avaliacoes</ThemedText>
+              <Pressable 
+                style={[styles.addReviewButton, { backgroundColor: Colors.light.primary }]}
+                onPress={() => setShowReviewForm(!showReviewForm)}
+              >
+                <Feather name={showReviewForm ? "x" : "plus"} size={16} color="#FFFFFF" />
+                <ThemedText style={styles.addReviewButtonText}>
+                  {showReviewForm ? "Cancelar" : "Avaliar"}
+                </ThemedText>
+              </Pressable>
+            </View>
+
+            {showReviewForm ? (
+              <View style={[styles.reviewFormCard, { backgroundColor: theme.backgroundDefault }]}>
+                <ThemedText type="body" style={{ marginBottom: Spacing.sm, fontWeight: "600" }}>
+                  Deixe sua avaliacao
+                </ThemedText>
+                
+                <View style={styles.reviewFormField}>
+                  <ThemedText type="caption" secondary style={{ marginBottom: Spacing.xs }}>Seu nome</ThemedText>
+                  <TextInput
+                    style={[styles.reviewInput, { backgroundColor: theme.backgroundRoot, color: theme.text }]}
+                    placeholder="Digite seu nome"
+                    placeholderTextColor={theme.textSecondary}
+                    value={reviewName}
+                    onChangeText={setReviewName}
+                  />
+                </View>
+
+                <View style={styles.reviewFormField}>
+                  <ThemedText type="caption" secondary style={{ marginBottom: Spacing.xs }}>Nota</ThemedText>
+                  <StarRating rating={reviewRating} size={28} onSelect={setReviewRating} />
+                </View>
+
+                <View style={styles.reviewFormField}>
+                  <ThemedText type="caption" secondary style={{ marginBottom: Spacing.xs }}>Comentario (opcional)</ThemedText>
+                  <TextInput
+                    style={[styles.reviewInput, styles.reviewTextarea, { backgroundColor: theme.backgroundRoot, color: theme.text }]}
+                    placeholder="Conte sua experiencia..."
+                    placeholderTextColor={theme.textSecondary}
+                    value={reviewComment}
+                    onChangeText={setReviewComment}
+                    multiline
+                    numberOfLines={3}
+                  />
+                </View>
+
+                <Pressable 
+                  style={[styles.submitReviewButton, { backgroundColor: Colors.light.primary }]}
+                  onPress={handleSubmitReview}
+                  disabled={createReviewMutation.isPending}
+                >
+                  {createReviewMutation.isPending ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <ThemedText style={styles.submitReviewButtonText}>Enviar Avaliacao</ThemedText>
+                  )}
+                </Pressable>
+              </View>
+            ) : null}
+
+            {reviewsLoading ? (
+              <View style={styles.reviewsLoading}>
+                <ActivityIndicator size="small" color={Colors.light.primary} />
+              </View>
+            ) : reviewsData?.reviews && reviewsData.reviews.length > 0 ? (
+              <View style={styles.reviewsList}>
+                {reviewsData.reviews.map((review) => (
+                  <ReviewCard key={review.id} review={review} />
+                ))}
+              </View>
+            ) : (
+              <View style={[styles.noReviewsCard, { backgroundColor: theme.backgroundDefault }]}>
+                <Feather name="message-square" size={32} color={theme.textSecondary} />
+                <ThemedText type="body" secondary style={{ marginTop: Spacing.sm, textAlign: "center" }}>
+                  Nenhuma avaliacao ainda. Seja o primeiro a avaliar!
+                </ThemedText>
+              </View>
+            )}
+          </View>
 
           <View style={[styles.contactCard, { backgroundColor: theme.backgroundDefault }]}>
             <View style={styles.contactHeader}>
@@ -700,6 +872,98 @@ const styles = StyleSheet.create({
   },
   contactButtonContent: {
     flexDirection: "row",
+    alignItems: "center",
+  },
+  section: {
+    marginTop: Spacing.lg,
+  },
+  reviewsHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
+  addReviewButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: BorderRadius.full,
+  },
+  addReviewButtonText: {
+    color: "#FFFFFF",
+    marginLeft: Spacing.xs,
+    fontWeight: "600",
+    fontSize: 13,
+  },
+  reviewFormCard: {
+    borderRadius: BorderRadius.md,
+    padding: Spacing.lg,
+    marginBottom: Spacing.md,
+  },
+  reviewFormField: {
+    marginBottom: Spacing.md,
+  },
+  reviewInput: {
+    borderRadius: BorderRadius.sm,
+    padding: Spacing.md,
+    fontSize: 15,
+  },
+  reviewTextarea: {
+    minHeight: 80,
+    textAlignVertical: "top",
+  },
+  submitReviewButton: {
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    alignItems: "center",
+    marginTop: Spacing.sm,
+  },
+  submitReviewButtonText: {
+    color: "#FFFFFF",
+    fontWeight: "600",
+  },
+  reviewsLoading: {
+    padding: Spacing.xl,
+    alignItems: "center",
+  },
+  reviewsList: {
+    gap: Spacing.sm,
+  },
+  reviewCard: {
+    borderRadius: BorderRadius.md,
+    padding: Spacing.lg,
+    marginBottom: Spacing.sm,
+  },
+  reviewHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: Spacing.sm,
+  },
+  reviewAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.light.primary,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: Spacing.sm,
+  },
+  reviewAvatarText: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+    fontSize: 16,
+  },
+  reviewInfo: {
+    flex: 1,
+  },
+  reviewComment: {
+    lineHeight: 22,
+    marginTop: Spacing.xs,
+  },
+  noReviewsCard: {
+    borderRadius: BorderRadius.md,
+    padding: Spacing.xl,
     alignItems: "center",
   },
 });

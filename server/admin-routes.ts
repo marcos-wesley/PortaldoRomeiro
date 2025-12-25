@@ -420,6 +420,11 @@ export function registerAdminRoutes(app: Express) {
     res.sendFile(quartosPath);
   });
 
+  app.get("/admin/hospedagens/:id/reviews", requireAuth, (req, res) => {
+    const reviewsPath = path.join(__dirname, "admin", "hospedagens-reviews.html");
+    res.sendFile(reviewsPath);
+  });
+
   app.get("/admin/eventos", requireAuth, (req, res) => {
     res.send(getPlaceholderPage("Eventos", "Gerencie os eventos"));
   });
@@ -1386,6 +1391,34 @@ export function registerAdminRoutes(app: Express) {
     } catch (error) {
       console.error("Admin delete accommodation review error:", error);
       return res.status(500).json({ error: "Erro ao excluir avaliacao" });
+    }
+  });
+
+  app.post("/admin/api/accommodations/:accommodationId/reviews/:reviewId/approve", requireAuth, async (req, res) => {
+    try {
+      const { reviewId } = req.params;
+      const review = await storage.approveAccommodationReview(reviewId);
+      if (!review) {
+        return res.status(404).json({ error: "Avaliacao nao encontrada" });
+      }
+      return res.json({ review, message: "Avaliacao aprovada com sucesso!" });
+    } catch (error) {
+      console.error("Admin approve accommodation review error:", error);
+      return res.status(500).json({ error: "Erro ao aprovar avaliacao" });
+    }
+  });
+
+  app.post("/admin/api/businesses/:businessId/reviews/:reviewId/approve", requireAuth, async (req, res) => {
+    try {
+      const { reviewId } = req.params;
+      const review = await storage.approveBusinessReview(reviewId);
+      if (!review) {
+        return res.status(404).json({ error: "Avaliacao nao encontrada" });
+      }
+      return res.json({ review, message: "Avaliacao aprovada com sucesso!" });
+    } catch (error) {
+      console.error("Admin approve business review error:", error);
+      return res.status(500).json({ error: "Erro ao aprovar avaliacao" });
     }
   });
 

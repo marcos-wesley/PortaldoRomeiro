@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "node:http";
 import { randomBytes, pbkdf2Sync, timingSafeEqual } from "node:crypto";
-import { registerUserSchema, loginUserSchema, updateProfileSchema, createNewsSchema, updateNewsSchema, createVideoSchema, updateVideoSchema, createAttractionSchema, updateAttractionSchema, createBusinessReviewSchema, createNotificationSchema, updateNotificationSchema, registerPushDeviceSchema, updateNotificationPreferencesSchema, createActivityLogSchema } from "@shared/schema";
+import { registerUserSchema, loginUserSchema, updateProfileSchema, createNewsSchema, updateNewsSchema, createVideoSchema, updateVideoSchema, createAttractionSchema, updateAttractionSchema, createBusinessReviewSchema, createAccommodationReviewSchema, createNotificationSchema, updateNotificationSchema, registerPushDeviceSchema, updateNotificationPreferencesSchema, createActivityLogSchema } from "@shared/schema";
 import { storage } from "./storage";
 import { fromError } from "zod-validation-error";
 import * as fs from "node:fs";
@@ -662,6 +662,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get accommodation reviews error:", error);
       return res.status(500).json({ error: "Erro ao buscar avaliacoes" });
+    }
+  });
+
+  app.post("/api/accommodations/:accommodationId/reviews", async (req, res) => {
+    try {
+      const { accommodationId } = req.params;
+      const validationResult = createAccommodationReviewSchema.safeParse({
+        ...req.body,
+        accommodationId,
+      });
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).message;
+        return res.status(400).json({ error: errorMessage });
+      }
+      const review = await storage.createAccommodationReview(validationResult.data);
+      return res.status(201).json({ review });
+    } catch (error) {
+      console.error("Create accommodation review error:", error);
+      return res.status(500).json({ error: "Erro ao criar avaliacao" });
     }
   });
 
