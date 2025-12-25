@@ -72,7 +72,7 @@ export const quickActions: QuickAction[] = [
   { id: "3", title: "Roteiros", icon: "map-pin", screen: "Roteiros", color: "#34D399" },
   { id: "4", title: "Info", icon: "info", screen: "Info", color: "#60A5FA" },
   { id: "5", title: "Hospedagem", icon: "home", screen: "Hospedagem", color: "#FBBF24" },
-  { id: "6", title: "Servicos", icon: "truck", screen: "Servicos", color: "#A78BFA" },
+  { id: "6", title: "Restaurantes", icon: "coffee", screen: "GuiaRestaurantes", color: "#F97316" },
 ];
 
 export const newsData: News[] = [

@@ -2,7 +2,7 @@ import { ScrollView, View, StyleSheet, Pressable, Dimensions, ImageBackground, A
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, CommonActions } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -592,7 +592,19 @@ export default function HomeScreen() {
   const displayVideos = [...allVideos].sort((a, b) => (a.featured === b.featured ? 0 : a.featured ? -1 : 1)).slice(0, 4);
 
   const handleQuickAction = (screen: string) => {
-    navigation.navigate(screen as any);
+    if (screen === "GuiaRestaurantes") {
+      navigation.dispatch(
+        CommonActions.navigate({
+          name: "GuiaTab",
+          params: {
+            screen: "Guia",
+            params: { initialCategory: "onde-comer" }
+          }
+        })
+      );
+    } else {
+      navigation.navigate(screen as any);
+    }
   };
 
   const handleNewsPress = (newsId: string) => {
