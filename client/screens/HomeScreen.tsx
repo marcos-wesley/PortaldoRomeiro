@@ -168,8 +168,8 @@ function FullScreenHeroBanner({ headerHeight, content }: { headerHeight: number;
         />
       )}
       <LinearGradient
-        colors={["transparent", "rgba(255,255,255,0.85)", "#FFFFFF"]}
-        locations={[0.3, 0.7, 0.9]}
+        colors={["transparent", "rgba(0,0,0,0.3)", "rgba(0,0,0,0.6)"]}
+        locations={[0.3, 0.7, 0.95]}
         style={styles.fullHeroGradient}
       />
       <View style={styles.fullHeroTextContainer}>
@@ -785,16 +785,22 @@ const styles = StyleSheet.create({
     right: Spacing.lg,
   },
   fullHeroTitle: {
-    color: "#1F2937",
+    color: "#FFFFFF",
     fontSize: 26,
     fontWeight: "600",
     lineHeight: 32,
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   fullHeroHighlight: {
-    color: "#1F2937",
+    color: "#FFFFFF",
     fontSize: 26,
     fontWeight: "800",
     lineHeight: 32,
+    textShadowColor: "rgba(0,0,0,0.5)",
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   heroBanner: {
     height: 180,
