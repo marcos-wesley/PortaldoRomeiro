@@ -1613,6 +1613,383 @@ export function registerAdminRoutes(app: Express) {
   app.get("/admin/configuracoes", requireAuth, (req, res) => {
     res.sendFile(path.join(process.cwd(), "server", "admin", "configuracoes.html"));
   });
+
+  // ========================================
+  // PUBLIC REGISTRATION ROUTES
+  // ========================================
+
+  // Public registration page
+  app.get("/cadastro", (req, res) => {
+    res.sendFile(path.join(process.cwd(), "server", "public", "cadastro.html"));
+  });
+
+  // Public API - Get settings for pricing display (limited fields)
+  app.get("/api/public/settings", async (req, res) => {
+    try {
+      await storage.initializeDefaultSettings();
+      const allSettings = await storage.getAllAppSettings();
+      const publicKeys = [
+        'plan_business_complete_price',
+        'plan_business_complete_duration',
+        'plan_accommodation_price',
+        'plan_accommodation_duration',
+        'app_name',
+        'contact_whatsapp'
+      ];
+      const publicSettings = allSettings.filter(s => publicKeys.includes(s.key));
+      res.json({ settings: publicSettings });
+    } catch (error) {
+      res.status(500).json({ error: "Erro ao carregar configuracoes" });
+    }
+  });
+
+  // Create uploads directory for public registrations
+  const uploadsPublicDir = path.join(process.cwd(), "server", "uploads", "cadastros");
+  if (!fs.existsSync(uploadsPublicDir)) {
+    fs.mkdirSync(uploadsPublicDir, { recursive: true });
+  }
+
+  const publicUploadStorage = multer.diskStorage({
+    destination: (_req, _file, cb) => {
+      cb(null, uploadsPublicDir);
+    },
+    filename: (_req, file, cb) => {
+      const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+      const ext = path.extname(file.originalname);
+      cb(null, uniqueSuffix + ext);
+    },
+  });
+
+  const publicUpload = multer({
+    storage: publicUploadStorage,
+    fileFilter: imageFilter,
+    limits: { fileSize: 5 * 1024 * 1024 }
+  });
+
+  // Public API - Register business or accommodation
+  app.post("/api/public/register", publicUpload.single("logo"), async (req, res) => {
+    try {
+      const { type, plan } = req.body;
+      const logoUrl = req.file ? `/uploads/cadastros/${req.file.filename}` : null;
+
+      if (type === 'business') {
+        const businessData: any = {
+          name: req.body.business_name || req.body.owner_name,
+          category: req.body.business_category || 'outros',
+          categoryId: req.body.business_category || 'outros',
+          planType: plan,
+          planStatus: plan === 'basic' ? 'active' : 'pending',
+          ownerEmail: req.body.owner_email,
+          ownerPhone: req.body.owner_phone,
+          logoUrl: logoUrl,
+          address: req.body.business_address || req.body.address,
+          whatsapp: req.body.business_whatsapp || req.body.owner_phone,
+          published: plan === 'basic', // Basic plans are auto-published
+          city: 'Trindade',
+        };
+
+        // Add extra fields for complete plan
+        if (plan === 'complete') {
+          businessData.description = req.body.description;
+          businessData.website = req.body.website;
+          businessData.instagram = req.body.instagram;
+          businessData.facebook = req.body.facebook;
+          businessData.hours = req.body.hours;
+        }
+
+        const business = await storage.createBusiness(businessData);
+
+        // For paid plans, create payment preference with Mercado Pago
+        if (plan === 'complete') {
+          const allSettings = await storage.getAllAppSettings();
+          const settingsMap: Record<string, string> = {};
+          allSettings.forEach(s => { settingsMap[s.key] = s.value || ''; });
+
+          const isProduction = settingsMap['mp_production_mode'] === 'true';
+          const accessToken = isProduction 
+            ? settingsMap['mp_production_access_token']
+            : settingsMap['mp_sandbox_access_token'];
+          const price = parseFloat(settingsMap['plan_business_complete_price']) || 99.90;
+
+          if (accessToken) {
+            try {
+              const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${accessToken}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  items: [{
+                    title: 'Plano Completo - Guia Comercial Portal do Romeiro',
+                    quantity: 1,
+                    unit_price: price,
+                    currency_id: 'BRL'
+                  }],
+                  external_reference: `business_${business.id}`,
+                  back_urls: {
+                    success: `${req.protocol}://${req.get('host')}/cadastro/sucesso`,
+                    failure: `${req.protocol}://${req.get('host')}/cadastro/erro`,
+                    pending: `${req.protocol}://${req.get('host')}/cadastro/pendente`
+                  },
+                  auto_return: 'approved'
+                })
+              });
+
+              const mpData = await mpResponse.json();
+              if (mpData.init_point) {
+                return res.json({ 
+                  success: true, 
+                  id: business.id,
+                  paymentUrl: isProduction ? mpData.init_point : mpData.sandbox_init_point
+                });
+              }
+            } catch (mpError) {
+              console.error('Mercado Pago error:', mpError);
+            }
+          }
+          
+          // If MP is not configured, return success without payment URL
+          return res.json({ 
+            success: true, 
+            id: business.id,
+            message: 'Cadastro realizado. O pagamento sera processado posteriormente.'
+          });
+        }
+
+        return res.json({ success: true, id: business.id });
+
+      } else if (type === 'accommodation') {
+        const accData: any = {
+          name: req.body.name,
+          type: req.body.type || 'pousada',
+          planStatus: 'pending',
+          ownerEmail: req.body.owner_email,
+          ownerPhone: req.body.owner_phone,
+          logoUrl: logoUrl,
+          address: req.body.address,
+          whatsapp: req.body.whatsapp,
+          description: req.body.description,
+          website: req.body.website,
+          instagram: req.body.instagram,
+          checkInTime: req.body.checkin || '14:00',
+          checkOutTime: req.body.checkout || '12:00',
+          published: false,
+          city: 'Trindade',
+        };
+
+        const accommodation = await storage.createAccommodation(accData);
+
+        // Create payment preference with Mercado Pago
+        const allSettings = await storage.getAllAppSettings();
+        const settingsMap: Record<string, string> = {};
+        allSettings.forEach(s => { settingsMap[s.key] = s.value || ''; });
+
+        const isProduction = settingsMap['mp_production_mode'] === 'true';
+        const accessToken = isProduction 
+          ? settingsMap['mp_production_access_token']
+          : settingsMap['mp_sandbox_access_token'];
+        const price = parseFloat(settingsMap['plan_accommodation_price']) || 199.90;
+
+        if (accessToken) {
+          try {
+            const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                items: [{
+                  title: 'Plano Anual - Hospedagem Portal do Romeiro',
+                  quantity: 1,
+                  unit_price: price,
+                  currency_id: 'BRL'
+                }],
+                external_reference: `accommodation_${accommodation.id}`,
+                back_urls: {
+                  success: `${req.protocol}://${req.get('host')}/cadastro/sucesso`,
+                  failure: `${req.protocol}://${req.get('host')}/cadastro/erro`,
+                  pending: `${req.protocol}://${req.get('host')}/cadastro/pendente`
+                },
+                auto_return: 'approved'
+              })
+            });
+
+            const mpData = await mpResponse.json();
+            if (mpData.init_point) {
+              return res.json({ 
+                success: true, 
+                id: accommodation.id,
+                paymentUrl: isProduction ? mpData.init_point : mpData.sandbox_init_point
+              });
+            }
+          } catch (mpError) {
+            console.error('Mercado Pago error:', mpError);
+          }
+        }
+        
+        return res.json({ 
+          success: true, 
+          id: accommodation.id,
+          message: 'Cadastro realizado. O pagamento sera processado posteriormente.'
+        });
+      }
+
+      return res.status(400).json({ error: 'Tipo de cadastro invalido' });
+    } catch (error) {
+      console.error('Registration error:', error);
+      res.status(500).json({ error: 'Erro ao processar cadastro' });
+    }
+  });
+
+  // Payment callback pages
+  app.get("/cadastro/sucesso", (req, res) => {
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Pagamento Confirmado - Portal do Romeiro</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #10b981 0%, #059669 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0; }
+          .card { background: white; border-radius: 16px; padding: 48px; text-align: center; max-width: 500px; margin: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+          .icon { width: 80px; height: 80px; background: rgba(16, 185, 129, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
+          .icon svg { width: 40px; height: 40px; color: #10b981; }
+          h1 { color: #1f2937; margin-bottom: 12px; }
+          p { color: #6b7280; }
+          .btn { display: inline-block; margin-top: 24px; padding: 14px 32px; background: #b22226; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <div class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </div>
+          <h1>Pagamento Confirmado!</h1>
+          <p>Seu cadastro foi realizado com sucesso e seu plano ja esta ativo. Voce recebera um e-mail com os detalhes.</p>
+          <a href="/" class="btn">Voltar ao Inicio</a>
+        </div>
+      </body>
+      </html>
+    `);
+  });
+
+  app.get("/cadastro/erro", (req, res) => {
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Erro no Pagamento - Portal do Romeiro</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0; }
+          .card { background: white; border-radius: 16px; padding: 48px; text-align: center; max-width: 500px; margin: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+          .icon { width: 80px; height: 80px; background: rgba(239, 68, 68, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
+          .icon svg { width: 40px; height: 40px; color: #ef4444; }
+          h1 { color: #1f2937; margin-bottom: 12px; }
+          p { color: #6b7280; }
+          .btn { display: inline-block; margin-top: 24px; padding: 14px 32px; background: #b22226; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <div class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </div>
+          <h1>Erro no Pagamento</h1>
+          <p>Houve um problema ao processar seu pagamento. Por favor, tente novamente ou entre em contato conosco.</p>
+          <a href="/cadastro" class="btn">Tentar Novamente</a>
+        </div>
+      </body>
+      </html>
+    `);
+  });
+
+  app.get("/cadastro/pendente", (req, res) => {
+    res.send(`
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Pagamento Pendente - Portal do Romeiro</title>
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0; }
+          .card { background: white; border-radius: 16px; padding: 48px; text-align: center; max-width: 500px; margin: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+          .icon { width: 80px; height: 80px; background: rgba(245, 158, 11, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; }
+          .icon svg { width: 40px; height: 40px; color: #f59e0b; }
+          h1 { color: #1f2937; margin-bottom: 12px; }
+          p { color: #6b7280; }
+          .btn { display: inline-block; margin-top: 24px; padding: 14px 32px; background: #b22226; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; }
+        </style>
+      </head>
+      <body>
+        <div class="card">
+          <div class="icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+          </div>
+          <h1>Pagamento Pendente</h1>
+          <p>Seu pagamento esta sendo processado. Assim que for confirmado, seu cadastro sera ativado e voce recebera um e-mail.</p>
+          <a href="/" class="btn">Voltar ao Inicio</a>
+        </div>
+      </body>
+      </html>
+    `);
+  });
+
+  // Webhook for Mercado Pago payment notifications
+  app.post("/api/webhooks/mercadopago", async (req, res) => {
+    try {
+      const { type, data } = req.body;
+      
+      if (type === 'payment') {
+        const allSettings = await storage.getAllAppSettings();
+        const settingsMap: Record<string, string> = {};
+        allSettings.forEach(s => { settingsMap[s.key] = s.value || ''; });
+
+        const isProduction = settingsMap['mp_production_mode'] === 'true';
+        const accessToken = isProduction 
+          ? settingsMap['mp_production_access_token']
+          : settingsMap['mp_sandbox_access_token'];
+
+        if (accessToken && data?.id) {
+          const paymentResponse = await fetch(`https://api.mercadopago.com/v1/payments/${data.id}`, {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+          });
+          const payment = await paymentResponse.json();
+
+          if (payment.status === 'approved' && payment.external_reference) {
+            const [entityType, entityId] = payment.external_reference.split('_');
+            const duration = entityType === 'business' 
+              ? parseInt(settingsMap['plan_business_complete_duration']) || 365
+              : parseInt(settingsMap['plan_accommodation_duration']) || 365;
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + duration);
+
+            if (entityType === 'business') {
+              await storage.updateBusiness(entityId, {
+                planStatus: 'active',
+                published: true,
+              });
+            } else if (entityType === 'accommodation') {
+              await storage.updateAccommodation(entityId, {
+                planStatus: 'active',
+                published: true,
+              });
+            }
+          }
+        }
+      }
+
+      res.sendStatus(200);
+    } catch (error) {
+      console.error('Webhook error:', error);
+      res.sendStatus(500);
+    }
+  });
 }
 
 function getPlaceholderPage(title: string, description: string): string {

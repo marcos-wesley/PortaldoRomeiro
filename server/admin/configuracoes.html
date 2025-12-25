@@ -249,6 +249,19 @@
     }
     .toast.success { background: #10b981; }
     .toast.error { background: #ef4444; }
+    .form-hint {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+    .section-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--primary);
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      margin-top: 8px;
+    }
   </style>
 </head>
 <body>
@@ -494,6 +507,88 @@
                 </label>
                 <span class="toggle-label">Permitir envio de notificacoes</span>
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-header">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect><line x1="1" y1="10" x2="23" y2="10"></line></svg>
+          <h3>Planos e Precos</h3>
+        </div>
+        <div class="settings-section-body">
+          <div class="form-grid">
+            <div class="form-group full-width">
+              <label class="section-label">Guia Comercial</label>
+            </div>
+            <div class="form-group">
+              <label for="plan_business_basic_price">Plano Basico (Gratuito)</label>
+              <input type="text" id="plan_business_basic_price" data-key="plan_business_basic_price" placeholder="0.00" value="0.00" disabled style="background: #f3f4f6;">
+              <small class="form-hint">Logo, titulo, endereco e WhatsApp</small>
+            </div>
+            <div class="form-group">
+              <label for="plan_business_complete_price">Plano Completo (R$)</label>
+              <input type="number" step="0.01" min="0" id="plan_business_complete_price" data-key="plan_business_complete_price" placeholder="99.90">
+              <small class="form-hint">Todas as funcionalidades</small>
+            </div>
+            <div class="form-group">
+              <label for="plan_business_complete_duration">Duracao do Plano Completo (dias)</label>
+              <input type="number" min="1" id="plan_business_complete_duration" data-key="plan_business_complete_duration" placeholder="365">
+            </div>
+            <div class="form-group full-width">
+              <label class="section-label">Hospedagens</label>
+            </div>
+            <div class="form-group">
+              <label for="plan_accommodation_price">Valor Anual (R$)</label>
+              <input type="number" step="0.01" min="0" id="plan_accommodation_price" data-key="plan_accommodation_price" placeholder="199.90">
+            </div>
+            <div class="form-group">
+              <label for="plan_accommodation_duration">Duracao do Plano (dias)</label>
+              <input type="number" min="1" id="plan_accommodation_duration" data-key="plan_accommodation_duration" placeholder="365">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-section-header">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><rect x="6" y="10" width="4" height="6" rx="1"></rect><line x1="14" y1="12" x2="18" y2="12"></line><line x1="14" y1="16" x2="18" y2="16"></line></svg>
+          <h3>Integracao Mercado Pago</h3>
+        </div>
+        <div class="settings-section-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Ambiente</label>
+              <div class="toggle-container">
+                <label class="toggle">
+                  <input type="checkbox" id="mp_production_mode" data-key="mp_production_mode">
+                  <span class="toggle-slider"></span>
+                </label>
+                <span class="toggle-label">Modo Producao (desativado = Homologacao)</span>
+              </div>
+            </div>
+            <div class="form-group full-width">
+              <label class="section-label">Credenciais de Homologacao (Sandbox)</label>
+            </div>
+            <div class="form-group">
+              <label for="mp_sandbox_public_key">Public Key (Sandbox)</label>
+              <input type="text" id="mp_sandbox_public_key" data-key="mp_sandbox_public_key" placeholder="TEST-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+            </div>
+            <div class="form-group">
+              <label for="mp_sandbox_access_token">Access Token (Sandbox)</label>
+              <input type="password" id="mp_sandbox_access_token" data-key="mp_sandbox_access_token" placeholder="TEST-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+            </div>
+            <div class="form-group full-width">
+              <label class="section-label">Credenciais de Producao</label>
+            </div>
+            <div class="form-group">
+              <label for="mp_production_public_key">Public Key (Producao)</label>
+              <input type="text" id="mp_production_public_key" data-key="mp_production_public_key" placeholder="APP_USR-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+            </div>
+            <div class="form-group">
+              <label for="mp_production_access_token">Access Token (Producao)</label>
+              <input type="password" id="mp_production_access_token" data-key="mp_production_access_token" placeholder="APP_USR-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
             </div>
           </div>
         </div>
