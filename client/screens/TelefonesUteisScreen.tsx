@@ -35,15 +35,20 @@ const categoryMapping: Record<string, { id: string; color: string }> = {
   "geral": { id: "geral", color: "#6B7280" },
 };
 
+function getCategoryId(category: string): string {
+  const catInfo = categoryMapping[category] || categoryMapping["geral"];
+  return `${catInfo.id}_${category.replace(/[\s\/]+/g, '_').toLowerCase()}`;
+}
+
 function mapApiToPhoneContact(apiPhone: ApiUsefulPhone): PhoneContact {
-  const catInfo = categoryMapping[apiPhone.category] || categoryMapping["geral"];
+  const categoryId = getCategoryId(apiPhone.category);
   const isEmergency = apiPhone.category === "Emergencia" || 
     ["192", "193", "190", "199"].includes(apiPhone.phone) ||
     apiPhone.phone.includes("3505-1234");
   
   return {
     id: apiPhone.id,
-    categoryId: catInfo.id,
+    categoryId: categoryId,
     name: apiPhone.name,
     phone: apiPhone.phone,
     icon: apiPhone.icon || "phone",
@@ -58,8 +63,9 @@ function mapApiCategories(apiPhones: ApiUsefulPhone[]): PhoneCategory[] {
   uniqueCategories.forEach(cat => {
     const catInfo = categoryMapping[cat] || categoryMapping["geral"];
     const staticCat = staticPhoneCategories.find(c => c.id === catInfo.id);
+    const uniqueId = getCategoryId(cat);
     categories.push({
-      id: catInfo.id,
+      id: uniqueId,
       name: cat,
       icon: staticCat?.icon || "phone",
       color: catInfo.color,
