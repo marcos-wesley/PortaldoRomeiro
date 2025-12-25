@@ -441,8 +441,9 @@ export default function HospedagemScreen() {
 
   const renderHeader = () => (
     <View style={styles.header}>
-      <ThemedText type="body" secondary style={styles.introText}>
-        Encontre a hospedagem ideal para sua romaria em Trindade
+      <ThemedText type="h2" style={styles.headerTitle}>Onde se Hospedar</ThemedText>
+      <ThemedText type="small" secondary style={styles.introText}>
+        Encontre a hospedagem ideal para sua romaria
       </ThemedText>
       
       <DateSelector
@@ -495,6 +496,11 @@ export default function HospedagemScreen() {
 const styles = StyleSheet.create({
   header: {
     marginBottom: Spacing.lg,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "700",
+    marginBottom: Spacing.xs,
   },
   introText: {
     marginBottom: Spacing.lg,
