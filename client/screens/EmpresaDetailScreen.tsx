@@ -327,15 +327,16 @@ export default function EmpresaDetailScreen({ route }: Props) {
   };
 
   return (
-    <ScrollView
-      style={{ flex: 1, backgroundColor: theme.backgroundRoot }}
-      contentContainerStyle={{
-        paddingTop: 0,
-        paddingBottom: insets.bottom + Spacing["3xl"],
-      }}
-      scrollIndicatorInsets={{ bottom: insets.bottom }}
-      showsVerticalScrollIndicator={false}
-    >
+    <View style={{ flex: 1, backgroundColor: theme.backgroundRoot }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          paddingTop: 0,
+          paddingBottom: 120,
+        }}
+        scrollIndicatorInsets={{ bottom: insets.bottom }}
+        showsVerticalScrollIndicator={false}
+      >
       {business.coverUrl ? (
         <Image
           source={{ uri: business.coverUrl }}
@@ -646,7 +647,41 @@ export default function EmpresaDetailScreen({ route }: Props) {
           </View>
         </View>
       </Modal>
-    </ScrollView>
+      </ScrollView>
+
+      {(business.whatsapp || business.phone) ? (
+        <View style={[styles.fixedContactBar, { backgroundColor: theme.backgroundDefault, paddingBottom: insets.bottom + Spacing.md }]}>
+          <View style={styles.fixedContactButtons}>
+            {business.whatsapp ? (
+              <Pressable 
+                onPress={handleWhatsApp}
+                style={[styles.fixedContactButton, { backgroundColor: "#25D366" }]}
+              >
+                <View style={styles.fixedContactButtonContent}>
+                  <Feather name="message-circle" size={18} color="#FFFFFF" />
+                  <ThemedText style={{ color: "#FFFFFF", marginLeft: Spacing.sm, fontWeight: "600", fontSize: 15 }}>
+                    WhatsApp
+                  </ThemedText>
+                </View>
+              </Pressable>
+            ) : null}
+            {business.phone ? (
+              <Pressable 
+                onPress={handleCall}
+                style={[styles.fixedContactButton, { backgroundColor: Colors.light.primary }]}
+              >
+                <View style={styles.fixedContactButtonContent}>
+                  <Feather name="phone" size={18} color="#FFFFFF" />
+                  <ThemedText style={{ color: "#FFFFFF", marginLeft: Spacing.sm, fontWeight: "600", fontSize: 15 }}>
+                    Ligar
+                  </ThemedText>
+                </View>
+              </Pressable>
+            ) : null}
+          </View>
+        </View>
+      ) : null}
+    </View>
   );
 }
 
@@ -926,5 +961,36 @@ const styles = StyleSheet.create({
     padding: Spacing.xl,
     borderRadius: BorderRadius.lg,
     alignItems: "center",
+  },
+  fixedContactBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingTop: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0,0,0,0.08)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  fixedContactButtons: {
+    flexDirection: "row",
+    gap: Spacing.md,
+  },
+  fixedContactButton: {
+    flex: 1,
+    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.md,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  fixedContactButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

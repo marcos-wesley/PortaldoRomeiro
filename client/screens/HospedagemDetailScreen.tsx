@@ -590,45 +590,42 @@ export default function HospedagemDetailScreen() {
             )}
           </View>
 
-          <View style={[styles.contactCard, { backgroundColor: theme.backgroundDefault }]}>
-            <View style={styles.contactHeader}>
-              <Feather name="phone" size={20} color={Colors.light.primary} />
-              <ThemedText type="h4" style={styles.contactTitle}>Entre em contato</ThemedText>
-            </View>
-            <ThemedText type="small" secondary style={styles.contactText}>
-              Fale diretamente com o estabelecimento para mais informacoes ou reservas.
-            </ThemedText>
-            <View style={styles.contactButtons}>
-              {accommodation.whatsapp ? (
-                <Pressable 
-                  onPress={() => handleContact()}
-                  style={[styles.contactButton, { backgroundColor: Colors.light.highlight, borderRadius: BorderRadius.md, paddingVertical: Spacing.md }]}
-                >
-                  <View style={styles.contactButtonContent}>
-                    <Feather name="message-circle" size={16} color={Colors.light.primary} />
-                    <ThemedText style={{ color: Colors.light.primary, marginLeft: Spacing.sm, fontWeight: "600" }}>
-                      WhatsApp
-                    </ThemedText>
-                  </View>
-                </Pressable>
-              ) : null}
-              {accommodation.phone ? (
-                <Pressable 
-                  onPress={handleCall}
-                  style={[styles.contactButton, { backgroundColor: Colors.light.highlight, borderRadius: BorderRadius.md, paddingVertical: Spacing.md }]}
-                >
-                  <View style={styles.contactButtonContent}>
-                    <Feather name="phone" size={16} color={Colors.light.primary} />
-                    <ThemedText style={{ color: Colors.light.primary, marginLeft: Spacing.sm, fontWeight: "600" }}>
-                      Ligar
-                    </ThemedText>
-                  </View>
-                </Pressable>
-              ) : null}
-            </View>
-          </View>
+          <View style={{ height: 100 }} />
         </View>
       </ScrollView>
+
+      {(accommodation.whatsapp || accommodation.phone) ? (
+        <View style={[styles.fixedContactBar, { backgroundColor: theme.backgroundDefault, paddingBottom: insets.bottom + Spacing.md }]}>
+          <View style={styles.fixedContactButtons}>
+            {accommodation.whatsapp ? (
+              <Pressable 
+                onPress={() => handleContact()}
+                style={[styles.fixedContactButton, { backgroundColor: "#25D366" }]}
+              >
+                <View style={styles.contactButtonContent}>
+                  <Feather name="message-circle" size={18} color="#FFFFFF" />
+                  <ThemedText style={{ color: "#FFFFFF", marginLeft: Spacing.sm, fontWeight: "600", fontSize: 15 }}>
+                    WhatsApp
+                  </ThemedText>
+                </View>
+              </Pressable>
+            ) : null}
+            {accommodation.phone ? (
+              <Pressable 
+                onPress={handleCall}
+                style={[styles.fixedContactButton, { backgroundColor: Colors.light.primary }]}
+              >
+                <View style={styles.contactButtonContent}>
+                  <Feather name="phone" size={18} color="#FFFFFF" />
+                  <ThemedText style={{ color: "#FFFFFF", marginLeft: Spacing.sm, fontWeight: "600", fontSize: 15 }}>
+                    Ligar
+                  </ThemedText>
+                </View>
+              </Pressable>
+            ) : null}
+          </View>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -870,10 +867,6 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: Spacing.sm,
   },
-  contactButtonContent: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
   section: {
     marginTop: Spacing.lg,
   },
@@ -965,5 +958,36 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     padding: Spacing.xl,
     alignItems: "center",
+  },
+  fixedContactBar: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingTop: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0,0,0,0.08)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 10,
+  },
+  fixedContactButtons: {
+    flexDirection: "row",
+    gap: Spacing.md,
+  },
+  fixedContactButton: {
+    flex: 1,
+    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.md,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  contactButtonContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
