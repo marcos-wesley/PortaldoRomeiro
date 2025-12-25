@@ -221,6 +221,7 @@
             <th>Imagem</th>
             <th>Titulo</th>
             <th>Posicao</th>
+            <th>Em Artigos</th>
             <th>Ordem</th>
             <th>Status</th>
             <th>Acoes</th>
@@ -236,6 +237,13 @@
       'home': 'Home',
       'news': 'Noticias',
       'all': 'Todas'
+    };
+    
+    const articlePlacementLabels = {
+      'none': '-',
+      'beginning': 'Inicio',
+      'middle': 'Meio',
+      'end': 'Final'
     };
 
     async function loadBanners() {
@@ -260,8 +268,9 @@
                 : `<div class="banner-placeholder">Sem imagem</div>`
               }
             </td>
-            <td><strong>${b.title}</strong></td>
+            <td><strong>${b.title}</strong>${b.description ? `<br><small style="color:#6b7280">${b.description.substring(0, 40)}...</small>` : ''}</td>
             <td><span class="badge badge-blue">${positionLabels[b.position] || b.position}</span></td>
+            <td><span class="badge ${b.articlePlacement && b.articlePlacement !== 'none' ? 'badge-success' : 'badge-gray'}">${articlePlacementLabels[b.articlePlacement] || '-'}</span></td>
             <td>${b.order || 0}</td>
             <td>
               <span class="badge ${b.published ? 'badge-success' : 'badge-gray'}">

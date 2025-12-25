@@ -19,6 +19,7 @@ import { useTheme } from "@/hooks/useTheme";
 import { Colors, Spacing, BorderRadius } from "@/constants/theme";
 import { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 import { getApiUrl } from "@/lib/query-client";
+import * as WebBrowser from "expo-web-browser";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -47,6 +48,18 @@ interface NewsItem {
   views: number;
   createdAt: string;
   updatedAt: string;
+}
+
+interface BannerItem {
+  id: string;
+  title: string;
+  description: string | null;
+  imageUrl: string | null;
+  link: string | null;
+  position: string;
+  articlePlacement: string | null;
+  order: number;
+  published: boolean;
 }
 
 const categoryColors: Record<string, string> = {
@@ -109,7 +122,59 @@ function ShareButton({ icon, label, color }: { icon: string; label: string; colo
   );
 }
 
-function HtmlContent({ html }: { html: string }) {
+function SponsoredBanner({ banner }: { banner: BannerItem }) {
+  const { theme } = useTheme();
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const handlePress = async () => {
+    if (banner.link) {
+      try {
+        await WebBrowser.openBrowserAsync(banner.link);
+      } catch (error) {}
+    }
+  };
+
+  const bannerImageUrl = getFullImageUrl(banner.imageUrl);
+
+  return (
+    <AnimatedPressable
+      onPress={handlePress}
+      onPressIn={() => { scale.value = withSpring(0.98); }}
+      onPressOut={() => { scale.value = withSpring(1); }}
+      style={[styles.sponsoredContainer, { backgroundColor: theme.backgroundDefault }, animatedStyle]}
+    >
+      <View style={styles.sponsoredHeader}>
+        <Feather name="speaker" size={12} color="#4169E1" />
+        <ThemedText style={styles.sponsoredLabel}>PUBLICIDADE</ThemedText>
+      </View>
+      <View style={styles.sponsoredContent}>
+        {bannerImageUrl ? (
+          <Image source={{ uri: bannerImageUrl }} style={styles.sponsoredImage} contentFit="cover" />
+        ) : null}
+        <View style={styles.sponsoredInfo}>
+          <ThemedText type="body" style={styles.sponsoredTitle}>{banner.title}</ThemedText>
+          {banner.description ? (
+            <ThemedText type="small" secondary numberOfLines={2} style={styles.sponsoredDescription}>
+              {banner.description}
+            </ThemedText>
+          ) : null}
+          {banner.link ? (
+            <View style={styles.sponsoredLink}>
+              <ThemedText style={styles.sponsoredLinkText}>Saiba mais</ThemedText>
+              <Feather name="external-link" size={12} color="#4169E1" />
+            </View>
+          ) : null}
+        </View>
+      </View>
+    </AnimatedPressable>
+  );
+}
+
+function HtmlContentWithBanner({ html, middleBanner }: { html: string; middleBanner: BannerItem | null }) {
   const { theme } = useTheme();
   
   const parseHtmlToElements = (htmlContent: string): React.ReactNode[] => {
@@ -190,7 +255,25 @@ function HtmlContent({ html }: { html: string }) {
     return elements;
   };
 
-  return <>{parseHtmlToElements(html)}</>;
+  const contentElements = parseHtmlToElements(html);
+  
+  if (middleBanner && contentElements.length > 1) {
+    const middleIndex = Math.floor(contentElements.length / 2);
+    const firstHalf = contentElements.slice(0, middleIndex);
+    const secondHalf = contentElements.slice(middleIndex);
+    
+    return (
+      <>
+        {firstHalf}
+        <View style={styles.sponsoredWrapper}>
+          <SponsoredBanner banner={middleBanner} />
+        </View>
+        {secondHalf}
+      </>
+    );
+  }
+
+  return <>{contentElements}</>;
 }
 
 export default function NoticiaDetailScreen() {
@@ -204,7 +287,23 @@ export default function NoticiaDetailScreen() {
     queryKey: ["/api/news", route.params.id],
   });
 
+  const { data: bannersData } = useQuery<{ banners: BannerItem[] }>({
+    queryKey: ["/api/banners"],
+  });
+
   const news = data?.news;
+
+  const articleBanners = useMemo(() => {
+    if (!bannersData?.banners) return { beginning: null, middle: null, end: null };
+    const banners = bannersData.banners.filter(b => 
+      b.articlePlacement && b.articlePlacement !== "none"
+    );
+    return {
+      beginning: banners.find(b => b.articlePlacement === "beginning") || null,
+      middle: banners.find(b => b.articlePlacement === "middle") || null,
+      end: banners.find(b => b.articlePlacement === "end") || null,
+    };
+  }, [bannersData]);
 
   const handleShare = async () => {
     if (!news) return;
@@ -289,7 +388,22 @@ export default function NoticiaDetailScreen() {
       </View>
 
       <View style={styles.content}>
-        <HtmlContent html={news.content} />
+        {articleBanners.beginning ? (
+          <View style={styles.sponsoredWrapper}>
+            <SponsoredBanner banner={articleBanners.beginning} />
+          </View>
+        ) : null}
+
+        <HtmlContentWithBanner 
+          html={news.content} 
+          middleBanner={articleBanners.middle} 
+        />
+
+        {articleBanners.end ? (
+          <View style={styles.sponsoredWrapper}>
+            <SponsoredBanner banner={articleBanners.end} />
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.footer}>
@@ -433,5 +547,57 @@ const styles = StyleSheet.create({
   backButton: {
     marginTop: Spacing.lg,
     padding: Spacing.md,
+  },
+  sponsoredWrapper: {
+    marginVertical: Spacing.lg,
+  },
+  sponsoredContainer: {
+    borderRadius: BorderRadius.md,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: "rgba(65, 105, 225, 0.2)",
+  },
+  sponsoredHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.xs,
+    marginBottom: Spacing.sm,
+  },
+  sponsoredLabel: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#4169E1",
+    letterSpacing: 0.5,
+  },
+  sponsoredContent: {
+    flexDirection: "row",
+    gap: Spacing.md,
+  },
+  sponsoredImage: {
+    width: 70,
+    height: 70,
+    borderRadius: BorderRadius.sm,
+  },
+  sponsoredInfo: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  sponsoredTitle: {
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  sponsoredDescription: {
+    lineHeight: 18,
+    marginBottom: 6,
+  },
+  sponsoredLink: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  sponsoredLinkText: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#4169E1",
   },
 });

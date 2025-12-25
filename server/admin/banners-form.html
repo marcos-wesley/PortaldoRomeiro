@@ -234,7 +234,13 @@
         <div class="form-group">
           <label>Titulo *</label>
           <input type="text" id="title" name="title" required>
-          <p class="help-text">Titulo interno para identificar o banner (nao aparece no app)</p>
+          <p class="help-text">Nome do anunciante ou titulo do banner (ex: Hotel do Romeiro)</p>
+        </div>
+
+        <div class="form-group">
+          <label>Descricao</label>
+          <input type="text" id="description" name="description" placeholder="Texto promocional curto...">
+          <p class="help-text">Texto que aparece abaixo do titulo (ex: Hospede-se com conforto a 200m do Santuario)</p>
         </div>
 
         <div class="form-row">
@@ -244,18 +250,30 @@
             <p class="help-text">URL que abre ao clicar no banner</p>
           </div>
           <div class="form-group">
-            <label>Posicao</label>
+            <label>Posicao Geral</label>
             <select id="position" name="position">
               <option value="home">Home</option>
-              <option value="news">Entre Noticias</option>
-              <option value="all">Todas as posicoes</option>
+              <option value="news">Pagina de Noticias</option>
+              <option value="all">Todas as paginas</option>
             </select>
           </div>
         </div>
 
-        <div class="form-group">
-          <label>Ordem de exibicao</label>
-          <input type="number" id="order" name="order" value="0" min="0" style="max-width: 150px;">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Posicao dentro das Noticias</label>
+            <select id="articlePlacement" name="articlePlacement">
+              <option value="none">Nenhuma (nao exibir em artigos)</option>
+              <option value="beginning">Inicio do artigo</option>
+              <option value="middle">Meio do artigo</option>
+              <option value="end">Final do artigo</option>
+            </select>
+            <p class="help-text">Onde o banner aparece dentro do texto da noticia como "Patrocinado"</p>
+          </div>
+          <div class="form-group">
+            <label>Ordem de exibicao</label>
+            <input type="number" id="order" name="order" value="0" min="0">
+          </div>
         </div>
 
         <div class="form-group">
@@ -302,8 +320,10 @@
         
         if (banner) {
           document.getElementById('title').value = banner.title || '';
+          document.getElementById('description').value = banner.description || '';
           document.getElementById('link').value = banner.link || '';
           document.getElementById('position').value = banner.position || 'home';
+          document.getElementById('articlePlacement').value = banner.articlePlacement || 'none';
           document.getElementById('order').value = banner.order || 0;
           document.getElementById('published').checked = banner.published !== false;
           
@@ -350,8 +370,10 @@
       
       const data = {
         title: document.getElementById('title').value,
+        description: document.getElementById('description').value || null,
         link: document.getElementById('link').value || null,
         position: document.getElementById('position').value,
+        articlePlacement: document.getElementById('articlePlacement').value,
         order: parseInt(document.getElementById('order').value) || 0,
         imageUrl: document.getElementById('imageUrl').value || null,
         published: document.getElementById('published').checked

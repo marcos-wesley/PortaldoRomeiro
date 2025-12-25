@@ -751,9 +751,11 @@ export const banners = pgTable("banners", {
     .primaryKey()
     .default(sql`gen_random_uuid()`),
   title: text("title").notNull(),
+  description: text("description"),
   imageUrl: text("image_url"),
   link: text("link"),
   position: text("position").default("home"), // home, news, all
+  articlePlacement: text("article_placement").default("none"), // none, beginning, middle, end
   order: integer("order").default(0),
   published: boolean("published").default(true),
   startDate: timestamp("start_date"),
@@ -764,9 +766,11 @@ export const banners = pgTable("banners", {
 
 export const createBannerSchema = z.object({
   title: z.string().min(2, "Titulo deve ter pelo menos 2 caracteres"),
+  description: z.string().optional().nullable(),
   imageUrl: z.string().optional().nullable(),
   link: z.string().optional().nullable(),
   position: z.string().optional().default("home"),
+  articlePlacement: z.string().optional().default("none"),
   order: z.number().optional().default(0),
   published: z.boolean().optional().default(true),
   startDate: z.string().optional().nullable(),
@@ -775,9 +779,11 @@ export const createBannerSchema = z.object({
 
 export const updateBannerSchema = z.object({
   title: z.string().min(2, "Titulo deve ter pelo menos 2 caracteres").optional(),
+  description: z.string().optional().nullable(),
   imageUrl: z.string().optional().nullable(),
   link: z.string().optional().nullable(),
   position: z.string().optional(),
+  articlePlacement: z.string().optional(),
   order: z.number().optional(),
   published: z.boolean().optional(),
   startDate: z.string().optional().nullable(),
