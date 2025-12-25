@@ -42,9 +42,7 @@ function getCategoryId(category: string): string {
 
 function mapApiToPhoneContact(apiPhone: ApiUsefulPhone): PhoneContact {
   const categoryId = getCategoryId(apiPhone.category);
-  const isEmergency = apiPhone.category === "Emergencia" || 
-    ["192", "193", "190", "199"].includes(apiPhone.phone) ||
-    apiPhone.phone.includes("3505-1234");
+  const isEmergency = apiPhone.category === "Emergencia";
   
   return {
     id: apiPhone.id,
