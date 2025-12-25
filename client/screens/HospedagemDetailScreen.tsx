@@ -367,6 +367,31 @@ export default function HospedagemDetailScreen() {
             </View>
           </View>
 
+          {accommodation.description ? (
+            <>
+              <ThemedText type="h4" style={styles.sectionTitle}>Sobre</ThemedText>
+              <ThemedText style={styles.description}>{accommodation.description}</ThemedText>
+            </>
+          ) : null}
+
+          {amenities.length > 0 ? (
+            <>
+              <ThemedText type="h4" style={styles.sectionTitle}>Comodidades</ThemedText>
+              <View style={styles.amenitiesGrid}>
+                {amenities.map((amenity) => (
+                  <View key={amenity} style={[styles.amenityItem, { backgroundColor: theme.backgroundDefault }]}>
+                    <Feather
+                      name={getAmenityIcon(amenity) as any}
+                      size={20}
+                      color={Colors.light.primary}
+                    />
+                    <ThemedText style={styles.amenityText}>{getAmenityLabel(amenity)}</ThemedText>
+                  </View>
+                ))}
+              </View>
+            </>
+          ) : null}
+
           {rooms.length > 0 ? (
             <>
               <ThemedText type="h4" style={styles.sectionTitle}>
@@ -392,31 +417,6 @@ export default function HospedagemDetailScreen() {
               </ThemedText>
             </View>
           )}
-
-          {accommodation.description ? (
-            <>
-              <ThemedText type="h4" style={styles.sectionTitle}>Sobre</ThemedText>
-              <ThemedText style={styles.description}>{accommodation.description}</ThemedText>
-            </>
-          ) : null}
-
-          {amenities.length > 0 ? (
-            <>
-              <ThemedText type="h4" style={styles.sectionTitle}>Comodidades</ThemedText>
-              <View style={styles.amenitiesGrid}>
-                {amenities.map((amenity) => (
-                  <View key={amenity} style={[styles.amenityItem, { backgroundColor: theme.backgroundDefault }]}>
-                    <Feather
-                      name={getAmenityIcon(amenity) as any}
-                      size={20}
-                      color={Colors.light.primary}
-                    />
-                    <ThemedText style={styles.amenityText}>{getAmenityLabel(amenity)}</ThemedText>
-                  </View>
-                ))}
-              </View>
-            </>
-          ) : null}
 
           <View style={[styles.contactCard, { backgroundColor: theme.backgroundDefault }]}>
             <View style={styles.contactHeader}>
