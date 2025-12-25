@@ -366,6 +366,8 @@ export default function GuiaScreen() {
         <ThemedText type="small" secondary>Encontre servicos na Capital da Fe</ThemedText>
       </View>
 
+      <PartnerBanner type="business" />
+
       <View style={[styles.searchContainer, { paddingHorizontal: Spacing.lg }]}>
         <View style={[styles.searchBar, { backgroundColor: theme.backgroundDefault }]}>
           <Feather name="search" size={20} color={theme.textSecondary} />
@@ -459,7 +461,6 @@ export default function GuiaScreen() {
         </View>
       ) : null}
 
-      <PartnerBanner type="business" />
     </ScrollView>
   );
 }
