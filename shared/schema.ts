@@ -332,7 +332,7 @@ export const usefulPhones = pgTable("useful_phones", {
 
 export const createUsefulPhoneSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
-  phone: z.string().min(8, "Telefone deve ter pelo menos 8 caracteres"),
+  phone: z.string().min(2, "Telefone deve ter pelo menos 2 caracteres"),
   category: z.string().optional().default("geral"),
   icon: z.string().optional().nullable(),
   order: z.number().optional().default(0),
@@ -341,7 +341,7 @@ export const createUsefulPhoneSchema = z.object({
 
 export const updateUsefulPhoneSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").optional(),
-  phone: z.string().min(8, "Telefone deve ter pelo menos 8 caracteres").optional(),
+  phone: z.string().min(2, "Telefone deve ter pelo menos 2 caracteres").optional(),
   category: z.string().optional(),
   icon: z.string().optional().nullable(),
   order: z.number().optional(),
