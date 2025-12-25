@@ -2,7 +2,7 @@ import { ScrollView, View, StyleSheet, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, CommonActions } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import Animated, {
@@ -39,6 +39,10 @@ const menuItems = [
   { id: "5", icon: "truck", title: "Horarios de Onibus", screen: "HorariosOnibus", color: VibrantColors.pink },
   { id: "6", icon: "help-circle", title: "Dicas do Romeiro", screen: "DicasRomeiro", color: VibrantColors.cyan },
   { id: "7", icon: "phone", title: "Telefones Uteis", screen: "TelefonesUteis", color: VibrantColors.gray },
+];
+
+const adminItems = [
+  { id: "admin1", icon: "send", title: "Gerenciar Notificacoes", screen: "AdminNotifications", color: VibrantColors.green },
 ];
 
 interface MenuItemProps {
@@ -87,6 +91,18 @@ export default function MaisScreen() {
     }
   };
 
+  const handleNavigateRoot = (screen: string) => {
+    try {
+      navigation.dispatch(
+        CommonActions.navigate({
+          name: screen,
+        })
+      );
+    } catch (e) {
+      // Screen might not exist yet
+    }
+  };
+
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.backgroundRoot }}
@@ -116,11 +132,33 @@ export default function MaisScreen() {
           />
         ))}
       </View>
+
+      <View style={styles.adminSection}>
+        <ThemedText type="caption" secondary style={styles.sectionTitle}>ADMINISTRACAO</ThemedText>
+        <View style={styles.menuList}>
+          {adminItems.map((item) => (
+            <MenuItem
+              key={item.id}
+              icon={item.icon}
+              title={item.title}
+              color={item.color}
+              onPress={() => handleNavigateRoot(item.screen)}
+            />
+          ))}
+        </View>
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
+  adminSection: {
+    marginTop: Spacing.xl,
+  },
+  sectionTitle: {
+    marginBottom: Spacing.md,
+    marginLeft: Spacing.xs,
+  },
   header: {
     marginBottom: Spacing.xl,
   },
