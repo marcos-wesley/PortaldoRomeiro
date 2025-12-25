@@ -372,24 +372,19 @@ function PartnersSection({ partners }: { partners: Partner[] }) {
     <View style={[styles.partnersSectionWrapper, { backgroundColor: "#F3F4F6" }]}>
       <View style={styles.partnersSectionHeader}>
         <ThemedText style={[styles.partnersSectionTitle, { color: "#374151" }]}>NOSSOS PARCEIROS</ThemedText>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.sm }}>
-          <View style={[styles.sponsoredBadge, { backgroundColor: "#E5E7EB" }]}>
-            <ThemedText type="caption" style={{ color: "#6B7280" }}>Patrocinado</ThemedText>
+        {totalSlides > 1 ? (
+          <View style={styles.bannerDots}>
+            {slides.map((_, idx) => (
+              <View 
+                key={idx} 
+                style={[
+                  styles.bannerDot, 
+                  { backgroundColor: idx === currentSlide ? Colors.light.primary : "#D1D5DB" }
+                ]} 
+              />
+            ))}
           </View>
-          {totalSlides > 1 ? (
-            <View style={styles.bannerDots}>
-              {slides.map((_, idx) => (
-                <View 
-                  key={idx} 
-                  style={[
-                    styles.bannerDot, 
-                    { backgroundColor: idx === currentSlide ? Colors.light.primary : "#D1D5DB" }
-                  ]} 
-                />
-              ))}
-            </View>
-          ) : null}
-        </View>
+        ) : null}
       </View>
       <ScrollView
         ref={scrollRef}
