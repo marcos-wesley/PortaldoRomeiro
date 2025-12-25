@@ -296,6 +296,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Useful Phones Routes (Public API)
+  app.get("/api/useful-phones", async (req, res) => {
+    try {
+      const phones = await storage.getAllUsefulPhones(true);
+      return res.json(phones);
+    } catch (error) {
+      console.error("Get useful phones error:", error);
+      return res.status(500).json({ error: "Erro ao buscar telefones úteis" });
+    }
+  });
+
   // Banners Routes (Public API)
   app.get("/api/banners", async (req, res) => {
     try {
