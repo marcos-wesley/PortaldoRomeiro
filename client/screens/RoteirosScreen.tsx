@@ -84,6 +84,62 @@ function NativeMapView({ attraction, userLocation, onOpenExternal }: {
   );
 }
 
+function AllAttractionsMapView({ attractions, userLocation }: { 
+  attractions: Attraction[];
+  userLocation: { latitude: number; longitude: number } | null;
+}) {
+  const validAttractions = attractions.filter(a => a.latitude && a.longitude && !isNaN(parseFloat(a.latitude)) && !isNaN(parseFloat(a.longitude)));
+  
+  if (!MapViewComponent || !MarkerComponent || validAttractions.length === 0) {
+    return (
+      <View style={styles.mapErrorContainer}>
+        <Feather name="map" size={48} color={Colors.light.primary} />
+        <ThemedText type="body" style={{ marginTop: Spacing.md, textAlign: "center", paddingHorizontal: Spacing.xl }}>
+          {validAttractions.length === 0 ? "Nenhuma atracao com localizacao disponivel" : "Mapa nao disponivel"}
+        </ThemedText>
+      </View>
+    );
+  }
+  
+  const latitudes = validAttractions.map(a => parseFloat(a.latitude!));
+  const longitudes = validAttractions.map(a => parseFloat(a.longitude!));
+  const minLat = Math.min(...latitudes);
+  const maxLat = Math.max(...latitudes);
+  const minLon = Math.min(...longitudes);
+  const maxLon = Math.max(...longitudes);
+  
+  const centerLat = (minLat + maxLat) / 2;
+  const centerLon = (minLon + maxLon) / 2;
+  const latDelta = (maxLat - minLat) * 1.2;
+  const lonDelta = (maxLon - minLon) * 1.2;
+  
+  return (
+    <MapViewComponent
+      style={styles.mapView}
+      initialRegion={{
+        latitude: centerLat,
+        longitude: centerLon,
+        latitudeDelta: latDelta > 0.01 ? latDelta : 0.05,
+        longitudeDelta: lonDelta > 0.01 ? lonDelta : 0.05,
+      }}
+      showsUserLocation={true}
+      showsMyLocationButton={true}
+    >
+      {validAttractions.map((attraction) => (
+        <MarkerComponent
+          key={attraction.id}
+          coordinate={{
+            latitude: parseFloat(attraction.latitude!),
+            longitude: parseFloat(attraction.longitude!),
+          }}
+          title={attraction.name}
+          description={attraction.category}
+        />
+      ))}
+    </MapViewComponent>
+  );
+}
+
 type Category = "Todas" | "Igrejas" | "Monumentos" | "Pracas" | "Museus";
 
 interface AttractionFromAPI {
@@ -707,6 +763,7 @@ export default function RoteirosScreen() {
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [locationPermission, setLocationPermission] = useState<Location.PermissionStatus | null>(null);
+  const [showAllAttractionsMap, setShowAllAttractionsMap] = useState(false);
 
   useEffect(() => {
     loadFavorites();
@@ -806,6 +863,24 @@ export default function RoteirosScreen() {
     getCurrentLocation();
     setRefreshing(false);
   }, [queryClient]);
+
+  if (showAllAttractionsMap) {
+    return (
+      <View style={{ flex: 1, backgroundColor: theme.backgroundRoot }}>
+        <View style={[styles.mapHeader, { paddingTop: insets.top + Spacing.sm }]}>
+          <Pressable 
+            onPress={() => setShowAllAttractionsMap(false)}
+            style={styles.mapBackButton}
+          >
+            <Feather name="chevron-left" size={24} color={Colors.light.primary} />
+          </Pressable>
+          <ThemedText type="h4">Todas as Atracoes</ThemedText>
+          <View style={{ width: 24 }} />
+        </View>
+        <AllAttractionsMapView attractions={attractions} userLocation={userLocation} />
+      </View>
+    );
+  }
 
   if (selectedAttraction) {
     return (
@@ -908,7 +983,10 @@ export default function RoteirosScreen() {
         </View>
       )}
 
-      <Pressable style={[styles.mapButton, { backgroundColor: Colors.light.primary }]}>
+      <Pressable 
+        onPress={() => setShowAllAttractionsMap(true)}
+        style={[styles.mapButton, { backgroundColor: Colors.light.primary }]}
+      >
         <Feather name="map" size={18} color="#FFFFFF" />
         <ThemedText style={styles.mapButtonText}>Ver todas no mapa</ThemedText>
       </Pressable>
@@ -1059,6 +1137,21 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
     marginLeft: Spacing.sm,
+  },
+  mapHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(0,0,0,0.1)",
+  },
+  mapBackButton: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
   },
   modalOverlay: {
     flex: 1,
