@@ -1,6 +1,7 @@
 import { ScrollView, View, StyleSheet, Pressable, Linking, Platform, Modal, Dimensions, TextInput, ActivityIndicator, Alert } from "react-native";
 import { useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -199,6 +200,7 @@ export default function EmpresaDetailScreen({ route }: Props) {
   const { businessId } = route.params;
   
   const insets = useSafeAreaInsets();
+  const tabBarHeight = useBottomTabBarHeight();
   const headerHeight = useHeaderHeight();
   const { theme } = useTheme();
   const queryClient = useQueryClient();
@@ -332,7 +334,7 @@ export default function EmpresaDetailScreen({ route }: Props) {
         style={{ flex: 1 }}
         contentContainerStyle={{
           paddingTop: 0,
-          paddingBottom: 120,
+          paddingBottom: tabBarHeight + 100,
         }}
         scrollIndicatorInsets={{ bottom: insets.bottom }}
         showsVerticalScrollIndicator={false}
@@ -650,7 +652,7 @@ export default function EmpresaDetailScreen({ route }: Props) {
       </ScrollView>
 
       {(business.whatsapp || business.phone) ? (
-        <View style={[styles.fixedContactBar, { backgroundColor: theme.backgroundDefault, paddingBottom: insets.bottom + Spacing.md }]}>
+        <View style={[styles.fixedContactBar, { backgroundColor: theme.backgroundDefault, bottom: tabBarHeight }]}>
           <View style={styles.fixedContactButtons}>
             {business.whatsapp ? (
               <Pressable 
@@ -964,10 +966,9 @@ const styles = StyleSheet.create({
   },
   fixedContactBar: {
     position: "absolute",
-    bottom: 0,
     left: 0,
     right: 0,
-    paddingTop: Spacing.md,
+    paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
     borderTopWidth: 1,
     borderTopColor: "rgba(0,0,0,0.08)",

@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { ScrollView, View, StyleSheet, Pressable, Linking, ActivityIndicator, TextInput } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
@@ -295,6 +296,7 @@ function RoomCard({
 
 export default function HospedagemDetailScreen() {
   const insets = useSafeAreaInsets();
+  const tabBarHeight = useBottomTabBarHeight();
   const { theme } = useTheme();
   const route = useRoute<HospedagemDetailRouteProp>();
   const queryClient = useQueryClient();
@@ -590,12 +592,12 @@ export default function HospedagemDetailScreen() {
             )}
           </View>
 
-          <View style={{ height: 100 }} />
+          <View style={{ height: tabBarHeight + 80 }} />
         </View>
       </ScrollView>
 
       {(accommodation.whatsapp || accommodation.phone) ? (
-        <View style={[styles.fixedContactBar, { backgroundColor: theme.backgroundDefault, paddingBottom: insets.bottom + Spacing.md }]}>
+        <View style={[styles.fixedContactBar, { backgroundColor: theme.backgroundDefault, bottom: tabBarHeight }]}>
           <View style={styles.fixedContactButtons}>
             {accommodation.whatsapp ? (
               <Pressable 
@@ -961,10 +963,9 @@ const styles = StyleSheet.create({
   },
   fixedContactBar: {
     position: "absolute",
-    bottom: 0,
     left: 0,
     right: 0,
-    paddingTop: Spacing.md,
+    paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.lg,
     borderTopWidth: 1,
     borderTopColor: "rgba(0,0,0,0.08)",
