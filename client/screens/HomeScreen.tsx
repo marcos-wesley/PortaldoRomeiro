@@ -392,6 +392,7 @@ function PartnersSection({ partners }: { partners: Partner[] }) {
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         scrollEnabled={false}
+        contentContainerStyle={{ paddingRight: Spacing.lg }}
       >
         {slides.map((slidePartners, slideIdx) => (
           <View key={slideIdx} style={[styles.partnerSlide, { width: containerWidth }]}>
@@ -984,10 +985,10 @@ const styles = StyleSheet.create({
   },
   partnerLogoBox: {
     flex: 1,
-    height: 60,
+    height: 70,
     alignItems: "center",
     justifyContent: "center",
-    marginHorizontal: Spacing.xs,
+    paddingHorizontal: Spacing.md,
   },
   partnerLogoImage: {
     width: "100%",
@@ -1135,8 +1136,9 @@ const styles = StyleSheet.create({
   },
   partnerSlide: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.md,
   },
 });
