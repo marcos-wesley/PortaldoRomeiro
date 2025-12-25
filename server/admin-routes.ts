@@ -482,10 +482,6 @@ export function registerAdminRoutes(app: Express) {
     res.sendFile(formPath);
   });
 
-  app.get("/admin/configuracoes", requireAuth, (req, res) => {
-    res.send(getPlaceholderPage("Configuracoes", "Configuracoes do sistema"));
-  });
-
   app.post("/admin/api/login", async (req, res) => {
     try {
       if (!isAdminConfigured) {
