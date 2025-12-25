@@ -172,23 +172,41 @@ export default function SearchScreen() {
 
   const handleResultPress = useCallback((item: SearchResult) => {
     Keyboard.dismiss();
-    switch (item.type) {
-      case "news":
-        (navigation as any).navigate("Home", { screen: "NewsDetail", params: { id: item.id } });
-        break;
-      case "accommodation":
-        (navigation as any).navigate("Home", { screen: "AccommodationDetail", params: { id: item.id } });
-        break;
-      case "business":
-        (navigation as any).navigate("Guia", { screen: "BusinessDetail", params: { id: item.id } });
-        break;
-      case "attraction":
-        (navigation as any).navigate("Mais", { screen: "Roteiros" });
-        break;
-      case "video":
-        (navigation as any).navigate("Home", { screen: "VideoPlayer", params: { id: item.id } });
-        break;
-    }
+    navigation.goBack();
+    setTimeout(() => {
+      switch (item.type) {
+        case "news":
+          (navigation as any).navigate("Main", { 
+            screen: "HomeTab", 
+            params: { screen: "NoticiaDetail", params: { id: item.id } } 
+          });
+          break;
+        case "accommodation":
+          (navigation as any).navigate("Main", { 
+            screen: "HomeTab", 
+            params: { screen: "HospedagemDetail", params: { id: item.id } } 
+          });
+          break;
+        case "business":
+          (navigation as any).navigate("Main", { 
+            screen: "GuiaTab", 
+            params: { screen: "EmpresaDetail", params: { businessId: item.id } } 
+          });
+          break;
+        case "attraction":
+          (navigation as any).navigate("Main", { 
+            screen: "MaisTab", 
+            params: { screen: "Roteiros" } 
+          });
+          break;
+        case "video":
+          (navigation as any).navigate("Main", { 
+            screen: "HomeTab", 
+            params: { screen: "VideoDetail", params: { id: item.id } } 
+          });
+          break;
+      }
+    }, 100);
   }, [navigation]);
 
   const renderItem = useCallback(({ item }: { item: SearchResult }) => (
