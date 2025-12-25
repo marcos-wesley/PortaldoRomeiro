@@ -1672,6 +1672,17 @@ export function registerAdminRoutes(app: Express) {
       const { type, plan } = req.body;
       const logoUrl = req.file ? `/uploads/cadastros/${req.file.filename}` : null;
 
+      // Validate password
+      const password = req.body.owner_password;
+      if (!password || password.length < 6) {
+        return res.status(400).json({ error: 'Senha deve ter pelo menos 6 caracteres' });
+      }
+
+      // Hash password
+      const salt = randomBytes(16).toString("hex");
+      const hashedPassword = pbkdf2Sync(password, salt, 10000, 64, "sha512").toString("hex");
+      const passwordHash = `${salt}:${hashedPassword}`;
+
       if (type === 'business') {
         const businessData: any = {
           name: req.body.business_name || req.body.owner_name,
@@ -1698,6 +1709,16 @@ export function registerAdminRoutes(app: Express) {
         }
 
         const business = await storage.createBusiness(businessData);
+
+        // Create owner user account
+        await storage.createOwnerUser({
+          email: req.body.owner_email,
+          password: passwordHash,
+          name: req.body.owner_name,
+          phone: req.body.owner_phone,
+          ownerType: 'business',
+          listingId: business.id,
+        });
 
         // For paid plans, create payment preference with Mercado Pago
         if (plan === 'complete') {
@@ -1779,6 +1800,16 @@ export function registerAdminRoutes(app: Express) {
         };
 
         const accommodation = await storage.createAccommodation(accData);
+
+        // Create owner user account
+        await storage.createOwnerUser({
+          email: req.body.owner_email,
+          password: passwordHash,
+          name: req.body.owner_name,
+          phone: req.body.owner_phone,
+          ownerType: 'accommodation',
+          listingId: accommodation.id,
+        });
 
         // Create payment preference with Mercado Pago
         const allSettings = await storage.getAllAppSettings();
@@ -1938,6 +1969,199 @@ export function registerAdminRoutes(app: Express) {
       </body>
       </html>
     `);
+  });
+
+  // ========================================
+  // OWNER AUTHENTICATION ROUTES
+  // ========================================
+
+  // Owner login page
+  app.get("/minha-conta", (req, res) => {
+    res.sendFile(path.join(process.cwd(), "server", "public", "minha-conta.html"));
+  });
+
+  // Owner login API
+  app.post("/api/owner/login", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      
+      if (!email || !password) {
+        return res.status(400).json({ error: "E-mail e senha são obrigatórios" });
+      }
+
+      const owner = await storage.getOwnerUserByEmail(email);
+      if (!owner) {
+        return res.status(401).json({ error: "E-mail ou senha incorretos" });
+      }
+
+      // Verify password
+      const [salt, storedHash] = owner.password.split(":");
+      const hash = pbkdf2Sync(password, salt, 10000, 64, "sha512").toString("hex");
+      
+      if (hash !== storedHash) {
+        return res.status(401).json({ error: "E-mail ou senha incorretos" });
+      }
+
+      // Set session
+      (req.session as any).ownerId = owner.id;
+      (req.session as any).ownerEmail = owner.email;
+      (req.session as any).ownerType = owner.ownerType;
+      (req.session as any).listingId = owner.listingId;
+
+      res.json({ 
+        success: true, 
+        owner: { 
+          id: owner.id, 
+          email: owner.email, 
+          name: owner.name,
+          ownerType: owner.ownerType,
+          listingId: owner.listingId
+        } 
+      });
+    } catch (error) {
+      console.error("Owner login error:", error);
+      res.status(500).json({ error: "Erro ao fazer login" });
+    }
+  });
+
+  // Owner logout API
+  app.post("/api/owner/logout", (req, res) => {
+    (req.session as any).ownerId = null;
+    (req.session as any).ownerEmail = null;
+    (req.session as any).ownerType = null;
+    (req.session as any).listingId = null;
+    res.json({ success: true });
+  });
+
+  // Owner session check
+  app.get("/api/owner/me", async (req, res) => {
+    const ownerId = (req.session as any).ownerId;
+    if (!ownerId) {
+      return res.status(401).json({ error: "Não autenticado" });
+    }
+
+    const owner = await storage.getOwnerUserById(ownerId);
+    if (!owner) {
+      return res.status(401).json({ error: "Usuário não encontrado" });
+    }
+
+    res.json({ 
+      owner: { 
+        id: owner.id, 
+        email: owner.email, 
+        name: owner.name,
+        phone: owner.phone,
+        ownerType: owner.ownerType,
+        listingId: owner.listingId
+      } 
+    });
+  });
+
+  // Middleware for owner authentication
+  const requireOwnerAuth = (req: Request, res: Response, next: NextFunction) => {
+    const ownerId = (req.session as any).ownerId;
+    if (!ownerId) {
+      return res.status(401).json({ error: "Não autenticado" });
+    }
+    next();
+  };
+
+  // Get owner's listing data
+  app.get("/api/owner/listing", requireOwnerAuth, async (req, res) => {
+    try {
+      const ownerType = (req.session as any).ownerType;
+      const listingId = (req.session as any).listingId;
+
+      if (!listingId) {
+        return res.status(404).json({ error: "Nenhum cadastro encontrado" });
+      }
+
+      if (ownerType === "business") {
+        const business = await storage.getBusinessById(listingId);
+        if (!business) {
+          return res.status(404).json({ error: "Empresa não encontrada" });
+        }
+        return res.json({ type: "business", listing: business });
+      } else if (ownerType === "accommodation") {
+        const accommodation = await storage.getAccommodationById(listingId);
+        if (!accommodation) {
+          return res.status(404).json({ error: "Hospedagem não encontrada" });
+        }
+        return res.json({ type: "accommodation", listing: accommodation });
+      }
+
+      return res.status(400).json({ error: "Tipo de cadastro inválido" });
+    } catch (error) {
+      console.error("Get listing error:", error);
+      res.status(500).json({ error: "Erro ao carregar dados" });
+    }
+  });
+
+  // Update owner's listing data
+  app.put("/api/owner/listing", requireOwnerAuth, publicUpload.single("logo"), async (req, res) => {
+    try {
+      const ownerType = (req.session as any).ownerType;
+      const listingId = (req.session as any).listingId;
+
+      if (!listingId) {
+        return res.status(404).json({ error: "Nenhum cadastro encontrado" });
+      }
+
+      const updateData: any = {};
+      
+      // Handle logo upload
+      if (req.file) {
+        updateData.logoUrl = `/uploads/cadastros/${req.file.filename}`;
+      }
+
+      // Common fields
+      if (req.body.name) updateData.name = req.body.name;
+      if (req.body.address) updateData.address = req.body.address;
+      if (req.body.whatsapp) updateData.whatsapp = req.body.whatsapp;
+      if (req.body.phone) updateData.phone = req.body.phone;
+
+      // Get current listing to check plan type
+      if (ownerType === "business") {
+        const business = await storage.getBusinessById(listingId);
+        if (!business) {
+          return res.status(404).json({ error: "Empresa não encontrada" });
+        }
+
+        // Only allow extra fields for complete plan
+        if (business.planType === "complete") {
+          if (req.body.description !== undefined) updateData.description = req.body.description;
+          if (req.body.website !== undefined) updateData.website = req.body.website;
+          if (req.body.instagram !== undefined) updateData.instagram = req.body.instagram;
+          if (req.body.facebook !== undefined) updateData.facebook = req.body.facebook;
+          if (req.body.hours !== undefined) updateData.hours = req.body.hours;
+        }
+
+        const updated = await storage.updateBusiness(listingId, updateData);
+        return res.json({ success: true, listing: updated });
+
+      } else if (ownerType === "accommodation") {
+        const accommodation = await storage.getAccommodationById(listingId);
+        if (!accommodation) {
+          return res.status(404).json({ error: "Hospedagem não encontrada" });
+        }
+
+        // Accommodations always have full access
+        if (req.body.description !== undefined) updateData.description = req.body.description;
+        if (req.body.website !== undefined) updateData.website = req.body.website;
+        if (req.body.instagram !== undefined) updateData.instagram = req.body.instagram;
+        if (req.body.email !== undefined) updateData.email = req.body.email;
+        if (req.body.checkInTime !== undefined) updateData.checkInTime = req.body.checkInTime;
+        if (req.body.checkOutTime !== undefined) updateData.checkOutTime = req.body.checkOutTime;
+
+        const updated = await storage.updateAccommodation(listingId, updateData);
+        return res.json({ success: true, listing: updated });
+      }
+
+      return res.status(400).json({ error: "Tipo de cadastro inválido" });
+    } catch (error) {
+      console.error("Update listing error:", error);
+      res.status(500).json({ error: "Erro ao atualizar dados" });
+    }
   });
 
   // Webhook for Mercado Pago payment notifications

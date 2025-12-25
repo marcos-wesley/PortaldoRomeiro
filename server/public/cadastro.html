@@ -666,6 +666,11 @@
                 <input type="tel" id="owner_phone" placeholder="(62) 99999-9999" required>
               </div>
               <div class="form-group">
+                <label>Senha <span class="required">*</span></label>
+                <input type="password" id="owner_password" placeholder="Minimo 6 caracteres" minlength="6" required>
+                <small style="color: var(--text-muted); font-size: 12px;">Senha para acessar e editar seu cadastro</small>
+              </div>
+              <div class="form-group">
                 <label>Nome da Empresa <span class="required">*</span></label>
                 <input type="text" id="business_name" placeholder="Nome do seu negocio" required>
               </div>
@@ -713,6 +718,11 @@
               <div class="form-group">
                 <label>Telefone <span class="required">*</span></label>
                 <input type="tel" id="owner_phone_complete" placeholder="(62) 99999-9999" required>
+              </div>
+              <div class="form-group">
+                <label>Senha <span class="required">*</span></label>
+                <input type="password" id="owner_password_complete" placeholder="Minimo 6 caracteres" minlength="6" required>
+                <small style="color: var(--text-muted); font-size: 12px;">Senha para acessar e editar seu cadastro</small>
               </div>
               <div class="form-group">
                 <label>Nome da Empresa <span class="required">*</span></label>
@@ -786,6 +796,11 @@
               <div class="form-group">
                 <label>Telefone <span class="required">*</span></label>
                 <input type="tel" id="acc_owner_phone" placeholder="(62) 99999-9999" required>
+              </div>
+              <div class="form-group">
+                <label>Senha <span class="required">*</span></label>
+                <input type="password" id="acc_owner_password" placeholder="Minimo 6 caracteres" minlength="6" required>
+                <small style="color: var(--text-muted); font-size: 12px;">Senha para acessar e editar seu cadastro</small>
               </div>
               <div class="form-group">
                 <label>Nome da Hospedagem <span class="required">*</span></label>
@@ -1028,7 +1043,7 @@
       let isValid = true;
 
       if (selectedType === 'business' && selectedPlan === 'basic') {
-        const fields = ['owner_name', 'owner_email', 'owner_phone', 'business_name', 'business_category', 'business_address'];
+        const fields = ['owner_name', 'owner_email', 'owner_phone', 'owner_password', 'business_name', 'business_category', 'business_address'];
         fields.forEach(field => {
           const el = document.getElementById(field);
           if (!el.value) {
@@ -1042,7 +1057,7 @@
         const logoFile = document.getElementById('logo_upload').files[0];
         if (logoFile) formData.append('logo', logoFile);
       } else if (selectedType === 'business' && selectedPlan === 'complete') {
-        const fields = ['owner_name_complete', 'owner_email_complete', 'owner_phone_complete', 'business_name_complete', 'business_category_complete', 'business_whatsapp_complete', 'business_address_complete'];
+        const fields = ['owner_name_complete', 'owner_email_complete', 'owner_phone_complete', 'owner_password_complete', 'business_name_complete', 'business_category_complete', 'business_whatsapp_complete', 'business_address_complete'];
         fields.forEach(field => {
           const el = document.getElementById(field);
           if (!el.value) {
@@ -1061,7 +1076,7 @@
         const logoFile = document.getElementById('logo_upload_complete').files[0];
         if (logoFile) formData.append('logo', logoFile);
       } else if (selectedType === 'accommodation') {
-        const fields = ['acc_owner_name', 'acc_owner_email', 'acc_owner_phone', 'acc_name', 'acc_type', 'acc_whatsapp', 'acc_address'];
+        const fields = ['acc_owner_name', 'acc_owner_email', 'acc_owner_phone', 'acc_owner_password', 'acc_name', 'acc_type', 'acc_whatsapp', 'acc_address'];
         fields.forEach(field => {
           const el = document.getElementById(field);
           if (!el.value) {

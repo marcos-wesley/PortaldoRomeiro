@@ -66,6 +66,38 @@ export type RegisterUserInput = z.infer<typeof registerUserSchema>;
 export type LoginUserInput = z.infer<typeof loginUserSchema>;
 export type UpdateProfileInput = z.infer<typeof updateProfileSchema>;
 
+// Owner Users (Business/Accommodation owners for self-service portal)
+export const ownerUsers = pgTable("owner_users", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  email: text("email").notNull().unique(),
+  password: text("password").notNull(),
+  name: text("name").notNull(),
+  phone: text("phone"),
+  ownerType: text("owner_type").notNull(), // 'business' or 'accommodation'
+  listingId: varchar("listing_id"), // ID of the business or accommodation
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const ownerLoginSchema = z.object({
+  email: z.string().email("E-mail inválido"),
+  password: z.string().min(1, "Senha é obrigatória"),
+});
+
+export const ownerRegisterSchema = z.object({
+  email: z.string().email("E-mail inválido"),
+  password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
+  name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  phone: z.string().optional(),
+  ownerType: z.enum(["business", "accommodation"]),
+});
+
+export type OwnerUser = typeof ownerUsers.$inferSelect;
+export type OwnerLoginInput = z.infer<typeof ownerLoginSchema>;
+export type OwnerRegisterInput = z.infer<typeof ownerRegisterSchema>;
+
 export const news = pgTable("news", {
   id: varchar("id")
     .primaryKey()

@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type UpdateProfileInput, users, type News, type InsertNews, type UpdateNewsInput, news, type Video, type InsertVideo, type UpdateVideoInput, videos, type Attraction, type InsertAttraction, type UpdateAttractionInput, attractions, type StaticPage, type InsertStaticPage, type UpdateStaticPageInput, staticPages, type UsefulPhone, type CreateUsefulPhoneInput, type UpdateUsefulPhoneInput, usefulPhones, type PilgrimTip, type CreatePilgrimTipInput, type UpdatePilgrimTipInput, pilgrimTips, type Service, type CreateServiceInput, type UpdateServiceInput, services, type Business, type CreateBusinessInput, type UpdateBusinessInput, businesses, type BusinessReview, type CreateBusinessReviewInput, businessReviews, type Accommodation, type CreateAccommodationInput, type UpdateAccommodationInput, accommodations, type Room, type CreateRoomInput, type UpdateRoomInput, rooms, type RoomBlockedDate, type CreateRoomBlockedDateInput, roomBlockedDates, type AccommodationReview, type CreateAccommodationReviewInput, accommodationReviews, type Partner, type CreatePartnerInput, type UpdatePartnerInput, partners, type Banner, type CreateBannerInput, type UpdateBannerInput, banners, type Notification, type CreateNotificationInput, type UpdateNotificationInput, notifications, type UserNotification, userNotifications, type PushDevice, type RegisterPushDeviceInput, pushDevices, type UserNotificationPreference, type UpdateNotificationPreferencesInput, userNotificationPreferences, type UserActivityLog, type CreateActivityLogInput, userActivityLogs, type AppSetting, type UpdateAppSettingInput, appSettings } from "@shared/schema";
+import { type User, type InsertUser, type UpdateProfileInput, users, type News, type InsertNews, type UpdateNewsInput, news, type Video, type InsertVideo, type UpdateVideoInput, videos, type Attraction, type InsertAttraction, type UpdateAttractionInput, attractions, type StaticPage, type InsertStaticPage, type UpdateStaticPageInput, staticPages, type UsefulPhone, type CreateUsefulPhoneInput, type UpdateUsefulPhoneInput, usefulPhones, type PilgrimTip, type CreatePilgrimTipInput, type UpdatePilgrimTipInput, pilgrimTips, type Service, type CreateServiceInput, type UpdateServiceInput, services, type Business, type CreateBusinessInput, type UpdateBusinessInput, businesses, type BusinessReview, type CreateBusinessReviewInput, businessReviews, type Accommodation, type CreateAccommodationInput, type UpdateAccommodationInput, accommodations, type Room, type CreateRoomInput, type UpdateRoomInput, rooms, type RoomBlockedDate, type CreateRoomBlockedDateInput, roomBlockedDates, type AccommodationReview, type CreateAccommodationReviewInput, accommodationReviews, type Partner, type CreatePartnerInput, type UpdatePartnerInput, partners, type Banner, type CreateBannerInput, type UpdateBannerInput, banners, type Notification, type CreateNotificationInput, type UpdateNotificationInput, notifications, type UserNotification, userNotifications, type PushDevice, type RegisterPushDeviceInput, pushDevices, type UserNotificationPreference, type UpdateNotificationPreferencesInput, userNotificationPreferences, type UserActivityLog, type CreateActivityLogInput, userActivityLogs, type AppSetting, type UpdateAppSettingInput, appSettings, type OwnerUser, ownerUsers } from "@shared/schema";
 import { db } from "./db";
 import { eq, count, desc, ilike, or, and, asc } from "drizzle-orm";
 
@@ -940,6 +940,32 @@ export class DatabaseStorage implements IStorage {
         await db.insert(appSettings).values(setting);
       }
     }
+  }
+
+  // Owner Users (Business/Accommodation owners)
+  async getOwnerUserById(id: string): Promise<OwnerUser | undefined> {
+    const result = await db.select().from(ownerUsers).where(eq(ownerUsers.id, id));
+    return result[0];
+  }
+
+  async getOwnerUserByEmail(email: string): Promise<OwnerUser | undefined> {
+    const result = await db.select().from(ownerUsers).where(eq(ownerUsers.email, email));
+    return result[0];
+  }
+
+  async createOwnerUser(data: { email: string; password: string; name: string; phone?: string; ownerType: string; listingId?: string }): Promise<OwnerUser> {
+    const result = await db.insert(ownerUsers).values(data).returning();
+    return result[0];
+  }
+
+  async updateOwnerUser(id: string, data: Partial<{ email: string; password: string; name: string; phone: string; listingId: string }>): Promise<OwnerUser | undefined> {
+    const result = await db.update(ownerUsers).set({ ...data, updatedAt: new Date() }).where(eq(ownerUsers.id, id)).returning();
+    return result[0];
+  }
+
+  async getOwnerUserByListingId(listingId: string): Promise<OwnerUser | undefined> {
+    const result = await db.select().from(ownerUsers).where(eq(ownerUsers.listingId, listingId));
+    return result[0];
   }
 }
 

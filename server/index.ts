@@ -1,11 +1,23 @@
 import express from "express";
 import type { Request, Response, NextFunction } from "express";
+import session from "express-session";
 import { registerRoutes } from "./routes";
 import { registerAdminRoutes } from "./admin-routes";
 import * as fs from "fs";
 import * as path from "path";
 
 const app = express();
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'portal-romeiro-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 30 * 24 * 60 * 60 * 1000,
+  }
+}));
 const log = console.log;
 
 declare module "http" {
