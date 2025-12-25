@@ -7,11 +7,67 @@ import Animated, {
   useSharedValue,
   withSpring,
 } from "react-native-reanimated";
+import { useQuery } from "@tanstack/react-query";
 
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Colors } from "@/constants/theme";
-import { phoneCategories, phoneContacts, PhoneContact, PhoneCategory } from "@/lib/data";
+import { phoneCategories as staticPhoneCategories, phoneContacts as staticPhoneContacts, PhoneContact, PhoneCategory } from "@/lib/data";
+
+interface ApiUsefulPhone {
+  id: string;
+  name: string;
+  phone: string;
+  category: string;
+  icon: string | null;
+  order: number;
+  published: boolean;
+}
+
+const categoryMapping: Record<string, { id: string; color: string }> = {
+  "Emergencia": { id: "emergencia", color: "#EF4444" },
+  "Saude": { id: "saude", color: "#10B981" },
+  "Seguranca Publica": { id: "seguranca", color: "#3B82F6" },
+  "Transporte": { id: "transporte", color: "#F97316" },
+  "Servicos Municipais": { id: "municipal", color: "#8B5CF6" },
+  "Santuario / Igreja": { id: "santuario", color: "#4169E1" },
+  "Apoio ao Romeiro": { id: "apoio", color: "#06B6D4" },
+  "geral": { id: "geral", color: "#6B7280" },
+};
+
+function mapApiToPhoneContact(apiPhone: ApiUsefulPhone): PhoneContact {
+  const catInfo = categoryMapping[apiPhone.category] || categoryMapping["geral"];
+  const isEmergency = apiPhone.category === "Emergencia" || 
+    ["192", "193", "190", "199"].includes(apiPhone.phone) ||
+    apiPhone.phone.includes("3505-1234");
+  
+  return {
+    id: apiPhone.id,
+    categoryId: catInfo.id,
+    name: apiPhone.name,
+    phone: apiPhone.phone,
+    icon: apiPhone.icon || "phone",
+    isEmergency,
+  };
+}
+
+function mapApiCategories(apiPhones: ApiUsefulPhone[]): PhoneCategory[] {
+  const uniqueCategories = new Set(apiPhones.map(p => p.category));
+  const categories: PhoneCategory[] = [];
+  
+  uniqueCategories.forEach(cat => {
+    const catInfo = categoryMapping[cat] || categoryMapping["geral"];
+    const staticCat = staticPhoneCategories.find(c => c.id === catInfo.id);
+    categories.push({
+      id: catInfo.id,
+      name: cat,
+      icon: staticCat?.icon || "phone",
+      color: catInfo.color,
+    });
+  });
+  
+  return categories;
+}
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -84,6 +140,24 @@ export default function TelefonesUteisScreen() {
   const { theme } = useTheme();
   const [searchQuery, setSearchQuery] = useState("");
 
+  const { data: apiPhones } = useQuery<ApiUsefulPhone[]>({
+    queryKey: ["/api/useful-phones"],
+  });
+
+  const phoneContacts = useMemo(() => {
+    if (apiPhones && apiPhones.length > 0) {
+      return apiPhones.map(mapApiToPhoneContact);
+    }
+    return staticPhoneContacts;
+  }, [apiPhones]);
+
+  const phoneCategories = useMemo(() => {
+    if (apiPhones && apiPhones.length > 0) {
+      return mapApiCategories(apiPhones);
+    }
+    return staticPhoneCategories;
+  }, [apiPhones]);
+
   const handleCall = async (phone: string) => {
     const cleanPhone = phone.replace(/\D/g, "");
     const phoneUrl = Platform.OS === "web" ? `tel:${cleanPhone}` : `tel:${cleanPhone}`;
@@ -110,7 +184,7 @@ export default function TelefonesUteisScreen() {
         categoryName.includes(query)
       );
     });
-  }, [searchQuery]);
+  }, [searchQuery, phoneContacts, phoneCategories]);
 
   const emergencyContacts = useMemo(
     () => filteredContacts.filter((c) => c.isEmergency),
