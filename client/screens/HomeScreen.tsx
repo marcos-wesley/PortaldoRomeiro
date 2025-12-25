@@ -809,6 +809,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-end",
     padding: Spacing.lg,
+    backgroundColor: "transparent",
   },
   categoryBadge: {
     alignSelf: "flex-start",
@@ -881,6 +882,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.lg,
     overflow: "hidden",
     marginBottom: Spacing.md,
+    backgroundColor: "transparent",
   },
   featuredNewsImage: {
     ...StyleSheet.absoluteFillObject,
@@ -889,6 +891,7 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     justifyContent: "flex-end",
     padding: Spacing.lg,
+    backgroundColor: "transparent",
   },
   featuredNewsBadge: {
     alignSelf: "flex-start",
