@@ -944,3 +944,32 @@ export const createActivityLogSchema = z.object({
 
 export type UserActivityLog = typeof userActivityLogs.$inferSelect;
 export type CreateActivityLogInput = z.infer<typeof createActivityLogSchema>;
+
+// Configuracoes do App
+export const appSettings = pgTable("app_settings", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  key: text("key").notNull().unique(),
+  value: text("value"),
+  category: text("category").default("geral"),
+  label: text("label"),
+  type: text("type").default("text"), // text, textarea, url, email, phone, boolean, color
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const updateAppSettingSchema = z.object({
+  key: z.string(),
+  value: z.string().nullable(),
+});
+
+export const updateAppSettingsSchema = z.object({
+  settings: z.array(z.object({
+    key: z.string(),
+    value: z.string().nullable(),
+  })),
+});
+
+export type AppSetting = typeof appSettings.$inferSelect;
+export type UpdateAppSettingInput = z.infer<typeof updateAppSettingSchema>;
+export type UpdateAppSettingsInput = z.infer<typeof updateAppSettingsSchema>;

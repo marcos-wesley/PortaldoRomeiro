@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type UpdateProfileInput, users, type News, type InsertNews, type UpdateNewsInput, news, type Video, type InsertVideo, type UpdateVideoInput, videos, type Attraction, type InsertAttraction, type UpdateAttractionInput, attractions, type StaticPage, type InsertStaticPage, type UpdateStaticPageInput, staticPages, type UsefulPhone, type CreateUsefulPhoneInput, type UpdateUsefulPhoneInput, usefulPhones, type PilgrimTip, type CreatePilgrimTipInput, type UpdatePilgrimTipInput, pilgrimTips, type Service, type CreateServiceInput, type UpdateServiceInput, services, type Business, type CreateBusinessInput, type UpdateBusinessInput, businesses, type BusinessReview, type CreateBusinessReviewInput, businessReviews, type Accommodation, type CreateAccommodationInput, type UpdateAccommodationInput, accommodations, type Room, type CreateRoomInput, type UpdateRoomInput, rooms, type RoomBlockedDate, type CreateRoomBlockedDateInput, roomBlockedDates, type AccommodationReview, type CreateAccommodationReviewInput, accommodationReviews, type Partner, type CreatePartnerInput, type UpdatePartnerInput, partners, type Banner, type CreateBannerInput, type UpdateBannerInput, banners, type Notification, type CreateNotificationInput, type UpdateNotificationInput, notifications, type UserNotification, userNotifications, type PushDevice, type RegisterPushDeviceInput, pushDevices, type UserNotificationPreference, type UpdateNotificationPreferencesInput, userNotificationPreferences, type UserActivityLog, type CreateActivityLogInput, userActivityLogs } from "@shared/schema";
+import { type User, type InsertUser, type UpdateProfileInput, users, type News, type InsertNews, type UpdateNewsInput, news, type Video, type InsertVideo, type UpdateVideoInput, videos, type Attraction, type InsertAttraction, type UpdateAttractionInput, attractions, type StaticPage, type InsertStaticPage, type UpdateStaticPageInput, staticPages, type UsefulPhone, type CreateUsefulPhoneInput, type UpdateUsefulPhoneInput, usefulPhones, type PilgrimTip, type CreatePilgrimTipInput, type UpdatePilgrimTipInput, pilgrimTips, type Service, type CreateServiceInput, type UpdateServiceInput, services, type Business, type CreateBusinessInput, type UpdateBusinessInput, businesses, type BusinessReview, type CreateBusinessReviewInput, businessReviews, type Accommodation, type CreateAccommodationInput, type UpdateAccommodationInput, accommodations, type Room, type CreateRoomInput, type UpdateRoomInput, rooms, type RoomBlockedDate, type CreateRoomBlockedDateInput, roomBlockedDates, type AccommodationReview, type CreateAccommodationReviewInput, accommodationReviews, type Partner, type CreatePartnerInput, type UpdatePartnerInput, partners, type Banner, type CreateBannerInput, type UpdateBannerInput, banners, type Notification, type CreateNotificationInput, type UpdateNotificationInput, notifications, type UserNotification, userNotifications, type PushDevice, type RegisterPushDeviceInput, pushDevices, type UserNotificationPreference, type UpdateNotificationPreferencesInput, userNotificationPreferences, type UserActivityLog, type CreateActivityLogInput, userActivityLogs, type AppSetting, type UpdateAppSettingInput, appSettings } from "@shared/schema";
 import { db } from "./db";
 import { eq, count, desc, ilike, or, and, asc } from "drizzle-orm";
 
@@ -875,6 +875,71 @@ export class DatabaseStorage implements IStorage {
       count++;
     }
     return count;
+  }
+
+  // App Settings
+  async getAllAppSettings(): Promise<AppSetting[]> {
+    return await db.select().from(appSettings).orderBy(asc(appSettings.category), asc(appSettings.key));
+  }
+
+  async getAppSettingByKey(key: string): Promise<AppSetting | undefined> {
+    const result = await db.select().from(appSettings).where(eq(appSettings.key, key));
+    return result[0];
+  }
+
+  async getAppSettingsByCategory(category: string): Promise<AppSetting[]> {
+    return await db.select().from(appSettings).where(eq(appSettings.category, category));
+  }
+
+  async upsertAppSetting(data: { key: string; value: string | null; category?: string; label?: string; type?: string }): Promise<AppSetting> {
+    const existing = await this.getAppSettingByKey(data.key);
+    if (existing) {
+      const result = await db.update(appSettings)
+        .set({ value: data.value, updatedAt: new Date() })
+        .where(eq(appSettings.key, data.key))
+        .returning();
+      return result[0];
+    }
+    const result = await db.insert(appSettings).values(data).returning();
+    return result[0];
+  }
+
+  async initializeDefaultSettings(): Promise<void> {
+    const defaults = [
+      // Informacoes do App
+      { key: "app_name", value: "Portal do Romeiro", category: "app", label: "Nome do App", type: "text" },
+      { key: "app_description", value: "Seu guia completo para a romaria em Trindade", category: "app", label: "Descricao do App", type: "textarea" },
+      
+      // Contato
+      { key: "contact_email", value: "", category: "contato", label: "E-mail de Contato", type: "email" },
+      { key: "contact_phone", value: "", category: "contato", label: "Telefone de Contato", type: "phone" },
+      { key: "contact_whatsapp", value: "", category: "contato", label: "WhatsApp", type: "phone" },
+      { key: "contact_address", value: "", category: "contato", label: "Endereco", type: "textarea" },
+      
+      // Redes Sociais
+      { key: "social_facebook", value: "", category: "redes_sociais", label: "Facebook", type: "url" },
+      { key: "social_instagram", value: "", category: "redes_sociais", label: "Instagram", type: "url" },
+      { key: "social_youtube", value: "", category: "redes_sociais", label: "YouTube", type: "url" },
+      { key: "social_twitter", value: "", category: "redes_sociais", label: "Twitter/X", type: "url" },
+      { key: "social_tiktok", value: "", category: "redes_sociais", label: "TikTok", type: "url" },
+      
+      // Links Uteis
+      { key: "link_website", value: "", category: "links", label: "Site Oficial", type: "url" },
+      { key: "link_app_store", value: "", category: "links", label: "App Store (iOS)", type: "url" },
+      { key: "link_play_store", value: "", category: "links", label: "Play Store (Android)", type: "url" },
+      { key: "link_tv_ao_vivo", value: "", category: "links", label: "Link TV ao Vivo", type: "url" },
+      
+      // Configuracoes Gerais
+      { key: "maintenance_mode", value: "false", category: "sistema", label: "Modo Manutencao", type: "boolean" },
+      { key: "notifications_enabled", value: "true", category: "sistema", label: "Notificacoes Ativas", type: "boolean" },
+    ];
+
+    for (const setting of defaults) {
+      const existing = await this.getAppSettingByKey(setting.key);
+      if (!existing) {
+        await db.insert(appSettings).values(setting);
+      }
+    }
   }
 }
 

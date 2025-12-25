@@ -1573,6 +1573,50 @@ export function registerAdminRoutes(app: Express) {
   app.get("/admin/banners/editar/:id", requireAuth, (req, res) => {
     res.sendFile(path.join(process.cwd(), "server", "admin", "banners-form.html"));
   });
+
+  // App Settings API
+  app.get("/admin/api/settings", requireAuth, async (req, res) => {
+    try {
+      await storage.initializeDefaultSettings();
+      const settings = await storage.getAllAppSettings();
+      res.json({ settings });
+    } catch (error) {
+      res.status(500).json({ error: "Erro ao carregar configuracoes" });
+    }
+  });
+
+  app.put("/admin/api/settings", requireAuth, async (req, res) => {
+    try {
+      const { settings } = req.body;
+      if (!Array.isArray(settings)) {
+        return res.status(400).json({ error: "Formato invalido" });
+      }
+      for (const setting of settings) {
+        await storage.upsertAppSetting({ key: setting.key, value: setting.value });
+      }
+      const updatedSettings = await storage.getAllAppSettings();
+      res.json({ settings: updatedSettings, message: "Configuracoes salvas com sucesso!" });
+    } catch (error) {
+      res.status(500).json({ error: "Erro ao salvar configuracoes" });
+    }
+  });
+
+  app.get("/admin/api/settings/:key", requireAuth, async (req, res) => {
+    try {
+      const setting = await storage.getAppSettingByKey(req.params.key);
+      if (!setting) {
+        return res.status(404).json({ error: "Configuracao nao encontrada" });
+      }
+      res.json({ setting });
+    } catch (error) {
+      res.status(500).json({ error: "Erro ao carregar configuracao" });
+    }
+  });
+
+  // Configuracoes page
+  app.get("/admin/configuracoes", requireAuth, (req, res) => {
+    res.sendFile(path.join(process.cwd(), "server", "admin", "configuracoes.html"));
+  });
 }
 
 function getPlaceholderPage(title: string, description: string): string {
