@@ -984,10 +984,10 @@ const styles = StyleSheet.create({
   },
   partnerLogoBox: {
     flex: 1,
-    height: 70,
+    height: 60,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: Spacing.md,
+    marginHorizontal: Spacing.xs,
   },
   partnerLogoImage: {
     width: "100%",
@@ -1135,9 +1135,8 @@ const styles = StyleSheet.create({
   },
   partnerSlide: {
     flexDirection: "row",
-    justifyContent: "center",
+    justifyContent: "space-between",
     alignItems: "center",
-    paddingHorizontal: Spacing.lg,
-    gap: Spacing.md,
+    paddingHorizontal: Spacing.xl,
   },
 });
