@@ -1139,7 +1139,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingLeft: Spacing.lg,
-    paddingRight: Spacing.lg,
+    paddingRight: Spacing.xl * 3,
     gap: Spacing.md,
   },
 });
