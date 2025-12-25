@@ -566,6 +566,26 @@ export default function HomeScreen() {
           <HomeBannerAd banner={bannersData.banners[0]} />
         ) : null}
 
+        <LinearGradient
+          colors={["#4169E1", "#5B7FE8"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.partnerBanner}
+        >
+          <View style={styles.partnerIcon}>
+            <Feather name="users" size={24} color="#FFFFFF" />
+          </View>
+          <View style={styles.partnerContent}>
+            <ThemedText style={styles.partnerTitle}>Seja nosso parceiro</ThemedText>
+            <ThemedText style={styles.partnerSubtitle}>
+              Divulgue sua marca para milhares de romeiros.
+            </ThemedText>
+          </View>
+          <Pressable style={styles.partnerButton}>
+            <ThemedText style={styles.partnerButtonText}>Saiba mais</ThemedText>
+          </Pressable>
+        </LinearGradient>
+
         <SectionHeader
           title="Videos em Destaque"
           actionText="Ver canal"
