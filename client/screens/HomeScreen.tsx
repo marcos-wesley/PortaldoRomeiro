@@ -333,28 +333,22 @@ function VideoCard({ video, onPress }: { video: VideoItem; onPress: () => void }
 function PartnersSection({ partners }: { partners: Partner[] }) {
   const { theme } = useTheme();
   const scrollRef = useRef<ScrollView>(null);
-  const [scrollPosition, setScrollPosition] = useState(0);
-  const logoWidth = 80;
-  const logoGap = Spacing.lg;
-  const totalWidth = partners.length * (logoWidth + logoGap);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const partnersPerSlide = 3;
+  const slideWidth = SCREEN_WIDTH - Spacing.lg * 2;
+  const totalSlides = Math.ceil(partners.length / partnersPerSlide);
 
   useEffect(() => {
-    if (partners.length <= 3) return;
+    if (totalSlides <= 1) return;
     const interval = setInterval(() => {
-      setScrollPosition((prev) => {
-        const next = prev + logoWidth + logoGap;
-        if (next >= totalWidth - SCREEN_WIDTH + Spacing.lg * 2) {
-          return 0;
-        }
-        return next;
-      });
-    }, 3000);
+      setCurrentSlide((prev) => (prev + 1) % totalSlides);
+    }, 4000);
     return () => clearInterval(interval);
-  }, [partners.length, totalWidth]);
+  }, [totalSlides]);
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ x: scrollPosition, animated: true });
-  }, [scrollPosition]);
+    scrollRef.current?.scrollTo({ x: currentSlide * slideWidth, animated: true });
+  }, [currentSlide, slideWidth]);
 
   const openWebsite = async (url: string | null) => {
     if (url) {
@@ -369,39 +363,64 @@ function PartnersSection({ partners }: { partners: Partner[] }) {
 
   if (partners.length === 0) return null;
 
+  const slides: Partner[][] = [];
+  for (let i = 0; i < partners.length; i += partnersPerSlide) {
+    slides.push(partners.slice(i, i + partnersPerSlide));
+  }
+
   return (
     <View style={styles.partnersSection}>
       <View style={styles.partnersSectionHeader}>
         <ThemedText style={styles.partnersSectionTitle}>Nossos Parceiros</ThemedText>
-        <View style={[styles.sponsoredBadge, { backgroundColor: theme.backgroundSecondary }]}>
-          <ThemedText type="caption" secondary>Patrocinado</ThemedText>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.sm }}>
+          <View style={[styles.sponsoredBadge, { backgroundColor: theme.backgroundSecondary }]}>
+            <ThemedText type="caption" secondary>Patrocinado</ThemedText>
+          </View>
+          {totalSlides > 1 ? (
+            <View style={styles.bannerDots}>
+              {slides.map((_, idx) => (
+                <View 
+                  key={idx} 
+                  style={[
+                    styles.bannerDot, 
+                    { backgroundColor: idx === currentSlide ? Colors.light.primary : theme.border }
+                  ]} 
+                />
+              ))}
+            </View>
+          ) : null}
         </View>
       </View>
       <ScrollView
         ref={scrollRef}
         horizontal
+        pagingEnabled
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.partnersScroll}
-        scrollEventThrottle={16}
+        scrollEnabled={false}
+        style={{ marginHorizontal: -Spacing.lg }}
       >
-        {partners.map((partner) => (
-          <Pressable
-            key={partner.id}
-            onPress={() => openWebsite(partner.website)}
-            style={styles.partnerLogoContainer}
-          >
-            {partner.logoUrl ? (
-              <Image
-                source={{ uri: getFullImageUrl(partner.logoUrl) || "" }}
-                style={styles.partnerLogo}
-                contentFit="contain"
-              />
-            ) : (
-              <View style={styles.partnerLogoPlaceholder}>
-                <Feather name="image" size={24} color="#9CA3AF" />
-              </View>
-            )}
-          </Pressable>
+        {slides.map((slidePartners, slideIdx) => (
+          <View key={slideIdx} style={[styles.partnerSlide, { width: slideWidth + Spacing.lg * 2 }]}>
+            {slidePartners.map((partner) => (
+              <Pressable
+                key={partner.id}
+                onPress={() => openWebsite(partner.website)}
+                style={styles.partnerLogoContainer}
+              >
+                {partner.logoUrl ? (
+                  <Image
+                    source={{ uri: getFullImageUrl(partner.logoUrl) || "" }}
+                    style={styles.partnerLogo}
+                    contentFit="contain"
+                  />
+                ) : (
+                  <View style={styles.partnerLogoPlaceholder}>
+                    <Feather name="image" size={32} color="#9CA3AF" />
+                  </View>
+                )}
+              </Pressable>
+            ))}
+          </View>
         ))}
       </ScrollView>
     </View>
@@ -443,7 +462,27 @@ function HomeBannerSlideshow({ banners }: { banners: Banner[] }) {
   };
 
   const validBanners = banners.filter(b => b.imageUrl);
-  if (validBanners.length === 0) return null;
+
+  if (validBanners.length === 0) {
+    return (
+      <View style={styles.bannerSlideshowContainer}>
+        <View style={styles.bannerSlideshowHeader}>
+          <View style={[styles.sponsoredBadge, { backgroundColor: theme.backgroundSecondary }]}>
+            <ThemedText type="caption" secondary>Patrocinado</ThemedText>
+          </View>
+        </View>
+        <View style={[styles.bannerPlaceholder, { width: bannerSize, height: bannerSize, backgroundColor: theme.backgroundSecondary }]}>
+          <Feather name="image" size={48} color={theme.textSecondary} />
+          <ThemedText type="body" secondary style={{ marginTop: Spacing.md, textAlign: "center" }}>
+            Espaco para anuncio
+          </ThemedText>
+          <ThemedText type="caption" secondary style={{ marginTop: Spacing.xs, textAlign: "center" }}>
+            Anuncie aqui sua empresa
+          </ThemedText>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.bannerSlideshowContainer}>
@@ -639,14 +678,6 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {partnersData?.partners && partnersData.partners.length > 0 ? (
-          <PartnersSection partners={partnersData.partners} />
-        ) : null}
-
-        {bannersData?.banners && bannersData.banners.length > 0 ? (
-          <HomeBannerSlideshow banners={bannersData.banners} />
-        ) : null}
-
         <LinearGradient
           colors={["#4169E1", "#5B7FE8"]}
           start={{ x: 0, y: 0 }}
@@ -696,6 +727,12 @@ export default function HomeScreen() {
             </ThemedText>
           )}
         </ScrollView>
+
+        <HomeBannerSlideshow banners={bannersData?.banners || []} />
+
+        {partnersData?.partners && partnersData.partners.length > 0 ? (
+          <PartnersSection partners={partnersData.partners} />
+        ) : null}
       </View>
     </ScrollView>
   );
@@ -928,16 +965,16 @@ const styles = StyleSheet.create({
     gap: Spacing.lg,
   },
   partnerLogoContainer: {
-    width: 80,
-    height: 80,
+    flex: 1,
+    height: 100,
     backgroundColor: "transparent",
     borderRadius: BorderRadius.md,
     alignItems: "center",
     justifyContent: "center",
   },
   partnerLogo: {
-    width: 70,
-    height: 70,
+    width: "100%",
+    height: 90,
   },
   partnerLogoPlaceholder: {
     alignItems: "center",
@@ -1072,5 +1109,18 @@ const styles = StyleSheet.create({
   bannerScrollView: {
     borderRadius: BorderRadius.lg,
     overflow: "hidden",
+  },
+  bannerPlaceholder: {
+    borderRadius: BorderRadius.lg,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: Spacing.xl,
+  },
+  partnerSlide: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: Spacing.lg,
+    gap: Spacing.md,
   },
 });
