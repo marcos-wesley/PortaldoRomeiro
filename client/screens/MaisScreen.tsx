@@ -2,7 +2,7 @@ import { ScrollView, View, StyleSheet, Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, CommonActions } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import Animated, {
@@ -82,10 +82,15 @@ export default function MaisScreen() {
   const handleNavigate = (screen: string) => {
     try {
       if (screen === "GuiaRestaurantes") {
-        navigation.getParent()?.navigate("Guia", { 
-          screen: "Guia", 
-          params: { initialCategory: "onde-comer" } 
-        });
+        navigation.dispatch(
+          CommonActions.navigate({
+            name: "GuiaTab",
+            params: {
+              screen: "Guia",
+              params: { initialCategory: "onde-comer" }
+            }
+          })
+        );
       } else {
         navigation.navigate(screen as any);
       }
