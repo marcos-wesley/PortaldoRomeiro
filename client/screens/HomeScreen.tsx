@@ -8,7 +8,7 @@ import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -331,6 +331,31 @@ function VideoCard({ video, onPress }: { video: VideoItem; onPress: () => void }
 }
 
 function PartnersSection({ partners }: { partners: Partner[] }) {
+  const { theme } = useTheme();
+  const scrollRef = useRef<ScrollView>(null);
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const logoWidth = 80;
+  const logoGap = Spacing.lg;
+  const totalWidth = partners.length * (logoWidth + logoGap);
+
+  useEffect(() => {
+    if (partners.length <= 3) return;
+    const interval = setInterval(() => {
+      setScrollPosition((prev) => {
+        const next = prev + logoWidth + logoGap;
+        if (next >= totalWidth - SCREEN_WIDTH + Spacing.lg * 2) {
+          return 0;
+        }
+        return next;
+      });
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [partners.length, totalWidth]);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ x: scrollPosition, animated: true });
+  }, [scrollPosition]);
+
   const openWebsite = async (url: string | null) => {
     if (url) {
       try {
@@ -346,11 +371,18 @@ function PartnersSection({ partners }: { partners: Partner[] }) {
 
   return (
     <View style={styles.partnersSection}>
-      <ThemedText style={styles.partnersSectionTitle}>Nossos Parceiros</ThemedText>
+      <View style={styles.partnersSectionHeader}>
+        <ThemedText style={styles.partnersSectionTitle}>Nossos Parceiros</ThemedText>
+        <View style={[styles.sponsoredBadge, { backgroundColor: theme.backgroundSecondary }]}>
+          <ThemedText type="caption" secondary>Patrocinado</ThemedText>
+        </View>
+      </View>
       <ScrollView
+        ref={scrollRef}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.partnersScroll}
+        scrollEventThrottle={16}
       >
         {partners.map((partner) => (
           <Pressable
@@ -376,39 +408,88 @@ function PartnersSection({ partners }: { partners: Partner[] }) {
   );
 }
 
-function HomeBannerAd({ banner }: { banner: Banner }) {
+function HomeBannerSlideshow({ banners }: { banners: Banner[] }) {
+  const { theme } = useTheme();
   const scale = useSharedValue(1);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const scrollRef = useRef<ScrollView>(null);
+  const bannerSize = SCREEN_WIDTH - Spacing.lg * 2;
+
+  useEffect(() => {
+    if (banners.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % banners.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [banners.length]);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ x: currentIndex * bannerSize, animated: true });
+  }, [currentIndex, bannerSize]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
 
-  const openLink = async () => {
-    if (banner.link) {
+  const openLink = async (link: string | null) => {
+    if (link) {
       try {
         const { openBrowserAsync } = await import("expo-web-browser");
-        await openBrowserAsync(banner.link);
+        await openBrowserAsync(link);
       } catch (e) {
         console.error("Error opening URL:", e);
       }
     }
   };
 
-  if (!banner.imageUrl) return null;
+  const validBanners = banners.filter(b => b.imageUrl);
+  if (validBanners.length === 0) return null;
 
   return (
-    <AnimatedPressable
-      onPress={openLink}
-      onPressIn={() => { scale.value = withSpring(0.98); }}
-      onPressOut={() => { scale.value = withSpring(1); }}
-      style={[animatedStyle, styles.bannerAdContainer]}
-    >
-      <Image
-        source={{ uri: getFullImageUrl(banner.imageUrl) || "" }}
-        style={styles.bannerAdImage}
-        contentFit="cover"
-      />
-    </AnimatedPressable>
+    <View style={styles.bannerSlideshowContainer}>
+      <View style={styles.bannerSlideshowHeader}>
+        <View style={[styles.sponsoredBadge, { backgroundColor: theme.backgroundSecondary }]}>
+          <ThemedText type="caption" secondary>Patrocinado</ThemedText>
+        </View>
+        {validBanners.length > 1 ? (
+          <View style={styles.bannerDots}>
+            {validBanners.map((_, idx) => (
+              <View 
+                key={idx} 
+                style={[
+                  styles.bannerDot, 
+                  { backgroundColor: idx === currentIndex ? Colors.light.primary : theme.border }
+                ]} 
+              />
+            ))}
+          </View>
+        ) : null}
+      </View>
+      <ScrollView
+        ref={scrollRef}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        scrollEnabled={false}
+        style={styles.bannerScrollView}
+      >
+        {validBanners.map((banner) => (
+          <AnimatedPressable
+            key={banner.id}
+            onPress={() => openLink(banner.link)}
+            onPressIn={() => { scale.value = withSpring(0.98); }}
+            onPressOut={() => { scale.value = withSpring(1); }}
+            style={[animatedStyle, styles.bannerAdContainer, { width: bannerSize, height: bannerSize }]}
+          >
+            <Image
+              source={{ uri: getFullImageUrl(banner.imageUrl) || "" }}
+              style={styles.bannerAdImage}
+              contentFit="cover"
+            />
+          </AnimatedPressable>
+        ))}
+      </ScrollView>
+    </View>
   );
 }
 
@@ -563,7 +644,7 @@ export default function HomeScreen() {
         ) : null}
 
         {bannersData?.banners && bannersData.banners.length > 0 ? (
-          <HomeBannerAd banner={bannersData.banners[0]} />
+          <HomeBannerSlideshow banners={bannersData.banners} />
         ) : null}
 
         <LinearGradient
@@ -847,19 +928,16 @@ const styles = StyleSheet.create({
     gap: Spacing.lg,
   },
   partnerLogoContainer: {
-    width: 120,
-    height: 60,
-    backgroundColor: "#FFFFFF",
+    width: 80,
+    height: 80,
+    backgroundColor: "transparent",
     borderRadius: BorderRadius.md,
-    padding: Spacing.md,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
   },
   partnerLogo: {
-    width: "100%",
-    height: "100%",
+    width: 70,
+    height: 70,
   },
   partnerLogoPlaceholder: {
     alignItems: "center",
@@ -872,8 +950,8 @@ const styles = StyleSheet.create({
   },
   bannerAdImage: {
     width: "100%",
-    height: 80,
-    borderRadius: BorderRadius.md,
+    height: "100%",
+    borderRadius: BorderRadius.lg,
   },
   partnerBanner: {
     borderRadius: BorderRadius.lg,
@@ -961,5 +1039,38 @@ const styles = StyleSheet.create({
   videoTitle: {
     fontSize: 13,
     fontWeight: "500",
+  },
+  partnersSectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.md,
+  },
+  sponsoredBadge: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs,
+    borderRadius: BorderRadius.xs,
+  },
+  bannerSlideshowContainer: {
+    marginBottom: Spacing.xl,
+  },
+  bannerSlideshowHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.sm,
+  },
+  bannerDots: {
+    flexDirection: "row",
+    gap: Spacing.xs,
+  },
+  bannerDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  bannerScrollView: {
+    borderRadius: BorderRadius.lg,
+    overflow: "hidden",
   },
 });
