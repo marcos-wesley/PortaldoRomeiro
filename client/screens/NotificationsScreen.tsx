@@ -2,6 +2,7 @@ import React, { useCallback } from "react";
 import { View, StyleSheet, FlatList, Pressable, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useHeaderHeight } from "@react-navigation/elements";
 import { useNavigation } from "@react-navigation/native";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Feather } from "@expo/vector-icons";
@@ -110,6 +111,7 @@ function NotificationItem({ notification, onPress, onDelete }: NotificationItemP
 
 export default function NotificationsScreen() {
   const insets = useSafeAreaInsets();
+  const headerHeight = useHeaderHeight();
   const { theme } = useTheme();
   const { user } = useAuth();
   const navigation = useNavigation();
@@ -217,7 +219,7 @@ export default function NotificationsScreen() {
         contentContainerStyle={{
           paddingHorizontal: Spacing.lg,
           paddingBottom: tabBarHeight + Spacing.xl,
-          paddingTop: Spacing.md,
+          paddingTop: headerHeight + Spacing.md,
         }}
         ItemSeparatorComponent={() => <View style={{ height: Spacing.sm }} />}
         refreshControl={

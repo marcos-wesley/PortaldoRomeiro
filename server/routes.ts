@@ -749,10 +749,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Mark as sent
       await storage.markNotificationSent(id);
 
-      // TODO: Send push notifications using Expo push notification service
-      // This will be implemented when push tokens are registered
+      // Send push notifications using Expo push notification service
+      const pushDevices = await storage.getAllPushDevices();
+      let pushSent = 0;
+      let pushErrors = 0;
 
-      return res.json({ success: true, userCount: count, message: `Notificacao enviada para ${count} usuarios` });
+      if (pushDevices.length > 0) {
+        const messages = pushDevices.map((device) => ({
+          to: device.pushToken,
+          sound: "default" as const,
+          title: notification.title,
+          body: notification.body,
+          data: {
+            notificationId: notification.id,
+            type: notification.type,
+            actionType: notification.actionType,
+            actionData: notification.actionData,
+          },
+        }));
+
+        // Send in chunks of 100 (Expo limit)
+        const chunks = [];
+        for (let i = 0; i < messages.length; i += 100) {
+          chunks.push(messages.slice(i, i + 100));
+        }
+
+        for (const chunk of chunks) {
+          try {
+            const response = await fetch("https://exp.host/--/api/v2/push/send", {
+              method: "POST",
+              headers: {
+                "Accept": "application/json",
+                "Accept-Encoding": "gzip, deflate",
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(chunk),
+            });
+
+            const result = await response.json();
+            if (result.data) {
+              for (const ticket of result.data) {
+                if (ticket.status === "ok") {
+                  pushSent++;
+                } else {
+                  pushErrors++;
+                  console.error("Push error:", ticket.message);
+                }
+              }
+            }
+          } catch (pushError) {
+            console.error("Expo push API error:", pushError);
+            pushErrors += chunk.length;
+          }
+        }
+      }
+
+      return res.json({ 
+        success: true, 
+        userCount: count, 
+        pushSent,
+        pushErrors,
+        message: `Notificacao enviada para ${count} usuarios. Push: ${pushSent} enviados, ${pushErrors} erros.` 
+      });
     } catch (error) {
       console.error("Send notification error:", error);
       return res.status(500).json({ error: "Erro ao enviar notificacao" });
