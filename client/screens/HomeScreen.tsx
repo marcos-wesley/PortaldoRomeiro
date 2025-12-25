@@ -678,6 +678,10 @@ export default function HomeScreen() {
           )}
         </View>
 
+        {partnersData?.partners && partnersData.partners.length > 0 ? (
+          <PartnersSection partners={partnersData.partners} />
+        ) : null}
+
         <LinearGradient
           colors={["#4169E1", "#5B7FE8"]}
           start={{ x: 0, y: 0 }}
@@ -728,11 +732,9 @@ export default function HomeScreen() {
           )}
         </ScrollView>
 
-        <HomeBannerSlideshow banners={bannersData?.banners || []} />
-
-        {partnersData?.partners && partnersData.partners.length > 0 ? (
-          <PartnersSection partners={partnersData.partners} />
-        ) : null}
+        <View style={{ marginTop: Spacing.xl }}>
+          <HomeBannerSlideshow banners={bannersData?.banners || []} />
+        </View>
       </View>
     </ScrollView>
   );
