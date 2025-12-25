@@ -335,7 +335,7 @@ function PartnersSection({ partners }: { partners: Partner[] }) {
   const scrollRef = useRef<ScrollView>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
   const partnersPerSlide = 3;
-  const slideWidth = SCREEN_WIDTH - Spacing.lg * 2;
+  const containerWidth = SCREEN_WIDTH;
   const totalSlides = Math.ceil(partners.length / partnersPerSlide);
 
   useEffect(() => {
@@ -347,8 +347,8 @@ function PartnersSection({ partners }: { partners: Partner[] }) {
   }, [totalSlides]);
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ x: currentSlide * slideWidth, animated: true });
-  }, [currentSlide, slideWidth]);
+    scrollRef.current?.scrollTo({ x: currentSlide * containerWidth, animated: true });
+  }, [currentSlide, containerWidth]);
 
   const openWebsite = async (url: string | null) => {
     if (url) {
@@ -369,12 +369,12 @@ function PartnersSection({ partners }: { partners: Partner[] }) {
   }
 
   return (
-    <View style={styles.partnersSection}>
+    <View style={[styles.partnersSectionWrapper, { backgroundColor: "#F3F4F6" }]}>
       <View style={styles.partnersSectionHeader}>
-        <ThemedText style={styles.partnersSectionTitle}>Nossos Parceiros</ThemedText>
+        <ThemedText style={[styles.partnersSectionTitle, { color: "#374151" }]}>NOSSOS PARCEIROS</ThemedText>
         <View style={{ flexDirection: "row", alignItems: "center", gap: Spacing.sm }}>
-          <View style={[styles.sponsoredBadge, { backgroundColor: theme.backgroundSecondary }]}>
-            <ThemedText type="caption" secondary>Patrocinado</ThemedText>
+          <View style={[styles.sponsoredBadge, { backgroundColor: "#E5E7EB" }]}>
+            <ThemedText type="caption" style={{ color: "#6B7280" }}>Patrocinado</ThemedText>
           </View>
           {totalSlides > 1 ? (
             <View style={styles.bannerDots}>
@@ -383,7 +383,7 @@ function PartnersSection({ partners }: { partners: Partner[] }) {
                   key={idx} 
                   style={[
                     styles.bannerDot, 
-                    { backgroundColor: idx === currentSlide ? Colors.light.primary : theme.border }
+                    { backgroundColor: idx === currentSlide ? Colors.light.primary : "#D1D5DB" }
                   ]} 
                 />
               ))}
@@ -397,20 +397,19 @@ function PartnersSection({ partners }: { partners: Partner[] }) {
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         scrollEnabled={false}
-        style={{ marginHorizontal: -Spacing.lg }}
       >
         {slides.map((slidePartners, slideIdx) => (
-          <View key={slideIdx} style={[styles.partnerSlide, { width: slideWidth + Spacing.lg * 2 }]}>
+          <View key={slideIdx} style={[styles.partnerSlide, { width: containerWidth }]}>
             {slidePartners.map((partner) => (
               <Pressable
                 key={partner.id}
                 onPress={() => openWebsite(partner.website)}
-                style={styles.partnerLogoContainer}
+                style={styles.partnerLogoBox}
               >
                 {partner.logoUrl ? (
                   <Image
                     source={{ uri: getFullImageUrl(partner.logoUrl) || "" }}
-                    style={styles.partnerLogo}
+                    style={styles.partnerLogoImage}
                     contentFit="contain"
                   />
                 ) : (
@@ -954,13 +953,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.lg,
     paddingVertical: Spacing.lg,
   },
+  partnersSectionWrapper: {
+    marginHorizontal: -Spacing.lg,
+    paddingVertical: Spacing.xl,
+    paddingHorizontal: Spacing.lg,
+    marginTop: Spacing.xl,
+  },
+  partnersSectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: Spacing.xl,
+  },
   partnersSectionTitle: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#6B7280",
-    marginBottom: Spacing.md,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
+    letterSpacing: 1,
   },
   partnersScroll: {
     paddingRight: Spacing.lg,
@@ -977,6 +985,17 @@ const styles = StyleSheet.create({
   partnerLogo: {
     width: "100%",
     height: 90,
+  },
+  partnerLogoBox: {
+    flex: 1,
+    height: 70,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: Spacing.md,
+  },
+  partnerLogoImage: {
+    width: "100%",
+    height: "100%",
   },
   partnerLogoPlaceholder: {
     alignItems: "center",
