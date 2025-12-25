@@ -5,9 +5,11 @@ import { Feather } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { NativeStackHeaderProps } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
+import { useQuery } from "@tanstack/react-query";
 
-import { Spacing, BorderRadius } from "@/constants/theme";
+import { Spacing, BorderRadius, Colors } from "@/constants/theme";
 import { useTheme } from "@/hooks/useTheme";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface AppHeaderProps extends Partial<NativeStackHeaderProps> {
   userName?: string;
@@ -32,6 +34,15 @@ export function AppHeader({
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const nav = useNavigation();
+  const { user } = useAuth();
+
+  const { data: unreadData } = useQuery<{ count: number }>({
+    queryKey: ["/api/user", user?.id, "notifications/unread-count"],
+    enabled: !!user?.id,
+    refetchInterval: 30000,
+  });
+
+  const unreadCount = unreadData?.count ?? 0;
 
   const handleBack = () => {
     if (navigation?.canGoBack()) {
@@ -76,12 +87,26 @@ export function AppHeader({
         </Pressable>
         
         <Pressable 
-          onPress={onNotificationsPress} 
+          onPress={() => {
+            if (onNotificationsPress) {
+              onNotificationsPress();
+            } else {
+              try {
+                (nav as any).navigate("Notifications");
+              } catch {
+                (navigation as any)?.navigate?.("Notifications");
+              }
+            }
+          }} 
           style={({ pressed }) => [styles.iconButton, pressed && styles.iconButtonPressed]}
         >
           <Feather name="bell" size={22} color={theme.headerIconColor} />
-          {hasNotifications ? (
-            <View style={[styles.notificationBadge, { backgroundColor: theme.notificationBadge }]} />
+          {unreadCount > 0 ? (
+            <View style={[styles.notificationBadge, { backgroundColor: Colors.light.primary }]}>
+              <Text style={styles.notificationBadgeText}>
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </Text>
+            </View>
           ) : null}
         </Pressable>
         
@@ -148,11 +173,19 @@ const styles = StyleSheet.create({
   },
   notificationBadge: {
     position: "absolute",
-    top: 4,
-    right: 4,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    top: 2,
+    right: 0,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 3,
+  },
+  notificationBadgeText: {
+    color: "#FFFFFF",
+    fontSize: 9,
+    fontWeight: "700",
   },
   avatarContainer: {
     width: 40,

@@ -1,10 +1,13 @@
 import { ScrollView, View, StyleSheet, Pressable, Switch, TextInput, Alert, Modal, Platform, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useHeaderHeight } from "@react-navigation/elements";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import { useState, useCallback } from "react";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
+import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -84,6 +87,7 @@ function DataItem({ icon, label, value }: { icon: string; label: string; value: 
 export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const headerHeight = useHeaderHeight();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { theme } = useTheme();
   const { user, logout, updateUser } = useAuth();
   
@@ -348,6 +352,19 @@ export default function ProfileScreen() {
               title="Privacidade e Seguranca"
               iconColor="#8B5CF6"
               onPress={() => {}}
+            />
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <ThemedText type="caption" secondary style={styles.sectionTitle}>ADMINISTRACAO</ThemedText>
+
+          <View style={styles.optionsContainer}>
+            <ProfileOption
+              icon="send"
+              title="Gerenciar Notificacoes"
+              iconColor="#22C55E"
+              onPress={() => navigation.navigate("AdminNotifications")}
             />
           </View>
         </View>

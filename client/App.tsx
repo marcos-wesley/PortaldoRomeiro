@@ -1,6 +1,6 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { StyleSheet } from "react-native";
-import { NavigationContainer } from "@react-navigation/native";
+import { NavigationContainer, NavigationContainerRef } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -13,9 +13,11 @@ import RootStackNavigator from "@/navigation/RootStackNavigator";
 import SplashScreen from "@/screens/SplashScreen";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { PushNotificationProvider } from "@/contexts/PushNotificationContext";
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
+  const navigationRef = useRef<NavigationContainerRef<any>>(null);
 
   const handleSplashFinish = useCallback(() => {
     setShowSplash(false);
@@ -39,8 +41,10 @@ export default function App() {
           <SafeAreaProvider>
             <GestureHandlerRootView style={styles.root}>
               <KeyboardProvider>
-                <NavigationContainer>
-                  <RootStackNavigator />
+                <NavigationContainer ref={navigationRef}>
+                  <PushNotificationProvider navigationRef={navigationRef}>
+                    <RootStackNavigator />
+                  </PushNotificationProvider>
                 </NavigationContainer>
                 <StatusBar style="auto" />
               </KeyboardProvider>

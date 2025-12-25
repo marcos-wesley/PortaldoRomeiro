@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "node:http";
 import { randomBytes, pbkdf2Sync, timingSafeEqual } from "node:crypto";
-import { registerUserSchema, loginUserSchema, updateProfileSchema, createNewsSchema, updateNewsSchema, createVideoSchema, updateVideoSchema, createAttractionSchema, updateAttractionSchema, createBusinessReviewSchema } from "@shared/schema";
+import { registerUserSchema, loginUserSchema, updateProfileSchema, createNewsSchema, updateNewsSchema, createVideoSchema, updateVideoSchema, createAttractionSchema, updateAttractionSchema, createBusinessReviewSchema, createNotificationSchema, updateNotificationSchema, registerPushDeviceSchema, updateNotificationPreferencesSchema, createActivityLogSchema } from "@shared/schema";
 import { storage } from "./storage";
 import { fromError } from "zod-validation-error";
 import * as fs from "node:fs";
@@ -663,6 +663,330 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get banners error:", error);
       return res.status(500).json({ error: "Erro ao buscar banners" });
+    }
+  });
+
+  // =====================
+  // NOTIFICATION ROUTES
+  // =====================
+
+  // Admin: Get all notifications
+  app.get("/api/admin/notifications", async (req, res) => {
+    try {
+      const notifications = await storage.getAllNotifications();
+      return res.json({ notifications });
+    } catch (error) {
+      console.error("Get notifications error:", error);
+      return res.status(500).json({ error: "Erro ao buscar notificacoes" });
+    }
+  });
+
+  // Admin: Create notification
+  app.post("/api/admin/notifications", async (req, res) => {
+    try {
+      const validationResult = createNotificationSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+
+      const notification = await storage.createNotification(validationResult.data);
+      return res.status(201).json({ notification });
+    } catch (error) {
+      console.error("Create notification error:", error);
+      return res.status(500).json({ error: "Erro ao criar notificacao" });
+    }
+  });
+
+  // Admin: Update notification
+  app.put("/api/admin/notifications/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validationResult = updateNotificationSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+
+      const notification = await storage.updateNotification(id, validationResult.data);
+      if (!notification) {
+        return res.status(404).json({ error: "Notificacao nao encontrada" });
+      }
+      return res.json({ notification });
+    } catch (error) {
+      console.error("Update notification error:", error);
+      return res.status(500).json({ error: "Erro ao atualizar notificacao" });
+    }
+  });
+
+  // Admin: Delete notification
+  app.delete("/api/admin/notifications/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteNotification(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Notificacao nao encontrada" });
+      }
+      return res.json({ success: true });
+    } catch (error) {
+      console.error("Delete notification error:", error);
+      return res.status(500).json({ error: "Erro ao deletar notificacao" });
+    }
+  });
+
+  // Admin: Send notification (broadcast to all users)
+  app.post("/api/admin/notifications/:id/send", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const notification = await storage.getNotificationById(id);
+      if (!notification) {
+        return res.status(404).json({ error: "Notificacao nao encontrada" });
+      }
+
+      // Broadcast to all users (internal notifications)
+      const count = await storage.broadcastNotification(notification);
+
+      // Mark as sent
+      await storage.markNotificationSent(id);
+
+      // TODO: Send push notifications using Expo push notification service
+      // This will be implemented when push tokens are registered
+
+      return res.json({ success: true, userCount: count, message: `Notificacao enviada para ${count} usuarios` });
+    } catch (error) {
+      console.error("Send notification error:", error);
+      return res.status(500).json({ error: "Erro ao enviar notificacao" });
+    }
+  });
+
+  // Admin: Get notification stats
+  app.get("/api/admin/notifications/stats", async (req, res) => {
+    try {
+      const notificationsCount = await storage.getNotificationsCount();
+      const devicesCount = await storage.getPushDevicesCount();
+      const usersCount = await storage.getUsersCount();
+      return res.json({ notificationsCount, devicesCount, usersCount });
+    } catch (error) {
+      console.error("Get notification stats error:", error);
+      return res.status(500).json({ error: "Erro ao buscar estatisticas" });
+    }
+  });
+
+  // User: Get my notifications (inbox)
+  app.get("/api/user/:userId/notifications", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const notifications = await storage.getUserNotifications(userId);
+      const unreadCount = await storage.getUnreadUserNotificationsCount(userId);
+      return res.json({ notifications, unreadCount });
+    } catch (error) {
+      console.error("Get user notifications error:", error);
+      return res.status(500).json({ error: "Erro ao buscar notificacoes" });
+    }
+  });
+
+  // User: Get unread notifications count
+  app.get("/api/user/:userId/notifications/unread-count", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const count = await storage.getUnreadUserNotificationsCount(userId);
+      return res.json({ count });
+    } catch (error) {
+      console.error("Get unread count error:", error);
+      return res.status(500).json({ error: "Erro ao buscar contador" });
+    }
+  });
+
+  // User: Mark notification as read
+  app.put("/api/user/notifications/:id/read", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const notification = await storage.markUserNotificationRead(id);
+      if (!notification) {
+        return res.status(404).json({ error: "Notificacao nao encontrada" });
+      }
+      return res.json({ notification });
+    } catch (error) {
+      console.error("Mark notification read error:", error);
+      return res.status(500).json({ error: "Erro ao marcar como lida" });
+    }
+  });
+
+  // User: Mark all notifications as read
+  app.put("/api/user/:userId/notifications/read-all", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      await storage.markAllUserNotificationsRead(userId);
+      return res.json({ success: true });
+    } catch (error) {
+      console.error("Mark all read error:", error);
+      return res.status(500).json({ error: "Erro ao marcar todas como lidas" });
+    }
+  });
+
+  // User: Delete notification from inbox
+  app.delete("/api/user/notifications/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteUserNotification(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Notificacao nao encontrada" });
+      }
+      return res.json({ success: true });
+    } catch (error) {
+      console.error("Delete user notification error:", error);
+      return res.status(500).json({ error: "Erro ao deletar notificacao" });
+    }
+  });
+
+  // Push Device Registration
+  app.post("/api/push/register", async (req, res) => {
+    try {
+      const validationResult = registerPushDeviceSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+
+      const device = await storage.registerPushDevice(validationResult.data);
+      return res.status(201).json({ device });
+    } catch (error) {
+      console.error("Register push device error:", error);
+      return res.status(500).json({ error: "Erro ao registrar dispositivo" });
+    }
+  });
+
+  // Push Device Unregister
+  app.delete("/api/push/unregister", async (req, res) => {
+    try {
+      const { pushToken } = req.body;
+      if (!pushToken) {
+        return res.status(400).json({ error: "Token obrigatorio" });
+      }
+
+      await storage.deletePushDevice(pushToken);
+      return res.json({ success: true });
+    } catch (error) {
+      console.error("Unregister push device error:", error);
+      return res.status(500).json({ error: "Erro ao remover dispositivo" });
+    }
+  });
+
+  // User: Get notification preferences
+  app.get("/api/user/:userId/notification-preferences", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      let preferences = await storage.getUserNotificationPreferences(userId);
+      if (!preferences) {
+        // Return default preferences
+        preferences = {
+          id: "",
+          userId,
+          pushEnabled: true,
+          newsNotifications: true,
+          accommodationNotifications: true,
+          tipNotifications: true,
+          routeNotifications: true,
+          promoNotifications: true,
+          updatedAt: new Date(),
+        };
+      }
+      return res.json({ preferences });
+    } catch (error) {
+      console.error("Get notification preferences error:", error);
+      return res.status(500).json({ error: "Erro ao buscar preferencias" });
+    }
+  });
+
+  // User: Update notification preferences
+  app.put("/api/user/:userId/notification-preferences", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const validationResult = updateNotificationPreferencesSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+
+      const preferences = await storage.createOrUpdateNotificationPreferences(userId, validationResult.data);
+      return res.json({ preferences });
+    } catch (error) {
+      console.error("Update notification preferences error:", error);
+      return res.status(500).json({ error: "Erro ao atualizar preferencias" });
+    }
+  });
+
+  // Activity Log (for smart suggestions)
+  app.post("/api/activity", async (req, res) => {
+    try {
+      const validationResult = createActivityLogSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+
+      const log = await storage.createActivityLog(validationResult.data);
+      return res.status(201).json({ log });
+    } catch (error) {
+      console.error("Create activity log error:", error);
+      return res.status(500).json({ error: "Erro ao registrar atividade" });
+    }
+  });
+
+  // Smart Suggestions based on user activity
+  app.get("/api/user/:userId/suggestions", async (req, res) => {
+    try {
+      const { userId } = req.params;
+      const suggestions: any[] = [];
+
+      // Get recent activity
+      const recentAccommodationViews = await storage.getRecentActivityByType(userId, "view_accommodation");
+      const recentRouteViews = await storage.getRecentActivityByType(userId, "view_route");
+
+      // If user viewed accommodations, suggest tips
+      if (recentAccommodationViews.length > 0) {
+        const tips = await storage.getAllPilgrimTips(true);
+        if (tips.length > 0) {
+          suggestions.push({
+            type: "tip",
+            title: "Dicas para sua hospedagem",
+            body: "Veja nossas dicas para aproveitar melhor sua estadia em Trindade",
+            actionType: "navigate",
+            actionData: JSON.stringify({ screen: "DicasRomeiro" }),
+          });
+        }
+      }
+
+      // If user viewed routes, suggest accommodations
+      if (recentRouteViews.length > 0) {
+        const accommodations = await storage.getAllAccommodations(true);
+        if (accommodations.length > 0) {
+          suggestions.push({
+            type: "accommodation",
+            title: "Onde se hospedar?",
+            body: "Encontre as melhores opcoes de hospedagem em Trindade",
+            actionType: "navigate",
+            actionData: JSON.stringify({ screen: "Hospedagem" }),
+          });
+        }
+      }
+
+      // Always suggest news if there are recent ones
+      const news = await storage.getAllNews(true);
+      if (news.length > 0) {
+        suggestions.push({
+          type: "news",
+          title: "Fique por dentro!",
+          body: "Confira as ultimas noticias do Santuario",
+          actionType: "navigate",
+          actionData: JSON.stringify({ screen: "Noticias" }),
+        });
+      }
+
+      return res.json({ suggestions: suggestions.slice(0, 3) }); // Max 3 suggestions
+    } catch (error) {
+      console.error("Get suggestions error:", error);
+      return res.status(500).json({ error: "Erro ao buscar sugestoes" });
     }
   });
 

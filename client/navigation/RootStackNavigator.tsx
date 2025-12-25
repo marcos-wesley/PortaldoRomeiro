@@ -6,6 +6,8 @@ import LoginScreen from "@/screens/LoginScreen";
 import RegisterScreen from "@/screens/RegisterScreen";
 import ForgotPasswordScreen from "@/screens/ForgotPasswordScreen";
 import ProfileScreen from "@/screens/ProfileScreen";
+import NotificationsScreen from "@/screens/NotificationsScreen";
+import AdminNotificationsScreen from "@/screens/AdminNotificationsScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/hooks/useTheme";
@@ -13,6 +15,8 @@ import { useTheme } from "@/hooks/useTheme";
 export type RootStackParamList = {
   Main: undefined;
   Profile: undefined;
+  Notifications: undefined;
+  AdminNotifications: undefined;
   Login: undefined;
   Register: undefined;
   ForgotPassword: undefined;
@@ -47,6 +51,22 @@ export default function RootStackNavigator() {
             component={ProfileScreen}
             options={{ 
               headerTitle: "Meu Perfil",
+              presentation: "modal",
+            }}
+          />
+          <Stack.Screen
+            name="Notifications"
+            component={NotificationsScreen}
+            options={{ 
+              headerTitle: "Notificacoes",
+              presentation: "modal",
+            }}
+          />
+          <Stack.Screen
+            name="AdminNotifications"
+            component={AdminNotificationsScreen}
+            options={{ 
+              headerTitle: "Gerenciar Notificacoes",
               presentation: "modal",
             }}
           />

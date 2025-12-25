@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type UpdateProfileInput, users, type News, type InsertNews, type UpdateNewsInput, news, type Video, type InsertVideo, type UpdateVideoInput, videos, type Attraction, type InsertAttraction, type UpdateAttractionInput, attractions, type StaticPage, type InsertStaticPage, type UpdateStaticPageInput, staticPages, type UsefulPhone, type CreateUsefulPhoneInput, type UpdateUsefulPhoneInput, usefulPhones, type PilgrimTip, type CreatePilgrimTipInput, type UpdatePilgrimTipInput, pilgrimTips, type Service, type CreateServiceInput, type UpdateServiceInput, services, type Business, type CreateBusinessInput, type UpdateBusinessInput, businesses, type BusinessReview, type CreateBusinessReviewInput, businessReviews, type Accommodation, type CreateAccommodationInput, type UpdateAccommodationInput, accommodations, type Room, type CreateRoomInput, type UpdateRoomInput, rooms, type RoomBlockedDate, type CreateRoomBlockedDateInput, roomBlockedDates, type AccommodationReview, type CreateAccommodationReviewInput, accommodationReviews, type Partner, type CreatePartnerInput, type UpdatePartnerInput, partners, type Banner, type CreateBannerInput, type UpdateBannerInput, banners } from "@shared/schema";
+import { type User, type InsertUser, type UpdateProfileInput, users, type News, type InsertNews, type UpdateNewsInput, news, type Video, type InsertVideo, type UpdateVideoInput, videos, type Attraction, type InsertAttraction, type UpdateAttractionInput, attractions, type StaticPage, type InsertStaticPage, type UpdateStaticPageInput, staticPages, type UsefulPhone, type CreateUsefulPhoneInput, type UpdateUsefulPhoneInput, usefulPhones, type PilgrimTip, type CreatePilgrimTipInput, type UpdatePilgrimTipInput, pilgrimTips, type Service, type CreateServiceInput, type UpdateServiceInput, services, type Business, type CreateBusinessInput, type UpdateBusinessInput, businesses, type BusinessReview, type CreateBusinessReviewInput, businessReviews, type Accommodation, type CreateAccommodationInput, type UpdateAccommodationInput, accommodations, type Room, type CreateRoomInput, type UpdateRoomInput, rooms, type RoomBlockedDate, type CreateRoomBlockedDateInput, roomBlockedDates, type AccommodationReview, type CreateAccommodationReviewInput, accommodationReviews, type Partner, type CreatePartnerInput, type UpdatePartnerInput, partners, type Banner, type CreateBannerInput, type UpdateBannerInput, banners, type Notification, type CreateNotificationInput, type UpdateNotificationInput, notifications, type UserNotification, userNotifications, type PushDevice, type RegisterPushDeviceInput, pushDevices, type UserNotificationPreference, type UpdateNotificationPreferencesInput, userNotificationPreferences, type UserActivityLog, type CreateActivityLogInput, userActivityLogs } from "@shared/schema";
 import { db } from "./db";
 import { eq, count, desc, ilike, or, and, asc } from "drizzle-orm";
 
@@ -691,6 +691,190 @@ export class DatabaseStorage implements IStorage {
   async getBannersCount(): Promise<number> {
     const result = await db.select({ count: count() }).from(banners);
     return result[0]?.count ?? 0;
+  }
+
+  // Notifications
+  async getAllNotifications(): Promise<Notification[]> {
+    return await db.select().from(notifications).orderBy(desc(notifications.createdAt));
+  }
+
+  async getNotificationById(id: string): Promise<Notification | undefined> {
+    const result = await db.select().from(notifications).where(eq(notifications.id, id));
+    return result[0];
+  }
+
+  async createNotification(data: CreateNotificationInput): Promise<Notification> {
+    const notificationData: any = { ...data };
+    if (data.scheduledAt) notificationData.scheduledAt = new Date(data.scheduledAt);
+    const result = await db.insert(notifications).values(notificationData).returning();
+    return result[0];
+  }
+
+  async updateNotification(id: string, data: UpdateNotificationInput): Promise<Notification | undefined> {
+    const updateData: any = { ...data };
+    if (data.scheduledAt) updateData.scheduledAt = new Date(data.scheduledAt);
+    const result = await db.update(notifications).set(updateData).where(eq(notifications.id, id)).returning();
+    return result[0];
+  }
+
+  async deleteNotification(id: string): Promise<boolean> {
+    const result = await db.delete(notifications).where(eq(notifications.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async markNotificationSent(id: string): Promise<Notification | undefined> {
+    const result = await db.update(notifications).set({ sent: true, sentAt: new Date() }).where(eq(notifications.id, id)).returning();
+    return result[0];
+  }
+
+  async getNotificationsCount(): Promise<number> {
+    const result = await db.select({ count: count() }).from(notifications);
+    return result[0]?.count ?? 0;
+  }
+
+  async getPendingScheduledNotifications(): Promise<Notification[]> {
+    return await db.select().from(notifications)
+      .where(and(eq(notifications.scheduled, true), eq(notifications.sent, false)));
+  }
+
+  // User Notifications (inbox)
+  async getUserNotifications(userId: string): Promise<UserNotification[]> {
+    return await db.select().from(userNotifications)
+      .where(eq(userNotifications.userId, userId))
+      .orderBy(desc(userNotifications.createdAt));
+  }
+
+  async getUnreadUserNotificationsCount(userId: string): Promise<number> {
+    const result = await db.select({ count: count() }).from(userNotifications)
+      .where(and(eq(userNotifications.userId, userId), eq(userNotifications.read, false)));
+    return result[0]?.count ?? 0;
+  }
+
+  async createUserNotification(data: {
+    userId: string;
+    notificationId?: string;
+    title: string;
+    body: string;
+    type?: string;
+    actionType?: string;
+    actionData?: string;
+    imageUrl?: string;
+  }): Promise<UserNotification> {
+    const result = await db.insert(userNotifications).values(data).returning();
+    return result[0];
+  }
+
+  async markUserNotificationRead(id: string): Promise<UserNotification | undefined> {
+    const result = await db.update(userNotifications)
+      .set({ read: true, readAt: new Date() })
+      .where(eq(userNotifications.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async markAllUserNotificationsRead(userId: string): Promise<void> {
+    await db.update(userNotifications)
+      .set({ read: true, readAt: new Date() })
+      .where(eq(userNotifications.userId, userId));
+  }
+
+  async deleteUserNotification(id: string): Promise<boolean> {
+    const result = await db.delete(userNotifications).where(eq(userNotifications.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Push Devices
+  async registerPushDevice(data: RegisterPushDeviceInput): Promise<PushDevice> {
+    const existing = await db.select().from(pushDevices).where(eq(pushDevices.pushToken, data.pushToken));
+    if (existing[0]) {
+      const updated = await db.update(pushDevices)
+        .set({ userId: data.userId, lastActive: new Date() })
+        .where(eq(pushDevices.pushToken, data.pushToken))
+        .returning();
+      return updated[0];
+    }
+    const result = await db.insert(pushDevices).values(data).returning();
+    return result[0];
+  }
+
+  async getPushDevicesByUserId(userId: string): Promise<PushDevice[]> {
+    return await db.select().from(pushDevices).where(eq(pushDevices.userId, userId));
+  }
+
+  async getAllPushDevices(): Promise<PushDevice[]> {
+    return await db.select().from(pushDevices);
+  }
+
+  async deletePushDevice(pushToken: string): Promise<boolean> {
+    const result = await db.delete(pushDevices).where(eq(pushDevices.pushToken, pushToken)).returning();
+    return result.length > 0;
+  }
+
+  async getPushDevicesCount(): Promise<number> {
+    const result = await db.select({ count: count() }).from(pushDevices);
+    return result[0]?.count ?? 0;
+  }
+
+  // User Notification Preferences
+  async getUserNotificationPreferences(userId: string): Promise<UserNotificationPreference | undefined> {
+    const result = await db.select().from(userNotificationPreferences)
+      .where(eq(userNotificationPreferences.userId, userId));
+    return result[0];
+  }
+
+  async createOrUpdateNotificationPreferences(userId: string, data: UpdateNotificationPreferencesInput): Promise<UserNotificationPreference> {
+    const existing = await this.getUserNotificationPreferences(userId);
+    if (existing) {
+      const result = await db.update(userNotificationPreferences)
+        .set({ ...data, updatedAt: new Date() })
+        .where(eq(userNotificationPreferences.userId, userId))
+        .returning();
+      return result[0];
+    }
+    const result = await db.insert(userNotificationPreferences)
+      .values({ userId, ...data })
+      .returning();
+    return result[0];
+  }
+
+  // User Activity Logs
+  async createActivityLog(data: CreateActivityLogInput): Promise<UserActivityLog> {
+    const result = await db.insert(userActivityLogs).values(data).returning();
+    return result[0];
+  }
+
+  async getUserActivityLogs(userId: string, limit = 50): Promise<UserActivityLog[]> {
+    return await db.select().from(userActivityLogs)
+      .where(eq(userActivityLogs.userId, userId))
+      .orderBy(desc(userActivityLogs.createdAt))
+      .limit(limit);
+  }
+
+  async getRecentActivityByType(userId: string, activityType: string): Promise<UserActivityLog[]> {
+    return await db.select().from(userActivityLogs)
+      .where(and(eq(userActivityLogs.userId, userId), eq(userActivityLogs.activityType, activityType)))
+      .orderBy(desc(userActivityLogs.createdAt))
+      .limit(10);
+  }
+
+  // Send notification to all users (creates userNotifications entries)
+  async broadcastNotification(notification: Notification): Promise<number> {
+    const allUsers = await this.getAllUsers();
+    let count = 0;
+    for (const user of allUsers) {
+      await this.createUserNotification({
+        userId: user.id,
+        notificationId: notification.id,
+        title: notification.title,
+        body: notification.body,
+        type: notification.type || "general",
+        actionType: notification.actionType || undefined,
+        actionData: notification.actionData || undefined,
+        imageUrl: notification.imageUrl || undefined,
+      });
+      count++;
+    }
+    return count;
   }
 }
 

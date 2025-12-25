@@ -793,3 +793,154 @@ export const updateBannerSchema = z.object({
 export type Banner = typeof banners.$inferSelect;
 export type CreateBannerInput = z.infer<typeof createBannerSchema>;
 export type UpdateBannerInput = z.infer<typeof updateBannerSchema>;
+
+// Notificacoes (Notifications)
+export const notifications = pgTable("notifications", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  type: text("type").default("general"), // general, news, accommodation, tip, route, promo
+  targetType: text("target_type").default("all"), // all, user, segment
+  targetId: text("target_id"), // userId or segment identifier
+  actionType: text("action_type"), // navigate, link, none
+  actionData: text("action_data"), // JSON: {screen: 'NoticiaDetail', params: {id: '123'}} or {url: '...'}
+  imageUrl: text("image_url"),
+  sendPush: boolean("send_push").default(true),
+  scheduled: boolean("scheduled").default(false),
+  scheduledAt: timestamp("scheduled_at"),
+  sent: boolean("sent").default(false),
+  sentAt: timestamp("sent_at"),
+  createdBy: varchar("created_by"), // Admin userId who created the notification
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const createNotificationSchema = z.object({
+  title: z.string().min(2, "Titulo deve ter pelo menos 2 caracteres"),
+  body: z.string().min(5, "Mensagem deve ter pelo menos 5 caracteres"),
+  type: z.string().optional().default("general"),
+  targetType: z.string().optional().default("all"),
+  targetId: z.string().optional().nullable(),
+  actionType: z.string().optional().nullable(),
+  actionData: z.string().optional().nullable(),
+  imageUrl: z.string().optional().nullable(),
+  sendPush: z.boolean().optional().default(true),
+  scheduled: z.boolean().optional().default(false),
+  scheduledAt: z.string().optional().nullable(),
+  createdBy: z.string().optional().nullable(),
+});
+
+export const updateNotificationSchema = z.object({
+  title: z.string().min(2).optional(),
+  body: z.string().min(5).optional(),
+  type: z.string().optional(),
+  targetType: z.string().optional(),
+  targetId: z.string().optional().nullable(),
+  actionType: z.string().optional().nullable(),
+  actionData: z.string().optional().nullable(),
+  imageUrl: z.string().optional().nullable(),
+  sendPush: z.boolean().optional(),
+  scheduled: z.boolean().optional(),
+  scheduledAt: z.string().optional().nullable(),
+});
+
+export type Notification = typeof notifications.$inferSelect;
+export type CreateNotificationInput = z.infer<typeof createNotificationSchema>;
+export type UpdateNotificationInput = z.infer<typeof updateNotificationSchema>;
+
+// Notificacoes do Usuario (User Notifications - inbox)
+export const userNotifications = pgTable("user_notifications", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  notificationId: varchar("notification_id"), // Linked to notifications table (for broadcast)
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  type: text("type").default("general"),
+  actionType: text("action_type"),
+  actionData: text("action_data"),
+  imageUrl: text("image_url"),
+  read: boolean("read").default(false),
+  readAt: timestamp("read_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type UserNotification = typeof userNotifications.$inferSelect;
+
+// Dispositivos Push (Push Devices)
+export const pushDevices = pgTable("push_devices", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: varchar("user_id"),
+  pushToken: text("push_token").notNull().unique(),
+  platform: text("platform"), // ios, android, web
+  deviceName: text("device_name"),
+  lastActive: timestamp("last_active").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const registerPushDeviceSchema = z.object({
+  userId: z.string().optional().nullable(),
+  pushToken: z.string().min(10, "Token invalido"),
+  platform: z.string().optional().nullable(),
+  deviceName: z.string().optional().nullable(),
+});
+
+export type PushDevice = typeof pushDevices.$inferSelect;
+export type RegisterPushDeviceInput = z.infer<typeof registerPushDeviceSchema>;
+
+// Preferencias de Notificacao do Usuario
+export const userNotificationPreferences = pgTable("user_notification_preferences", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().unique(),
+  pushEnabled: boolean("push_enabled").default(true),
+  newsNotifications: boolean("news_notifications").default(true),
+  accommodationNotifications: boolean("accommodation_notifications").default(true),
+  tipNotifications: boolean("tip_notifications").default(true),
+  routeNotifications: boolean("route_notifications").default(true),
+  promoNotifications: boolean("promo_notifications").default(true),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const updateNotificationPreferencesSchema = z.object({
+  pushEnabled: z.boolean().optional(),
+  newsNotifications: z.boolean().optional(),
+  accommodationNotifications: z.boolean().optional(),
+  tipNotifications: z.boolean().optional(),
+  routeNotifications: z.boolean().optional(),
+  promoNotifications: z.boolean().optional(),
+});
+
+export type UserNotificationPreference = typeof userNotificationPreferences.$inferSelect;
+export type UpdateNotificationPreferencesInput = z.infer<typeof updateNotificationPreferencesSchema>;
+
+// Logs de Eventos de Usuario (para sugestoes automaticas)
+export const userActivityLogs = pgTable("user_activity_logs", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: varchar("user_id"),
+  deviceId: varchar("device_id"), // For anonymous users
+  activityType: text("activity_type").notNull(), // view_accommodation, view_route, view_news, search, etc
+  resourceType: text("resource_type"), // accommodation, attraction, news, etc
+  resourceId: varchar("resource_id"),
+  metadata: text("metadata"), // JSON with additional context
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const createActivityLogSchema = z.object({
+  userId: z.string().optional().nullable(),
+  deviceId: z.string().optional().nullable(),
+  activityType: z.string(),
+  resourceType: z.string().optional().nullable(),
+  resourceId: z.string().optional().nullable(),
+  metadata: z.string().optional().nullable(),
+});
+
+export type UserActivityLog = typeof userActivityLogs.$inferSelect;
+export type CreateActivityLogInput = z.infer<typeof createActivityLogSchema>;
