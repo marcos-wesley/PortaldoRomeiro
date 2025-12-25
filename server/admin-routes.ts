@@ -6,6 +6,7 @@ import multer from "multer";
 import { storage } from "./storage";
 import { createNewsSchema, updateNewsSchema, createVideoSchema, updateVideoSchema, createAttractionSchema, updateAttractionSchema, createUsefulPhoneSchema, updateUsefulPhoneSchema, createPilgrimTipSchema, updatePilgrimTipSchema, createServiceSchema, updateServiceSchema, createBusinessSchema, updateBusinessSchema, createAccommodationSchema, updateAccommodationSchema, createRoomSchema, updateRoomSchema, createRoomBlockedDateSchema, createPartnerSchema, updatePartnerSchema, createBannerSchema, updateBannerSchema } from "@shared/schema";
 import { fromError } from "zod-validation-error";
+import { updatesHub } from "./updates-hub";
 
 const uploadsDir = path.join(process.cwd(), "server", "uploads", "empresas");
 const uploadsHospedagensDir = path.join(process.cwd(), "server", "uploads", "hospedagens");
@@ -579,7 +580,7 @@ export function registerAdminRoutes(app: Express) {
 
       const newsData = validationResult.data;
       const created = await storage.createNews(newsData);
-      
+      updatesHub.broadcast("news");
       return res.status(201).json({ news: created, message: "Noticia criada com sucesso!" });
     } catch (error) {
       console.error("Admin create news error:", error);
@@ -602,7 +603,7 @@ export function registerAdminRoutes(app: Express) {
       if (!updated) {
         return res.status(404).json({ error: "Noticia nao encontrada" });
       }
-
+      updatesHub.broadcast("news");
       return res.json({ news: updated, message: "Noticia atualizada com sucesso!" });
     } catch (error) {
       console.error("Admin update news error:", error);
@@ -618,7 +619,7 @@ export function registerAdminRoutes(app: Express) {
       if (!deleted) {
         return res.status(404).json({ error: "Noticia nao encontrada" });
       }
-
+      updatesHub.broadcast("news");
       return res.json({ message: "Noticia excluida com sucesso!" });
     } catch (error) {
       console.error("Admin delete news error:", error);
@@ -663,7 +664,7 @@ export function registerAdminRoutes(app: Express) {
 
       const videoData = validationResult.data;
       const created = await storage.createVideo(videoData);
-      
+      updatesHub.broadcast("videos");
       return res.status(201).json({ video: created, message: "Video criado com sucesso!" });
     } catch (error) {
       console.error("Admin create video error:", error);
@@ -686,7 +687,7 @@ export function registerAdminRoutes(app: Express) {
       if (!updated) {
         return res.status(404).json({ error: "Video nao encontrado" });
       }
-
+      updatesHub.broadcast("videos");
       return res.json({ video: updated, message: "Video atualizado com sucesso!" });
     } catch (error) {
       console.error("Admin update video error:", error);
@@ -702,7 +703,7 @@ export function registerAdminRoutes(app: Express) {
       if (!deleted) {
         return res.status(404).json({ error: "Video nao encontrado" });
       }
-
+      updatesHub.broadcast("videos");
       return res.json({ message: "Video excluido com sucesso!" });
     } catch (error) {
       console.error("Admin delete video error:", error);
@@ -874,6 +875,7 @@ export function registerAdminRoutes(app: Express) {
         return res.status(400).json({ error: errorMessage });
       }
       const created = await storage.createUsefulPhone(validationResult.data);
+      updatesHub.broadcast("useful-phones");
       return res.status(201).json({ phone: created, message: "Telefone criado com sucesso!" });
     } catch (error) {
       console.error("Admin create useful phone error:", error);
@@ -893,6 +895,7 @@ export function registerAdminRoutes(app: Express) {
       if (!updated) {
         return res.status(404).json({ error: "Telefone nao encontrado" });
       }
+      updatesHub.broadcast("useful-phones");
       return res.json({ phone: updated, message: "Telefone atualizado com sucesso!" });
     } catch (error) {
       console.error("Admin update useful phone error:", error);
@@ -907,6 +910,7 @@ export function registerAdminRoutes(app: Express) {
       if (!deleted) {
         return res.status(404).json({ error: "Telefone nao encontrado" });
       }
+      updatesHub.broadcast("useful-phones");
       return res.json({ message: "Telefone excluido com sucesso!" });
     } catch (error) {
       console.error("Admin delete useful phone error:", error);
@@ -1404,6 +1408,7 @@ export function registerAdminRoutes(app: Express) {
         return res.status(400).json({ error: errorMessage });
       }
       const partner = await storage.createPartner(validationResult.data);
+      updatesHub.broadcast("partners");
       return res.status(201).json({ partner, message: "Parceiro criado com sucesso!" });
     } catch (error) {
       console.error("Admin create partner error:", error);
@@ -1423,6 +1428,7 @@ export function registerAdminRoutes(app: Express) {
       if (!partner) {
         return res.status(404).json({ error: "Parceiro nao encontrado" });
       }
+      updatesHub.broadcast("partners");
       return res.json({ partner, message: "Parceiro atualizado com sucesso!" });
     } catch (error) {
       console.error("Admin update partner error:", error);
@@ -1437,6 +1443,7 @@ export function registerAdminRoutes(app: Express) {
       if (!deleted) {
         return res.status(404).json({ error: "Parceiro nao encontrado" });
       }
+      updatesHub.broadcast("partners");
       return res.json({ message: "Parceiro excluido com sucesso!" });
     } catch (error) {
       console.error("Admin delete partner error:", error);
@@ -1484,6 +1491,7 @@ export function registerAdminRoutes(app: Express) {
         return res.status(400).json({ error: errorMessage });
       }
       const banner = await storage.createBanner(validationResult.data);
+      updatesHub.broadcast("banners");
       return res.status(201).json({ banner, message: "Banner criado com sucesso!" });
     } catch (error) {
       console.error("Admin create banner error:", error);
@@ -1503,6 +1511,7 @@ export function registerAdminRoutes(app: Express) {
       if (!banner) {
         return res.status(404).json({ error: "Banner nao encontrado" });
       }
+      updatesHub.broadcast("banners");
       return res.json({ banner, message: "Banner atualizado com sucesso!" });
     } catch (error) {
       console.error("Admin update banner error:", error);
@@ -1517,6 +1526,7 @@ export function registerAdminRoutes(app: Express) {
       if (!deleted) {
         return res.status(404).json({ error: "Banner nao encontrado" });
       }
+      updatesHub.broadcast("banners");
       return res.json({ message: "Banner excluido com sucesso!" });
     } catch (error) {
       console.error("Admin delete banner error:", error);

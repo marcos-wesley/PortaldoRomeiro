@@ -6,6 +6,7 @@ import { storage } from "./storage";
 import { fromError } from "zod-validation-error";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { updatesHub } from "./updates-hub";
 
 function hashPassword(password: string): string {
   const salt = randomBytes(32).toString("hex");
@@ -25,6 +26,16 @@ function verifyPassword(password: string, storedHash: string): boolean {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Real-time updates SSE endpoint
+  app.get("/api/updates/stream", (req, res) => {
+    const clientId = `client_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    updatesHub.addClient(clientId, res);
+    
+    req.on("close", () => {
+      // Client disconnected, handled in updatesHub
+    });
+  });
+
   app.post("/api/auth/register", async (req, res) => {
     try {
       const validationResult = registerUserSchema.safeParse(req.body);

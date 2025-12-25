@@ -14,6 +14,12 @@ import SplashScreen from "@/screens/SplashScreen";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PushNotificationProvider } from "@/contexts/PushNotificationContext";
+import { useRealtimeUpdates } from "@/hooks/useRealtimeUpdates";
+
+function RealtimeUpdatesProvider({ children }: { children: React.ReactNode }) {
+  useRealtimeUpdates();
+  return <>{children}</>;
+}
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -37,20 +43,22 @@ export default function App() {
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
-          <SafeAreaProvider>
-            <GestureHandlerRootView style={styles.root}>
-              <KeyboardProvider>
-                <NavigationContainer ref={navigationRef}>
-                  <PushNotificationProvider navigationRef={navigationRef}>
-                    <RootStackNavigator />
-                  </PushNotificationProvider>
-                </NavigationContainer>
-                <StatusBar style="auto" />
-              </KeyboardProvider>
-            </GestureHandlerRootView>
-          </SafeAreaProvider>
-        </AuthProvider>
+        <RealtimeUpdatesProvider>
+          <AuthProvider>
+            <SafeAreaProvider>
+              <GestureHandlerRootView style={styles.root}>
+                <KeyboardProvider>
+                  <NavigationContainer ref={navigationRef}>
+                    <PushNotificationProvider navigationRef={navigationRef}>
+                      <RootStackNavigator />
+                    </PushNotificationProvider>
+                  </NavigationContainer>
+                  <StatusBar style="auto" />
+                </KeyboardProvider>
+              </GestureHandlerRootView>
+            </SafeAreaProvider>
+          </AuthProvider>
+        </RealtimeUpdatesProvider>
       </QueryClientProvider>
     </ErrorBoundary>
   );
