@@ -15,6 +15,7 @@ import Animated, {
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
 import { Button } from "@/components/Button";
+import { PartnerBanner } from "@/components/PartnerBanner";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Colors } from "@/constants/theme";
 import { HomeStackParamList } from "@/navigation/HomeStackNavigator";
@@ -458,6 +459,10 @@ export default function HospedagemScreen() {
           {accommodations.length} {accommodations.length === 1 ? "opcao encontrada" : "opcoes encontradas"}
         </ThemedText>
       ) : null}
+
+      <View style={{ marginHorizontal: -Spacing.lg, marginBottom: Spacing.md }}>
+        <PartnerBanner type="accommodation" />
+      </View>
     </View>
   );
 

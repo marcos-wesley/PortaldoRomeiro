@@ -15,6 +15,7 @@ import { useQuery } from "@tanstack/react-query";
 
 import { ThemedText } from "@/components/ThemedText";
 import { ThemedView } from "@/components/ThemedView";
+import { PartnerBanner } from "@/components/PartnerBanner";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Colors, Typography } from "@/constants/theme";
 import { businessCategories, BusinessCategory } from "@/lib/data";
@@ -457,6 +458,8 @@ export default function GuiaScreen() {
           </View>
         </View>
       ) : null}
+
+      <PartnerBanner type="business" />
     </ScrollView>
   );
 }
