@@ -369,6 +369,11 @@ export function registerAdminRoutes(app: Express) {
     res.sendFile(noticiasPath);
   });
 
+  app.get("/admin/notificacoes", requireAuth, (req, res) => {
+    const notificacoesPath = path.join(__dirname, "admin", "notificacoes.html");
+    res.sendFile(notificacoesPath);
+  });
+
   app.get("/admin/noticias/nova", requireAuth, (req, res) => {
     const formPath = path.join(__dirname, "admin", "noticias-form.html");
     res.sendFile(formPath);

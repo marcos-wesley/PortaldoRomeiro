@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notificacoes - Admin Portal do Romeiro</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f8f9fa;
+      min-height: 100vh;
+      display: flex;
+    }
+    .sidebar {
+      width: 260px;
+      background: #1a1a2e;
+      color: white;
+      position: fixed;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-header {
+      padding: 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      flex-shrink: 0;
+    }
+    .sidebar-header h1 { color: #b22226; font-size: 18px; margin-bottom: 4px; }
+    .sidebar-header p { color: #9ca3af; font-size: 12px; }
+    .sidebar nav {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 0;
+    }
+    .nav-section {
+      padding: 0 16px;
+      margin-bottom: 16px;
+    }
+    .nav-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #9ca3af;
+      padding: 0 8px;
+      margin-bottom: 8px;
+    }
+    .nav-item {
+      display: block;
+      padding: 12px 16px;
+      color: #9ca3af;
+      text-decoration: none;
+      border-radius: 8px;
+      margin-bottom: 4px;
+    }
+    .nav-item:hover { background: #16213e; color: white; }
+    .nav-item.active { background: #b22226; color: white; }
+    .sidebar-footer {
+      margin-top: auto;
+      padding: 16px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      flex-shrink: 0;
+    }
+    .logout-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      color: #ef4444;
+      text-decoration: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .logout-btn:hover { background: rgba(239, 68, 68, 0.1); }
+    .main {
+      flex: 1;
+      margin-left: 260px;
+      padding: 32px;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+    .header h2 { font-size: 24px; color: #1f2937; }
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-primary { background: #b22226; color: white; }
+    .btn-primary:hover { background: #8b1a1d; }
+    .btn-secondary { background: #e5e7eb; color: #374151; }
+    .btn-secondary:hover { background: #d1d5db; }
+    .btn-danger { background: #ef4444; color: white; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-success { background: #22c55e; color: white; }
+    .btn-success:hover { background: #16a34a; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .stat-card h4 { color: #6b7280; font-size: 12px; margin-bottom: 8px; text-transform: uppercase; }
+    .stat-card .value { font-size: 32px; font-weight: 700; color: #1f2937; }
+    .table-container {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 16px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    th {
+      background: #f9fafb;
+      font-weight: 600;
+      color: #374151;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+    td { color: #4b5563; }
+    .notif-title { color: #1f2937; font-weight: 500; }
+    .notif-body { color: #6b7280; font-size: 13px; max-width: 300px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .badge-success { background: #d1fae5; color: #059669; }
+    .badge-warning { background: #fef3c7; color: #d97706; }
+    .badge-info { background: #dbeafe; color: #2563eb; }
+    .badge-secondary { background: #e5e7eb; color: #6b7280; }
+    .actions { display: flex; gap: 8px; }
+    .empty-state {
+      text-align: center;
+      padding: 64px 32px;
+      color: #6b7280;
+    }
+    .empty-state h3 { color: #374151; margin-bottom: 8px; }
+    .loading {
+      text-align: center;
+      padding: 48px;
+      color: #6b7280;
+    }
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: white;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h3 { font-size: 18px; color: #1f2937; }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #6b7280;
+    }
+    .modal-body { padding: 24px; }
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+    .form-group { margin-bottom: 16px; }
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+    .form-group input, .form-group textarea, .form-group select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .form-group textarea { resize: vertical; min-height: 100px; }
+    .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+      outline: none;
+      border-color: #b22226;
+    }
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .checkbox-group input { width: auto; }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h1>Portal do Romeiro</h1>
+      <p>Painel Administrativo</p>
+    </div>
+    
+    <nav>
+      <div class="nav-section">
+        <div class="nav-section-title">Principal</div>
+        <a href="/admin/dashboard" class="nav-item">Dashboard</a>
+      </div>
+      
+      <div class="nav-section">
+        <div class="nav-section-title">Conteudo</div>
+        <a href="/admin/noticias" class="nav-item">Noticias</a>
+        <a href="/admin/videos" class="nav-item">Videos</a>
+        <a href="/admin/hospedagens" class="nav-item">Hospedagens</a>
+        <a href="/admin/eventos" class="nav-item">Eventos</a>
+        <a href="/admin/oracoes" class="nav-item">Oracoes</a>
+        <a href="/admin/pontos-turisticos" class="nav-item">Pontos Turisticos</a>
+        <a href="/admin/paginas" class="nav-item">Paginas Estaticas</a>
+        <a href="/admin/telefones" class="nav-item">Telefones Uteis</a>
+        <a href="/admin/dicas" class="nav-item">Dicas do Romeiro</a>
+        <a href="/admin/servicos" class="nav-item">Servicos</a>
+        <a href="/admin/empresas" class="nav-item">Guia Comercial</a>
+      </div>
+      
+      <div class="nav-section">
+        <div class="nav-section-title">Comunicacao</div>
+        <a href="/admin/notificacoes" class="nav-item active">Notificacoes</a>
+      </div>
+      
+      <div class="nav-section">
+        <div class="nav-section-title">Usuarios</div>
+        <a href="/admin/usuarios" class="nav-item">Usuarios</a>
+      </div>
+      
+      <div class="nav-section">
+        <div class="nav-section-title">Marketing</div>
+        <a href="/admin/parceiros" class="nav-item">Parceiros</a>
+        <a href="/admin/banners" class="nav-item">Banners</a>
+      </div>
+      
+      <div class="nav-section">
+        <div class="nav-section-title">Configuracoes</div>
+        <a href="/admin/configuracoes" class="nav-item">Configuracoes</a>
+      </div>
+    </nav>
+    
+    <div class="sidebar-footer">
+      <a class="logout-btn" onclick="fetch('/admin/api/logout', {method:'POST'}).then(()=>location.href='/admin')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+        <span>Sair</span>
+      </a>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="header">
+      <h2>Notificacoes</h2>
+      <button class="btn btn-primary" onclick="openModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+        Nova Notificacao
+      </button>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h4>Total de Notificacoes</h4>
+        <div class="value" id="totalNotifications">0</div>
+      </div>
+      <div class="stat-card">
+        <h4>Dispositivos Registrados</h4>
+        <div class="value" id="totalDevices">0</div>
+      </div>
+      <div class="stat-card">
+        <h4>Usuarios Ativos</h4>
+        <div class="value" id="totalUsers">0</div>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Titulo</th>
+            <th>Mensagem</th>
+            <th>Tipo</th>
+            <th>Status</th>
+            <th>Data</th>
+            <th>Acoes</th>
+          </tr>
+        </thead>
+        <tbody id="notificationsTable">
+          <tr>
+            <td colspan="6" class="loading">Carregando...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modalTitle">Nova Notificacao</h3>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="notificationId">
+        <div class="form-group">
+          <label for="title">Titulo *</label>
+          <input type="text" id="title" placeholder="Titulo da notificacao">
+        </div>
+        <div class="form-group">
+          <label for="body">Mensagem *</label>
+          <textarea id="body" placeholder="Conteudo da notificacao"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="type">Tipo</label>
+          <select id="type">
+            <option value="general">Geral</option>
+            <option value="news">Noticia</option>
+            <option value="accommodation">Hospedagem</option>
+            <option value="tip">Dica</option>
+            <option value="route">Roteiro</option>
+            <option value="promo">Promocao</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <div class="checkbox-group">
+            <input type="checkbox" id="sendPush" checked>
+            <label for="sendPush">Enviar push notification para dispositivos</label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
+        <button class="btn btn-primary" onclick="saveNotification()">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let notifications = [];
+
+    async function loadStats() {
+      try {
+        const res = await fetch('/api/admin/notifications/stats');
+        const data = await res.json();
+        document.getElementById('totalNotifications').textContent = data.notificationsCount || 0;
+        document.getElementById('totalDevices').textContent = data.devicesCount || 0;
+        document.getElementById('totalUsers').textContent = data.usersCount || 0;
+      } catch (e) {
+        console.error('Error loading stats:', e);
+      }
+    }
+
+    async function loadNotifications() {
+      try {
+        const res = await fetch('/api/admin/notifications');
+        const data = await res.json();
+        notifications = data.notifications || [];
+        renderTable();
+      } catch (e) {
+        document.getElementById('notificationsTable').innerHTML = 
+          '<tr><td colspan="6" class="empty-state"><h3>Erro ao carregar</h3><p>Tente novamente mais tarde</p></td></tr>';
+      }
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('notificationsTable');
+      
+      if (notifications.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><h3>Nenhuma notificacao</h3><p>Crie sua primeira notificacao</p></td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = notifications.map(n => `
+        <tr>
+          <td class="notif-title">${escapeHtml(n.title)}</td>
+          <td class="notif-body">${escapeHtml(n.body)}</td>
+          <td><span class="badge badge-info">${getTypeLabel(n.type)}</span></td>
+          <td>${n.sent ? '<span class="badge badge-success">Enviada</span>' : '<span class="badge badge-warning">Pendente</span>'}</td>
+          <td>${formatDate(n.createdAt)}</td>
+          <td class="actions">
+            ${!n.sent ? `<button class="btn btn-success btn-sm" onclick="sendNotification('${n.id}')">Enviar</button>` : ''}
+            <button class="btn btn-secondary btn-sm" onclick="editNotification('${n.id}')">Editar</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteNotification('${n.id}')">Excluir</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function getTypeLabel(type) {
+      const types = {
+        general: 'Geral',
+        news: 'Noticia',
+        accommodation: 'Hospedagem',
+        tip: 'Dica',
+        route: 'Roteiro',
+        promo: 'Promocao'
+      };
+      return types[type] || 'Geral';
+    }
+
+    function formatDate(date) {
+      if (!date) return '-';
+      return new Date(date).toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function openModal(notification = null) {
+      document.getElementById('modalTitle').textContent = notification ? 'Editar Notificacao' : 'Nova Notificacao';
+      document.getElementById('notificationId').value = notification?.id || '';
+      document.getElementById('title').value = notification?.title || '';
+      document.getElementById('body').value = notification?.body || '';
+      document.getElementById('type').value = notification?.type || 'general';
+      document.getElementById('sendPush').checked = notification?.sendPush !== false;
+      document.getElementById('modalOverlay').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('modalOverlay').classList.remove('active');
+    }
+
+    function editNotification(id) {
+      const notification = notifications.find(n => n.id === id);
+      if (notification) openModal(notification);
+    }
+
+    async function saveNotification() {
+      const id = document.getElementById('notificationId').value;
+      const title = document.getElementById('title').value.trim();
+      const body = document.getElementById('body').value.trim();
+      const type = document.getElementById('type').value;
+      const sendPush = document.getElementById('sendPush').checked;
+
+      if (!title || !body) {
+        alert('Preencha todos os campos obrigatorios');
+        return;
+      }
+
+      try {
+        const url = id ? `/api/admin/notifications/${id}` : '/api/admin/notifications';
+        const method = id ? 'PUT' : 'POST';
+        
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title, body, type, sendPush })
+        });
+
+        if (res.ok) {
+          closeModal();
+          loadNotifications();
+          loadStats();
+        } else {
+          const data = await res.json();
+          alert(data.error || 'Erro ao salvar');
+        }
+      } catch (e) {
+        alert('Erro ao salvar notificacao');
+      }
+    }
+
+    async function sendNotification(id) {
+      if (!confirm('Enviar esta notificacao para todos os usuarios?')) return;
+
+      try {
+        const res = await fetch(`/api/admin/notifications/${id}/send`, { method: 'POST' });
+        const data = await res.json();
+        
+        if (res.ok) {
+          alert(data.message || 'Notificacao enviada com sucesso!');
+          loadNotifications();
+        } else {
+          alert(data.error || 'Erro ao enviar');
+        }
+      } catch (e) {
+        alert('Erro ao enviar notificacao');
+      }
+    }
+
+    async function deleteNotification(id) {
+      if (!confirm('Tem certeza que deseja excluir esta notificacao?')) return;
+
+      try {
+        const res = await fetch(`/api/admin/notifications/${id}`, { method: 'DELETE' });
+        
+        if (res.ok) {
+          loadNotifications();
+          loadStats();
+        } else {
+          alert('Erro ao excluir');
+        }
+      } catch (e) {
+        alert('Erro ao excluir notificacao');
+      }
+    }
+
+    // Initialize
+    loadStats();
+    loadNotifications();
+  </script>
+</body>
+</html>
