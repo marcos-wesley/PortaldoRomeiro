@@ -972,7 +972,7 @@
   </main>
 
   <footer class="footer">
-    <p>Portal do Romeiro - Seu guia em Trindade | <a href="/">Voltar ao site</a></p>
+    <p>Portal do Romeiro - Seu guia em Trindade | <a href="/">Voltar ao site</a> | <a href="/minha-conta">Minha Conta</a></p>
   </footer>
 
   <div id="toast" class="toast"></div>
@@ -1181,7 +1181,9 @@
             el.style.borderColor = 'var(--primary)';
           } else {
             el.style.borderColor = '';
-            formData.append(field.replace('acc_basic_', ''), el.value);
+            let fieldName = field.replace('acc_basic_', '');
+            if (fieldName === 'type') fieldName = 'accommodation_type';
+            formData.append(fieldName, el.value);
           }
         });
         const logoFile = document.getElementById('acc_basic_logo_upload').files[0];
@@ -1195,7 +1197,9 @@
             el.style.borderColor = 'var(--primary)';
           } else {
             el.style.borderColor = '';
-            formData.append(field.replace('acc_', ''), el.value);
+            let fieldName = field.replace('acc_', '');
+            if (fieldName === 'type') fieldName = 'accommodation_type';
+            formData.append(fieldName, el.value);
           }
         });
         const optionalFields = ['acc_description', 'acc_website', 'acc_instagram', 'acc_checkin', 'acc_checkout'];

@@ -1741,7 +1741,7 @@ export function registerAdminRoutes(app: Express) {
           logoUrl: logoUrl,
           address: req.body.business_address || req.body.address,
           whatsapp: req.body.business_whatsapp || req.body.owner_phone,
-          published: plan === 'basic', // Basic plans are auto-published
+          published: false,
           city: 'Trindade',
         };
 
@@ -1831,7 +1831,7 @@ export function registerAdminRoutes(app: Express) {
         
         const accData: any = {
           name: req.body.name,
-          type: req.body.type || 'pousada',
+          type: req.body.accommodation_type || 'pousada',
           planType: isBasicPlan ? 'basic' : 'complete',
           planStatus: isBasicPlan ? 'active' : 'pending',
           ownerEmail: req.body.owner_email,
@@ -1839,7 +1839,7 @@ export function registerAdminRoutes(app: Express) {
           coverUrl: logoUrl,
           address: req.body.address,
           whatsapp: req.body.whatsapp,
-          published: isBasicPlan,
+          published: false,
           city: 'Trindade',
         };
 
