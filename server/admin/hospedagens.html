@@ -366,6 +366,7 @@
             <th>Tipo</th>
             <th>Cidade</th>
             <th>Quartos</th>
+            <th>Plano</th>
             <th>Status</th>
             <th>Destaque</th>
             <th>Acoes</th>
@@ -424,6 +425,37 @@
       }
     }
 
+    function getPlanBadge(plan, planStatus) {
+      const planName = plan === 'complete' ? 'Completo' : 'Gratuito';
+      let statusClass = 'badge-secondary';
+      let statusText = planName;
+      
+      if (plan === 'complete') {
+        switch (planStatus) {
+          case 'active':
+            statusClass = 'badge-success';
+            statusText = 'Completo - Pago';
+            break;
+          case 'pending':
+            statusClass = 'badge-warning';
+            statusText = 'Completo - Aguardando Pagamento';
+            break;
+          case 'pending_approval':
+            statusClass = 'badge-info';
+            statusText = 'Completo - Aguardando Aprovacao';
+            break;
+          default:
+            statusClass = 'badge-warning';
+            statusText = 'Completo - Pendente';
+        }
+      } else {
+        statusClass = 'badge-secondary';
+        statusText = 'Gratuito';
+      }
+      
+      return `<span class="badge ${statusClass}">${statusText}</span>`;
+    }
+
     function getTypeLabel(type) {
       const types = {
         'hotel': 'Hotel',
@@ -467,6 +499,9 @@
           </td>
           <td>${a.city || '-'}</td>
           <td>${a.roomCount || 0} quartos</td>
+          <td>
+            ${getPlanBadge(a.plan, a.planStatus)}
+          </td>
           <td>
             <span class="badge ${a.published ? 'badge-success' : 'badge-warning'}">
               ${a.published ? 'Publicado' : 'Rascunho'}

@@ -355,6 +355,7 @@
             <th>Empresa</th>
             <th>Categoria</th>
             <th>Cidade</th>
+            <th>Plano</th>
             <th>Status</th>
             <th>Destaque</th>
             <th>Acoes</th>
@@ -398,6 +399,37 @@
       }
     }
 
+    function getPlanBadge(plan, planStatus) {
+      const planName = plan === 'complete' ? 'Completo' : 'Gratuito';
+      let statusClass = 'badge-secondary';
+      let statusText = planName;
+      
+      if (plan === 'complete') {
+        switch (planStatus) {
+          case 'active':
+            statusClass = 'badge-success';
+            statusText = 'Completo - Pago';
+            break;
+          case 'pending':
+            statusClass = 'badge-warning';
+            statusText = 'Completo - Aguardando Pagamento';
+            break;
+          case 'pending_approval':
+            statusClass = 'badge-info';
+            statusText = 'Completo - Aguardando Aprovacao';
+            break;
+          default:
+            statusClass = 'badge-warning';
+            statusText = 'Completo - Pendente';
+        }
+      } else {
+        statusClass = 'badge-secondary';
+        statusText = 'Gratuito';
+      }
+      
+      return `<span class="badge ${statusClass}">${statusText}</span>`;
+    }
+
     function renderTable() {
       const loading = document.getElementById('loading');
       const empty = document.getElementById('empty');
@@ -428,6 +460,9 @@
           </td>
           <td>${b.category}</td>
           <td>${b.city || '-'}</td>
+          <td>
+            ${getPlanBadge(b.plan, b.planStatus)}
+          </td>
           <td>
             <span class="badge ${b.published ? 'badge-success' : 'badge-warning'}">
               ${b.published ? 'Publicado' : 'Rascunho'}
