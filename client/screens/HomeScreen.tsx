@@ -429,18 +429,23 @@ function HomeBannerSlideshow({ banners }: { banners: Banner[] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
   const bannerSize = SCREEN_WIDTH - Spacing.lg * 2;
+  const validBanners = useMemo(() => banners.filter(b => b.imageUrl), [banners]);
 
   useEffect(() => {
-    if (banners.length <= 1) return;
+    if (validBanners.length <= 1) return;
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % banners.length);
+      setCurrentIndex((prev) => (prev + 1) % validBanners.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, [banners.length]);
+  }, [validBanners.length]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ x: currentIndex * bannerSize, animated: true });
-  }, [currentIndex, bannerSize]);
+    const currentBanner = validBanners[currentIndex];
+    if (currentBanner) {
+      trackBannerImpression(currentBanner.id, currentBanner.title || "Banner");
+    }
+  }, [currentIndex, bannerSize, validBanners]);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -457,8 +462,6 @@ function HomeBannerSlideshow({ banners }: { banners: Banner[] }) {
       }
     }
   };
-
-  const validBanners = banners.filter(b => b.imageUrl);
 
   if (validBanners.length === 0) {
     return (
