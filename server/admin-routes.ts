@@ -1824,23 +1824,30 @@ export function registerAdminRoutes(app: Express) {
         return res.json({ success: true, id: business.id });
 
       } else if (type === 'accommodation') {
+        const isBasicPlan = plan === 'acc_basic';
+        
         const accData: any = {
           name: req.body.name,
           type: req.body.type || 'pousada',
-          planStatus: 'pending',
+          planType: isBasicPlan ? 'basic' : 'complete',
+          planStatus: isBasicPlan ? 'active' : 'pending',
           ownerEmail: req.body.owner_email,
           ownerPhone: req.body.owner_phone,
-          logoUrl: logoUrl,
+          coverUrl: logoUrl,
           address: req.body.address,
           whatsapp: req.body.whatsapp,
-          description: req.body.description,
-          website: req.body.website,
-          instagram: req.body.instagram,
-          checkInTime: req.body.checkin || '14:00',
-          checkOutTime: req.body.checkout || '12:00',
-          published: false,
+          published: isBasicPlan,
           city: 'Trindade',
         };
+
+        // Add extra fields for complete plan
+        if (!isBasicPlan) {
+          accData.description = req.body.description;
+          accData.website = req.body.website;
+          accData.instagram = req.body.instagram;
+          accData.checkInTime = req.body.checkin || '14:00';
+          accData.checkOutTime = req.body.checkout || '12:00';
+        }
 
         const accommodation = await storage.createAccommodation(accData);
 
@@ -1854,7 +1861,12 @@ export function registerAdminRoutes(app: Express) {
           listingId: accommodation.id,
         });
 
-        // Create payment preference with Mercado Pago
+        // Basic plan - no payment needed
+        if (isBasicPlan) {
+          return res.json({ success: true, id: accommodation.id });
+        }
+
+        // Create payment preference with Mercado Pago for complete plan
         const allSettings = await storage.getAllAppSettings();
         const settingsMap: Record<string, string> = {};
         allSettings.forEach(s => { settingsMap[s.key] = s.value || ''; });

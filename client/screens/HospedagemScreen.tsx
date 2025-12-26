@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { FlatList, View, StyleSheet, Pressable, Platform, Modal } from "react-native";
+import { FlatList, View, StyleSheet, Pressable, Platform, Modal, Linking } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -49,6 +49,19 @@ type AccommodationWithRooms = AccommodationType & {
     pricePerNight: number;
     maxGuests: number;
   }[];
+};
+
+type BasicAccommodationType = {
+  id: string;
+  name: string;
+  type: string;
+  address: string | null;
+  neighborhood: string | null;
+  city: string | null;
+  whatsapp: string | null;
+  coverUrl: string | null;
+  logoUrl: string | null;
+  planType: string | null;
 };
 
 function formatDate(date: Date): string {
@@ -413,6 +426,71 @@ function EmptyState({ isSearching }: { isSearching: boolean }) {
   );
 }
 
+function BasicAccommodationCard({ 
+  item, 
+  onWhatsApp 
+}: { 
+  item: BasicAccommodationType; 
+  onWhatsApp: () => void;
+}) {
+  const { theme } = useTheme();
+  const scale = useSharedValue(1);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  const typeLabel = item.type === "hotel" ? "Hotel" : item.type === "pousada" ? "Pousada" : "Hostel";
+
+  return (
+    <Animated.View style={[styles.basicCard, { backgroundColor: theme.backgroundDefault }, animatedStyle]}>
+      <View style={styles.basicCardContent}>
+        {item.coverUrl || item.logoUrl ? (
+          <Image 
+            source={{ uri: item.coverUrl || item.logoUrl || "" }} 
+            style={styles.basicCardImage} 
+            contentFit="cover" 
+          />
+        ) : (
+          <View style={[styles.basicCardImage, styles.basicCardImagePlaceholder, { backgroundColor: theme.backgroundRoot }]}>
+            <Feather name="home" size={24} color={theme.textSecondary} />
+          </View>
+        )}
+        <View style={styles.basicCardInfo}>
+          <View style={styles.basicCardHeader}>
+            <ThemedText type="body" style={styles.basicCardName} numberOfLines={1}>
+              {item.name}
+            </ThemedText>
+            <View style={[styles.basicTypeBadge, { backgroundColor: Colors.light.primary + "20" }]}>
+              <ThemedText style={[styles.basicTypeText, { color: Colors.light.primary }]}>
+                {typeLabel}
+              </ThemedText>
+            </View>
+          </View>
+          {item.address ? (
+            <View style={styles.basicAddressRow}>
+              <Feather name="map-pin" size={12} color={theme.textSecondary} />
+              <ThemedText type="caption" secondary numberOfLines={1} style={styles.basicAddressText}>
+                {item.address}{item.neighborhood ? `, ${item.neighborhood}` : ""}
+              </ThemedText>
+            </View>
+          ) : null}
+        </View>
+        {item.whatsapp ? (
+          <Pressable 
+            onPress={onWhatsApp}
+            onPressIn={() => { scale.value = withSpring(0.95); }}
+            onPressOut={() => { scale.value = withSpring(1); }}
+            style={styles.basicWhatsAppButton}
+          >
+            <Feather name="message-circle" size={20} color="#FFFFFF" />
+          </Pressable>
+        ) : null}
+      </View>
+    </Animated.View>
+  );
+}
+
 export default function HospedagemScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
@@ -425,7 +503,10 @@ export default function HospedagemScreen() {
   const [checkOut, setCheckOut] = useState(formatDate(tomorrow));
   const [filter, setFilter] = useState("todos");
 
-  const { data: searchData, isLoading } = useQuery<{ accommodations: AccommodationWithRooms[] }>({
+  const { data: searchData, isLoading } = useQuery<{ 
+    accommodations: AccommodationWithRooms[]; 
+    basicAccommodations: BasicAccommodationType[];
+  }>({
     queryKey: [`/api/accommodations/search?checkIn=${checkIn}&checkOut=${checkOut}`],
   });
 
@@ -434,6 +515,17 @@ export default function HospedagemScreen() {
     if (filter === "todos") return data;
     return data.filter(a => a.type === filter);
   }, [searchData, filter]);
+
+  const basicAccommodations = useMemo(() => {
+    const data = searchData?.basicAccommodations || [];
+    if (filter === "todos") return data;
+    return data.filter(a => a.type === filter);
+  }, [searchData, filter]);
+
+  const handleWhatsApp = (whatsapp: string, name: string) => {
+    const message = encodeURIComponent(`Ola! Gostaria de mais informacoes sobre ${name}.`);
+    Linking.openURL(`https://wa.me/${whatsapp}?text=${message}`);
+  };
 
   const handlePress = (id: string) => {
     navigation.navigate("HospedagemDetail", { id, checkIn, checkOut });
@@ -467,6 +559,26 @@ export default function HospedagemScreen() {
     </View>
   );
 
+  const renderFooter = () => {
+    if (basicAccommodations.length === 0) return null;
+    
+    return (
+      <View style={styles.basicSection}>
+        <View style={styles.basicSectionHeader}>
+          <ThemedText type="h4" style={styles.basicSectionTitle}>Outras Hospedagens</ThemedText>
+          <ThemedText type="caption" secondary>Cadastros gratuitos</ThemedText>
+        </View>
+        {basicAccommodations.map((item) => (
+          <BasicAccommodationCard
+            key={item.id}
+            item={item}
+            onWhatsApp={() => item.whatsapp && handleWhatsApp(item.whatsapp, item.name)}
+          />
+        ))}
+      </View>
+    );
+  };
+
   return (
     <FlatList
       style={{ flex: 1, backgroundColor: theme.backgroundRoot }}
@@ -480,7 +592,8 @@ export default function HospedagemScreen() {
       data={accommodations}
       keyExtractor={(item) => item.id}
       ListHeaderComponent={renderHeader}
-      ListEmptyComponent={<EmptyState isSearching={!isLoading} />}
+      ListEmptyComponent={accommodations.length === 0 && basicAccommodations.length === 0 ? <EmptyState isSearching={!isLoading} /> : null}
+      ListFooterComponent={renderFooter}
       renderItem={({ item }) => (
         <AccommodationCard 
           item={item} 
@@ -700,5 +813,75 @@ const styles = StyleSheet.create({
   dateMonthText: {
     fontSize: 10,
     marginTop: 2,
+  },
+  basicSection: {
+    marginTop: Spacing.xl,
+  },
+  basicSectionHeader: {
+    marginBottom: Spacing.md,
+  },
+  basicSectionTitle: {
+    fontWeight: "700",
+    marginBottom: Spacing.xs,
+  },
+  basicCard: {
+    borderRadius: BorderRadius.md,
+    marginBottom: Spacing.sm,
+    overflow: "hidden",
+  },
+  basicCardContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: Spacing.sm,
+  },
+  basicCardImage: {
+    width: 60,
+    height: 60,
+    borderRadius: BorderRadius.sm,
+  },
+  basicCardImagePlaceholder: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  basicCardInfo: {
+    flex: 1,
+    marginLeft: Spacing.md,
+  },
+  basicCardHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.sm,
+    marginBottom: Spacing.xs,
+  },
+  basicCardName: {
+    flex: 1,
+    fontWeight: "600",
+    fontSize: 15,
+  },
+  basicTypeBadge: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.full,
+  },
+  basicTypeText: {
+    fontSize: 10,
+    fontWeight: "600",
+  },
+  basicAddressRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  basicAddressText: {
+    flex: 1,
+  },
+  basicWhatsAppButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: "#25D366",
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: Spacing.sm,
   },
 });

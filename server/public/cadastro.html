@@ -605,9 +605,33 @@
             </div>
           </div>
           <div id="accommodation-plans" class="plan-selection hidden">
-            <div class="plan-card featured" style="max-width: 400px; margin: 0 auto;" onclick="selectPlan('accommodation')">
-              <div class="plan-badge">Hospedagem</div>
-              <div class="plan-name">Plano Anual</div>
+            <div class="plan-card" onclick="selectPlan('acc_basic')">
+              <div class="plan-name">Plano Gratuito</div>
+              <div class="plan-price">
+                <span class="amount">Gratis</span>
+              </div>
+              <ul class="plan-features">
+                <li>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  Nome da hospedagem
+                </li>
+                <li>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  Foto de capa
+                </li>
+                <li>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  Endereco
+                </li>
+                <li>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  WhatsApp para contato
+                </li>
+              </ul>
+            </div>
+            <div class="plan-card featured" onclick="selectPlan('acc_complete')">
+              <div class="plan-badge">Recomendado</div>
+              <div class="plan-name">Plano Completo</div>
               <div class="plan-price">
                 <span class="amount" id="accommodation-price">R$ 199,90</span>
                 <span class="period">/ano</span>
@@ -615,7 +639,11 @@
               <ul class="plan-features">
                 <li>
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                  Perfil completo da hospedagem
+                  Tudo do plano gratuito
+                </li>
+                <li>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  Descricao completa
                 </li>
                 <li>
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -631,11 +659,11 @@
                 </li>
                 <li>
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                  Contato direto (WhatsApp)
+                  Localizacao no mapa
                 </li>
                 <li>
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                  Localizacao no mapa
+                  Destaque na busca
                 </li>
               </ul>
             </div>
@@ -778,6 +806,58 @@
                   <img id="logo_preview_complete" class="file-preview hidden">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="logo_icon_complete"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                   <p id="logo_text_complete">Clique para enviar o logo</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="accommodation-form-basic" class="hidden">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Nome do Proprietario <span class="required">*</span></label>
+                <input type="text" id="acc_basic_owner_name" placeholder="Seu nome completo" required>
+              </div>
+              <div class="form-group">
+                <label>E-mail <span class="required">*</span></label>
+                <input type="email" id="acc_basic_owner_email" placeholder="seu@email.com" required>
+              </div>
+              <div class="form-group">
+                <label>Telefone <span class="required">*</span></label>
+                <input type="tel" id="acc_basic_owner_phone" placeholder="(62) 99999-9999" required>
+              </div>
+              <div class="form-group">
+                <label>Senha <span class="required">*</span></label>
+                <input type="password" id="acc_basic_owner_password" placeholder="Minimo 6 caracteres" minlength="6" required>
+                <small style="color: var(--text-muted); font-size: 12px;">Senha para acessar e editar seu cadastro</small>
+              </div>
+              <div class="form-group">
+                <label>Nome da Hospedagem <span class="required">*</span></label>
+                <input type="text" id="acc_basic_name" placeholder="Nome do hotel/pousada" required>
+              </div>
+              <div class="form-group">
+                <label>Tipo <span class="required">*</span></label>
+                <select id="acc_basic_type" required>
+                  <option value="">Selecione o tipo</option>
+                  <option value="hotel">Hotel</option>
+                  <option value="pousada">Pousada</option>
+                  <option value="hostel">Hostel</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>WhatsApp <span class="required">*</span></label>
+                <input type="tel" id="acc_basic_whatsapp" placeholder="(62) 99999-9999" required>
+              </div>
+              <div class="form-group full-width">
+                <label>Endereco <span class="required">*</span></label>
+                <input type="text" id="acc_basic_address" placeholder="Rua, numero, bairro" required>
+              </div>
+              <div class="form-group full-width">
+                <label>Foto de Capa</label>
+                <div class="file-upload" onclick="document.getElementById('acc_basic_logo_upload').click()">
+                  <input type="file" id="acc_basic_logo_upload" accept="image/*" onchange="previewAccBasicLogo(this)">
+                  <img id="acc_basic_logo_preview" class="file-preview hidden">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" id="acc_basic_logo_icon"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                  <p id="acc_basic_logo_text">Clique para enviar a foto</p>
                 </div>
               </div>
             </div>
@@ -982,6 +1062,7 @@
         document.getElementById('business-form-basic').classList.add('hidden');
         document.getElementById('business-form-complete').classList.add('hidden');
         document.getElementById('accommodation-form').classList.add('hidden');
+        document.getElementById('accommodation-form-basic').classList.add('hidden');
         
         if (selectedType === 'business' && selectedPlan === 'basic') {
           document.getElementById('business-form-basic').classList.remove('hidden');
@@ -989,7 +1070,10 @@
         } else if (selectedType === 'business' && selectedPlan === 'complete') {
           document.getElementById('business-form-complete').classList.remove('hidden');
           document.getElementById('submit-btn-text').textContent = 'Ir para Pagamento';
-        } else if (selectedType === 'accommodation') {
+        } else if (selectedType === 'accommodation' && selectedPlan === 'acc_basic') {
+          document.getElementById('accommodation-form-basic').classList.remove('hidden');
+          document.getElementById('submit-btn-text').textContent = 'Finalizar Cadastro';
+        } else if (selectedType === 'accommodation' && selectedPlan === 'acc_complete') {
           document.getElementById('accommodation-form').classList.remove('hidden');
           document.getElementById('submit-btn-text').textContent = 'Ir para Pagamento';
         }
@@ -1035,6 +1119,19 @@
       }
     }
 
+    function previewAccBasicLogo(input) {
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('acc_basic_logo_preview').src = e.target.result;
+          document.getElementById('acc_basic_logo_preview').classList.remove('hidden');
+          document.getElementById('acc_basic_logo_icon').classList.add('hidden');
+          document.getElementById('acc_basic_logo_text').textContent = 'Clique para trocar';
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
     async function submitForm() {
       const formData = new FormData();
       formData.append('type', selectedType);
@@ -1075,7 +1172,21 @@
         });
         const logoFile = document.getElementById('logo_upload_complete').files[0];
         if (logoFile) formData.append('logo', logoFile);
-      } else if (selectedType === 'accommodation') {
+      } else if (selectedType === 'accommodation' && selectedPlan === 'acc_basic') {
+        const fields = ['acc_basic_owner_name', 'acc_basic_owner_email', 'acc_basic_owner_phone', 'acc_basic_owner_password', 'acc_basic_name', 'acc_basic_type', 'acc_basic_whatsapp', 'acc_basic_address'];
+        fields.forEach(field => {
+          const el = document.getElementById(field);
+          if (!el.value) {
+            isValid = false;
+            el.style.borderColor = 'var(--primary)';
+          } else {
+            el.style.borderColor = '';
+            formData.append(field.replace('acc_basic_', ''), el.value);
+          }
+        });
+        const logoFile = document.getElementById('acc_basic_logo_upload').files[0];
+        if (logoFile) formData.append('logo', logoFile);
+      } else if (selectedType === 'accommodation' && selectedPlan === 'acc_complete') {
         const fields = ['acc_owner_name', 'acc_owner_email', 'acc_owner_phone', 'acc_owner_password', 'acc_name', 'acc_type', 'acc_whatsapp', 'acc_address'];
         fields.forEach(field => {
           const el = document.getElementById(field);
@@ -1114,7 +1225,7 @@
 
         if (res.ok) {
           goToStep(4);
-          if (selectedPlan === 'basic') {
+          if (selectedPlan === 'basic' || selectedPlan === 'acc_basic') {
             document.getElementById('success-free').classList.remove('hidden');
             document.getElementById('success-paid').classList.add('hidden');
           } else {

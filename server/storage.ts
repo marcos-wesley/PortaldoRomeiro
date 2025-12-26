@@ -432,6 +432,16 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(accommodations).orderBy(desc(accommodations.createdAt));
   }
 
+  async getBasicAccommodations(): Promise<Accommodation[]> {
+    return await db.select().from(accommodations).where(
+      and(
+        eq(accommodations.published, true),
+        eq(accommodations.planType, "basic"),
+        eq(accommodations.planStatus, "active")
+      )
+    ).orderBy(asc(accommodations.name));
+  }
+
   async getAccommodationById(id: string): Promise<Accommodation | undefined> {
     const result = await db.select().from(accommodations).where(eq(accommodations.id, id));
     return result[0];

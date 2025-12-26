@@ -593,8 +593,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Data de check-in deve ser anterior ao check-out" });
       }
 
+      // Get complete plan accommodations with available rooms
       const accommodations = await storage.getAvailableAccommodations(checkInDate, checkOutDate);
-      return res.json({ accommodations, checkIn: checkInDate, checkOut: checkOutDate });
+      
+      // Get basic plan accommodations (free - just listing info, no rooms)
+      const basicAccommodations = await storage.getBasicAccommodations();
+      
+      return res.json({ 
+        accommodations, 
+        basicAccommodations,
+        checkIn: checkInDate, 
+        checkOut: checkOutDate 
+      });
     } catch (error) {
       console.error("Search accommodations error:", error);
       return res.status(500).json({ error: "Erro ao buscar hospedagens disponiveis" });

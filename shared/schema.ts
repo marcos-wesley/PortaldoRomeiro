@@ -574,6 +574,7 @@ export const accommodations = pgTable("accommodations", {
     .default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   type: text("type").notNull(), // hotel, pousada, hostel
+  planType: text("plan_type").default("basic"), // basic (free) or complete (paid)
   planStatus: text("plan_status").default("pending"), // active, pending, expired
   planExpiresAt: timestamp("plan_expires_at"),
   paymentId: text("payment_id"), // Mercado Pago payment ID
@@ -608,6 +609,7 @@ export const accommodations = pgTable("accommodations", {
 export const createAccommodationSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   type: z.enum(["hotel", "pousada", "hostel"]),
+  planType: z.string().optional().default("basic"),
   planStatus: z.string().optional().default("pending"),
   ownerEmail: z.string().optional().nullable(),
   ownerPhone: z.string().optional().nullable(),
@@ -636,6 +638,7 @@ export const createAccommodationSchema = z.object({
 export const updateAccommodationSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres").optional(),
   type: z.enum(["hotel", "pousada", "hostel"]).optional(),
+  planType: z.string().optional(),
   planStatus: z.string().optional(),
   ownerEmail: z.string().optional().nullable(),
   ownerPhone: z.string().optional().nullable(),
