@@ -235,26 +235,26 @@ export default function InfoScreen() {
 
         <View style={[styles.mascotSection, { backgroundColor: VibrantColors.cyan + "15" }]}>
           <Image
-            source={{ uri: "https://images.unsplash.com/photo-1560807707-8cc77767d783?w=400" }}
+            source={require("@/assets/romeirinho.jpeg")}
             style={styles.mascotImage}
-            contentFit="cover"
+            contentFit="contain"
           />
           <ThemedText type="h3" style={styles.mascotTitle}>Conheca o Romeirinho</ThemedText>
           <ThemedText type="body" secondary style={styles.mascotDescription}>
-            Nosso mascote oficial! Ele representa a alegria, a fe e a amizade que todo romeiro encontra em Trindade.
+            Romeirinho e o mascote do Portal do Romeiro, inspirado na figura de um pequeno guia espiritual que nasceu da fe e devocao dos peregrinos de Trindade. Com um coracao generoso e um conhecimento profundo sobre a romaria, Romeirinho esta aqui para ajudar todos os romeiros em sua jornada ao Santuario Basilica do Divino Pai Eterno.
           </ThemedText>
           
           <View style={[styles.mascotInfoCard, { backgroundColor: theme.backgroundDefault }]}>
             <ThemedText type="h4" style={styles.mascotInfoTitle}>Quem e ele?</ThemedText>
             <ThemedText type="small" secondary>
-              O guia virtual mais simpatico do Brasil, sempre pronto para ajudar voce a encontrar o melhor caminho.
+              Romeirinho simboliza orientacao, apoio e a rica tradicao da peregrinacao, tornando cada visita a Trindade uma experiencia segura, enriquecedora e inesquecivel. Ele e um guia virtual que leva adiante a missao de ajudar os peregrinos a se conectarem profundamente com a experiencia da romaria.
             </ThemedText>
           </View>
           
           <View style={[styles.mascotInfoCard, { backgroundColor: theme.backgroundDefault }]}>
             <ThemedText type="h4" style={styles.mascotInfoTitle}>Sua Historia</ThemedText>
             <ThemedText type="small" secondary>
-              Nasceu da necessidade de criar um simbolo que conectasse geracoes e trouxesse a tradicao da Romaria.
+              Em um vilarejo tranquilo proximo a Trindade, vivia um menino chamado Joao, que tinha uma fe inabalavel. Ele acompanhava seus pais nas romarias ao Santuario e era conhecido por todos como um pequeno guia. Um dia, encontrou uma figura de madeira que chamou de Romeirinho, acreditando que trazia sorte e protecao aos romeiros.
             </ThemedText>
           </View>
         </View>
@@ -421,9 +421,9 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.xl,
   },
   mascotImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 180,
+    height: 180,
+    borderRadius: BorderRadius.lg,
     marginBottom: Spacing.lg,
   },
   mascotTitle: {
