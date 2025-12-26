@@ -816,6 +816,7 @@ const styles = StyleSheet.create({
   },
   basicSection: {
     marginTop: Spacing.xl,
+    paddingBottom: Spacing["3xl"],
   },
   basicSectionHeader: {
     marginBottom: Spacing.md,
