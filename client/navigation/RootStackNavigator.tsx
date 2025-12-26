@@ -9,6 +9,7 @@ import ProfileScreen from "@/screens/ProfileScreen";
 import NotificationsScreen from "@/screens/NotificationsScreen";
 import SearchScreen from "@/screens/SearchScreen";
 import AdminNotificationsScreen from "@/screens/AdminNotificationsScreen";
+import PrivacyPolicyScreen from "@/screens/PrivacyPolicyScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/hooks/useTheme";
@@ -19,6 +20,7 @@ export type RootStackParamList = {
   Notifications: undefined;
   Search: undefined;
   AdminNotifications: undefined;
+  PrivacyPolicy: undefined;
   Login: undefined;
   Register: undefined;
   ForgotPassword: undefined;
@@ -81,6 +83,14 @@ export default function RootStackNavigator() {
               presentation: "modal",
             }}
           />
+          <Stack.Screen
+            name="PrivacyPolicy"
+            component={PrivacyPolicyScreen}
+            options={{ 
+              headerTitle: "Politica de Privacidade",
+              presentation: "modal",
+            }}
+          />
         </>
       ) : (
         <>
@@ -98,6 +108,14 @@ export default function RootStackNavigator() {
             name="ForgotPassword"
             component={ForgotPasswordScreen}
             options={{ headerTitle: "Recuperar Senha" }}
+          />
+          <Stack.Screen
+            name="PrivacyPolicy"
+            component={PrivacyPolicyScreen}
+            options={{ 
+              headerTitle: "Politica de Privacidade",
+              presentation: "modal",
+            }}
           />
         </>
       )}

@@ -503,6 +503,7 @@
         <button class="tab active" data-tab="home">Home</button>
         <button class="tab" data-tab="historia">Historia</button>
         <button class="tab" data-tab="info">Info</button>
+        <button class="tab" data-tab="privacidade">Privacidade</button>
       </div>
       
       <!-- HOME TAB -->
@@ -648,6 +649,34 @@
           </div>
         </div>
       </div>
+      
+      <!-- PRIVACIDADE TAB -->
+      <div id="privacidade-content" class="tab-content">
+        <div class="content-section">
+          <div class="content-section-header">
+            <h3 class="content-section-title">Politica de Privacidade</h3>
+            <button class="btn btn-primary" id="save-privacidade-btn">Salvar Alteracoes</button>
+          </div>
+          <div class="content-section-body">
+            <div class="form-group">
+              <label for="privacidade-titulo">Titulo</label>
+              <input type="text" id="privacidade-titulo" placeholder="Ex: Politica de Privacidade">
+            </div>
+            <div class="form-group">
+              <label for="privacidade-conteudo">Conteudo Completo</label>
+              <textarea id="privacidade-conteudo" style="min-height: 500px;" placeholder="Digite aqui o texto completo da politica de privacidade..."></textarea>
+            </div>
+            <div class="form-group">
+              <label for="privacidade-email">E-mail de Contato</label>
+              <input type="email" id="privacidade-email" placeholder="Ex: contato@portaldoromeiro.com.br">
+            </div>
+            <div class="form-group">
+              <label for="privacidade-ultima-atualizacao">Ultima Atualizacao</label>
+              <input type="date" id="privacidade-ultima-atualizacao">
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
   
@@ -748,6 +777,13 @@
       quemSomosImage: null
     };
     
+    let privacidadeData = {
+      titulo: 'Politica de Privacidade',
+      conteudo: '',
+      email: 'contato@portaldoromeiro.com.br',
+      ultimaAtualizacao: ''
+    };
+    
     async function loadPageData(pageKey) {
       try {
         const response = await fetch(`/api/static-pages/${pageKey}`);
@@ -824,6 +860,15 @@
           document.getElementById('info-quem-somos-preview').style.display = 'block';
         }
       }
+      
+      const savedPrivacidade = await loadPageData('privacidade');
+      if (savedPrivacidade) {
+        privacidadeData = { ...privacidadeData, ...savedPrivacidade };
+        document.getElementById('privacidade-titulo').value = privacidadeData.titulo || '';
+        document.getElementById('privacidade-conteudo').value = privacidadeData.conteudo || '';
+        document.getElementById('privacidade-email').value = privacidadeData.email || '';
+        document.getElementById('privacidade-ultima-atualizacao').value = privacidadeData.ultimaAtualizacao || '';
+      }
     }
     
     setupImageUpload('home-hero-upload', 'home-hero-image-input', 'home-hero-preview', (url) => {
@@ -865,6 +910,14 @@
       infoData.nossaHistoria2 = document.getElementById('info-nossa-historia-2').value;
       infoData.quemSomos = document.getElementById('info-quem-somos').value;
       await savePageData('info', infoData);
+    });
+    
+    document.getElementById('save-privacidade-btn').addEventListener('click', async () => {
+      privacidadeData.titulo = document.getElementById('privacidade-titulo').value;
+      privacidadeData.conteudo = document.getElementById('privacidade-conteudo').value;
+      privacidadeData.email = document.getElementById('privacidade-email').value;
+      privacidadeData.ultimaAtualizacao = document.getElementById('privacidade-ultima-atualizacao').value;
+      await savePageData('privacidade', privacidadeData);
     });
     
     document.getElementById('logout-btn').addEventListener('click', async () => {

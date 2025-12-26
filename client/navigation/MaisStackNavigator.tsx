@@ -7,6 +7,7 @@ import HistoriaScreen from "@/screens/HistoriaScreen";
 import RoteirosScreen from "@/screens/RoteirosScreen";
 import HospedagemScreen from "@/screens/HospedagemScreen";
 import HospedagemDetailScreen from "@/screens/HospedagemDetailScreen";
+import PrivacyPolicyScreen from "@/screens/PrivacyPolicyScreen";
 import { AuthAwareHeader } from "@/components/AuthAwareHeader";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -20,6 +21,7 @@ export type MaisStackParamList = {
   Hospedagem: undefined;
   HospedagemDetail: { id: string; checkIn?: string; checkOut?: string };
   HorariosOnibus: undefined;
+  PrivacyPolicy: undefined;
 };
 
 const Stack = createNativeStackNavigator<MaisStackParamList>();
@@ -143,6 +145,13 @@ export default function MaisStackNavigator() {
         component={HorariosOnibusPlaceholder}
         options={{
           headerTitle: "Horarios de Onibus",
+        }}
+      />
+      <Stack.Screen
+        name="PrivacyPolicy"
+        component={PrivacyPolicyScreen}
+        options={{
+          headerTitle: "Politica de Privacidade",
         }}
       />
     </Stack.Navigator>

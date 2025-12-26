@@ -351,7 +351,20 @@ export default function ProfileScreen() {
               icon="shield"
               title="Privacidade e Seguranca"
               iconColor="#8B5CF6"
-              onPress={() => {}}
+              onPress={() => navigation.navigate("PrivacyPolicy")}
+            />
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <ThemedText type="caption" secondary style={styles.sectionTitle}>SOBRE</ThemedText>
+
+          <View style={styles.optionsContainer}>
+            <ProfileOption
+              icon="file-text"
+              title="Politica de Privacidade"
+              iconColor="#6366F1"
+              onPress={() => navigation.navigate("PrivacyPolicy")}
             />
           </View>
         </View>

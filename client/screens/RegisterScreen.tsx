@@ -434,10 +434,13 @@ export default function RegisterScreen() {
               ) : null}
             </View>
             <ThemedText type="small" style={styles.checkboxLabel}>
-              Li e aceito os{" "}
-              <ThemedText type="link">Termos de Uso</ThemedText>
-              {" "}e a{" "}
-              <ThemedText type="link">Política de Privacidade</ThemedText>
+              Li e aceito os Termos de Uso e a{" "}
+              <ThemedText 
+                type="link" 
+                onPress={() => navigation.navigate("PrivacyPolicy")}
+              >
+                Politica de Privacidade
+              </ThemedText>
               {" "}*
             </ThemedText>
           </Pressable>
