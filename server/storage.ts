@@ -1,6 +1,6 @@
-import { type User, type InsertUser, type UpdateProfileInput, users, type News, type InsertNews, type UpdateNewsInput, news, type Video, type InsertVideo, type UpdateVideoInput, videos, type Attraction, type InsertAttraction, type UpdateAttractionInput, attractions, type StaticPage, type InsertStaticPage, type UpdateStaticPageInput, staticPages, type UsefulPhone, type CreateUsefulPhoneInput, type UpdateUsefulPhoneInput, usefulPhones, type PilgrimTip, type CreatePilgrimTipInput, type UpdatePilgrimTipInput, pilgrimTips, type Service, type CreateServiceInput, type UpdateServiceInput, services, type Business, type CreateBusinessInput, type UpdateBusinessInput, businesses, type BusinessReview, type CreateBusinessReviewInput, businessReviews, type Accommodation, type CreateAccommodationInput, type UpdateAccommodationInput, accommodations, type Room, type CreateRoomInput, type UpdateRoomInput, rooms, type RoomBlockedDate, type CreateRoomBlockedDateInput, roomBlockedDates, type AccommodationReview, type CreateAccommodationReviewInput, accommodationReviews, type Partner, type CreatePartnerInput, type UpdatePartnerInput, partners, type Banner, type CreateBannerInput, type UpdateBannerInput, banners, type Notification, type CreateNotificationInput, type UpdateNotificationInput, notifications, type UserNotification, userNotifications, type PushDevice, type RegisterPushDeviceInput, pushDevices, type UserNotificationPreference, type UpdateNotificationPreferencesInput, userNotificationPreferences, type UserActivityLog, type CreateActivityLogInput, userActivityLogs, type AppSetting, type UpdateAppSettingInput, appSettings, type OwnerUser, ownerUsers } from "@shared/schema";
+import { type User, type InsertUser, type UpdateProfileInput, users, type News, type InsertNews, type UpdateNewsInput, news, type Video, type InsertVideo, type UpdateVideoInput, videos, type Attraction, type InsertAttraction, type UpdateAttractionInput, attractions, type StaticPage, type InsertStaticPage, type UpdateStaticPageInput, staticPages, type UsefulPhone, type CreateUsefulPhoneInput, type UpdateUsefulPhoneInput, usefulPhones, type PilgrimTip, type CreatePilgrimTipInput, type UpdatePilgrimTipInput, pilgrimTips, type Service, type CreateServiceInput, type UpdateServiceInput, services, type Business, type CreateBusinessInput, type UpdateBusinessInput, businesses, type BusinessReview, type CreateBusinessReviewInput, businessReviews, type Accommodation, type CreateAccommodationInput, type UpdateAccommodationInput, accommodations, type Room, type CreateRoomInput, type UpdateRoomInput, rooms, type RoomBlockedDate, type CreateRoomBlockedDateInput, roomBlockedDates, type AccommodationReview, type CreateAccommodationReviewInput, accommodationReviews, type Partner, type CreatePartnerInput, type UpdatePartnerInput, partners, type Banner, type CreateBannerInput, type UpdateBannerInput, banners, type Notification, type CreateNotificationInput, type UpdateNotificationInput, notifications, type UserNotification, userNotifications, type PushDevice, type RegisterPushDeviceInput, pushDevices, type UserNotificationPreference, type UpdateNotificationPreferencesInput, userNotificationPreferences, type UserActivityLog, type CreateActivityLogInput, userActivityLogs, type AppSetting, type UpdateAppSettingInput, appSettings, type OwnerUser, ownerUsers, type AnalyticsEvent, type CreateAnalyticsEventInput, analyticsEvents } from "@shared/schema";
 import { db } from "./db";
-import { eq, count, desc, ilike, or, and, asc } from "drizzle-orm";
+import { eq, count, desc, ilike, or, and, asc, gte, sql, countDistinct } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -1038,6 +1038,90 @@ export class DatabaseStorage implements IStorage {
   async getOwnerUserByListingId(listingId: string): Promise<OwnerUser | undefined> {
     const result = await db.select().from(ownerUsers).where(eq(ownerUsers.listingId, listingId));
     return result[0];
+  }
+
+  // Analytics Events
+  async createAnalyticsEvent(data: CreateAnalyticsEventInput): Promise<AnalyticsEvent> {
+    const result = await db.insert(analyticsEvents).values(data).returning();
+    return result[0];
+  }
+
+  async getAnalyticsSummary(days: number = 30): Promise<{
+    totalEvents: number;
+    uniqueUsers: number;
+    accommodationViews: number;
+    businessViews: number;
+    reservationClicks: number;
+    bannerClicks: number;
+    bannerImpressions: number;
+    newsAdClicks: number;
+  }> {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const events = await db.select().from(analyticsEvents).where(gte(analyticsEvents.createdAt, startDate));
+    
+    const uniqueUserIds = new Set(events.filter(e => e.userId).map(e => e.userId));
+    
+    return {
+      totalEvents: events.length,
+      uniqueUsers: uniqueUserIds.size,
+      accommodationViews: events.filter(e => e.eventType === "accommodation_view").length,
+      businessViews: events.filter(e => e.eventType === "business_view").length,
+      reservationClicks: events.filter(e => e.eventType === "reservation_click").length,
+      bannerClicks: events.filter(e => e.eventType === "banner_click").length,
+      bannerImpressions: events.filter(e => e.eventType === "banner_impression").length,
+      newsAdClicks: events.filter(e => e.eventType === "news_ad_click").length,
+    };
+  }
+
+  async getTopEntities(entityType: string, days: number = 30, limit: number = 10): Promise<Array<{ entityId: string; entityName: string | null; count: number }>> {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const events = await db.select().from(analyticsEvents)
+      .where(and(
+        gte(analyticsEvents.createdAt, startDate),
+        eq(analyticsEvents.entityType, entityType)
+      ));
+
+    const counts: Record<string, { name: string | null; count: number }> = {};
+    events.forEach(e => {
+      if (e.entityId) {
+        if (!counts[e.entityId]) {
+          counts[e.entityId] = { name: e.entityName, count: 0 };
+        }
+        counts[e.entityId].count++;
+      }
+    });
+
+    return Object.entries(counts)
+      .map(([entityId, data]) => ({ entityId, entityName: data.name, count: data.count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, limit);
+  }
+
+  async getEventsByDay(days: number = 30): Promise<Array<{ date: string; count: number }>> {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const events = await db.select().from(analyticsEvents).where(gte(analyticsEvents.createdAt, startDate));
+
+    const dailyCounts: Record<string, number> = {};
+    events.forEach(e => {
+      if (e.createdAt) {
+        const date = e.createdAt.toISOString().split("T")[0];
+        dailyCounts[date] = (dailyCounts[date] || 0) + 1;
+      }
+    });
+
+    return Object.entries(dailyCounts)
+      .map(([date, count]) => ({ date, count }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  async getRecentEvents(limit: number = 50): Promise<AnalyticsEvent[]> {
+    return await db.select().from(analyticsEvents).orderBy(desc(analyticsEvents.createdAt)).limit(limit);
   }
 }
 

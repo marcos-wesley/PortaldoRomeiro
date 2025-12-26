@@ -1035,3 +1035,48 @@ export const updateAppSettingsSchema = z.object({
 export type AppSetting = typeof appSettings.$inferSelect;
 export type UpdateAppSettingInput = z.infer<typeof updateAppSettingSchema>;
 export type UpdateAppSettingsInput = z.infer<typeof updateAppSettingsSchema>;
+
+// Analytics Events - Eventos para dashboard comercial
+export const analyticsEvents = pgTable("analytics_events", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: varchar("user_id"),
+  sessionId: varchar("session_id"),
+  eventType: text("event_type").notNull(), // accommodation_view, business_view, reservation_click, banner_click, banner_impression, news_ad_click, video_view
+  entityType: text("entity_type"), // accommodation, business, news, banner, video
+  entityId: varchar("entity_id"),
+  entityName: text("entity_name"), // Nome para facilitar relatórios
+  metadata: text("metadata"), // JSON com contexto adicional
+  source: text("source").default("app"), // app, web, admin
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const createAnalyticsEventSchema = z.object({
+  userId: z.string().optional().nullable(),
+  sessionId: z.string().optional().nullable(),
+  eventType: z.enum([
+    "accommodation_view",
+    "business_view", 
+    "reservation_click",
+    "banner_click",
+    "banner_impression",
+    "news_ad_click",
+    "video_view",
+    "news_view",
+    "attraction_view",
+    "phone_click",
+    "whatsapp_click",
+    "website_click",
+    "map_click",
+    "share_click"
+  ]),
+  entityType: z.string().optional().nullable(),
+  entityId: z.string().optional().nullable(),
+  entityName: z.string().optional().nullable(),
+  metadata: z.string().optional().nullable(),
+  source: z.string().optional().default("app"),
+});
+
+export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
+export type CreateAnalyticsEventInput = z.infer<typeof createAnalyticsEventSchema>;
