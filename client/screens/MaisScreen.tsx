@@ -129,7 +129,7 @@ function RomariaCountdownCard({ data }: { data: RomariaData }) {
         onPressOut={() => { scale.value = withSpring(1); }}
       >
         <LinearGradient
-          colors={isDuring ? ["#22C55E", "#16A34A"] : ["#4169E1", "#3B5FC5"]}
+          colors={isDuring ? ["#22C55E", "#16A34A"] : ["#B91C1C", "#991B1B"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.romariaCard}
@@ -143,6 +143,9 @@ function RomariaCountdownCard({ data }: { data: RomariaData }) {
               {isDuring ? (
                 <>
                   <ThemedText style={styles.romariaTitle}>Romaria em andamento</ThemedText>
+                  <ThemedText style={styles.romariaTheme}>
+                    {data.name || "Chamamos: Abba, Pai!"}
+                  </ThemedText>
                   <ThemedText style={styles.romariaMessage}>
                     {data.message_during || "Viva esse momento de fe."}
                   </ThemedText>
@@ -152,8 +155,11 @@ function RomariaCountdownCard({ data }: { data: RomariaData }) {
                   <ThemedText style={styles.romariaTitle}>
                     Faltam {countdown.days} dias para a Romaria
                   </ThemedText>
-                  <ThemedText style={styles.romariaMessage}>
-                    {data.message_before || "Prepare sua caminhada."}
+                  <ThemedText style={styles.romariaTheme}>
+                    {data.name || "Chamamos: Abba, Pai!"}
+                  </ThemedText>
+                  <ThemedText style={styles.romariaDates}>
+                    De 26 de Junho a 05 de Julho
                   </ThemedText>
                 </>
               )}
@@ -328,6 +334,17 @@ const styles = StyleSheet.create({
   romariaMessage: {
     fontSize: 14,
     color: "rgba(255, 255, 255, 0.9)",
+  },
+  romariaTheme: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "white",
+    fontStyle: "italic",
+    marginBottom: 2,
+  },
+  romariaDates: {
+    fontSize: 13,
+    color: "rgba(255, 255, 255, 0.85)",
   },
   countdownContainer: {
     flexDirection: "row",
