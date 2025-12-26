@@ -1,7 +1,9 @@
-import { ScrollView, View, StyleSheet, ActivityIndicator } from "react-native";
+import { useState } from "react";
+import { ScrollView, View, StyleSheet, ActivityIndicator, useWindowDimensions } from "react-native";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useQuery } from "@tanstack/react-query";
+import WebView from "react-native-webview";
 import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
@@ -17,6 +19,8 @@ export default function TermsOfUseScreen() {
   const { theme } = useTheme();
   const headerHeight = useHeaderHeight();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const [webViewHeight, setWebViewHeight] = useState(400);
 
   const { data, isLoading, error } = useQuery<{ content: TermsOfUseData }>({
     queryKey: ["/api/static-pages/termos-de-uso"],
@@ -52,6 +56,63 @@ export default function TermsOfUseScreen() {
     });
   };
 
+  const isHtml = termsData.conteudo && (
+    termsData.conteudo.includes("<p>") || 
+    termsData.conteudo.includes("<br") || 
+    termsData.conteudo.includes("<strong>") ||
+    termsData.conteudo.includes("<ul>") ||
+    termsData.conteudo.includes("<ol>")
+  );
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+      <style>
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+          font-size: 15px;
+          line-height: 1.6;
+          color: ${theme.text};
+          margin: 0;
+          padding: 0;
+          background-color: transparent;
+        }
+        p { margin-bottom: 12px; }
+        h1 { font-size: 24px; font-weight: 700; margin: 20px 0 12px 0; }
+        h2 { font-size: 20px; font-weight: 700; margin: 18px 0 10px 0; }
+        h3 { font-size: 18px; font-weight: 600; margin: 16px 0 8px 0; }
+        h4 { font-size: 16px; font-weight: 600; margin: 14px 0 6px 0; }
+        ul, ol { margin: 12px 0; padding-left: 24px; }
+        li { margin-bottom: 6px; }
+        strong, b { font-weight: 700; }
+        em, i { font-style: italic; }
+        a { color: ${theme.primary}; text-decoration: underline; }
+        .ql-size-small { font-size: 13px; }
+        .ql-size-large { font-size: 18px; }
+        .ql-size-huge { font-size: 24px; }
+        .ql-align-center { text-align: center; }
+        .ql-align-right { text-align: right; }
+        .ql-align-justify { text-align: justify; }
+        u { text-decoration: underline; }
+        s { text-decoration: line-through; }
+      </style>
+    </head>
+    <body>${termsData.conteudo}</body>
+    </html>
+  `;
+
+  const handleWebViewMessage = (event: any) => {
+    try {
+      const data = JSON.parse(event.nativeEvent.data);
+      if (data.height) {
+        setWebViewHeight(data.height + 20);
+      }
+    } catch (e) {}
+  };
+
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: theme.backgroundRoot }]}
@@ -74,9 +135,27 @@ export default function TermsOfUseScreen() {
 
         <View style={styles.divider} />
 
-        <ThemedText type="body" style={styles.content}>
-          {termsData.conteudo}
-        </ThemedText>
+        {isHtml ? (
+          <WebView
+            source={{ html: htmlContent }}
+            style={{ width: width - 64, height: webViewHeight, backgroundColor: "transparent" }}
+            scrollEnabled={false}
+            showsVerticalScrollIndicator={false}
+            originWhitelist={["*"]}
+            onMessage={handleWebViewMessage}
+            injectedJavaScript={`
+              setTimeout(function() {
+                const height = document.body.scrollHeight;
+                window.ReactNativeWebView.postMessage(JSON.stringify({ height: height }));
+              }, 100);
+              true;
+            `}
+          />
+        ) : (
+          <ThemedText type="body" style={styles.content}>
+            {termsData.conteudo}
+          </ThemedText>
+        )}
 
         {termsData.email ? (
           <View style={[styles.contactSection, { backgroundColor: theme.backgroundSecondary }]}>
