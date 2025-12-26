@@ -366,6 +366,23 @@
       <form id="accommodationForm">
         <div class="modal-body">
           <div class="form-group">
+            <label>Escolha o Plano</label>
+            <div class="plan-cards" id="accommodationPlanCards">
+              <div class="plan-card selected" data-plan="basic">
+                <h3>Plano Basico</h3>
+                <div class="price">Gratis</div>
+                <p>Nome e endereco no guia de hospedagens</p>
+              </div>
+              <div class="plan-card" data-plan="complete">
+                <h3>Plano Completo</h3>
+                <div class="price">R$ 149<span>/ano</span></div>
+                <p>Descricao, fotos, comodidades e destaque</p>
+              </div>
+            </div>
+            <input type="hidden" id="accommodationPlan" name="plan" value="basic">
+          </div>
+
+          <div class="form-group">
             <label for="accommodationType">Tipo de Hospedagem *</label>
             <select id="accommodationType" name="accommodation_type" required>
               <option value="">Selecione...</option>
@@ -406,19 +423,31 @@
             <input type="file" id="accommodationLogo" name="logo" accept="image/*">
           </div>
 
-          <div class="form-group">
-            <label for="accommodationDescription">Descricao</label>
-            <textarea id="accommodationDescription" name="description" rows="3"></textarea>
-          </div>
+          <div id="accommodationCompleteFields" class="hidden">
+            <div class="form-group">
+              <label for="accommodationDescription">Descricao</label>
+              <textarea id="accommodationDescription" name="description" rows="3"></textarea>
+            </div>
 
-          <div class="form-group">
-            <label for="accommodationWebsite">Website</label>
-            <input type="url" id="accommodationWebsite" name="website" placeholder="https://">
-          </div>
+            <div class="form-group">
+              <label for="accommodationWebsite">Website</label>
+              <input type="url" id="accommodationWebsite" name="website" placeholder="https://">
+            </div>
 
-          <div class="form-group">
-            <label for="accommodationInstagram">Instagram</label>
-            <input type="text" id="accommodationInstagram" name="instagram" placeholder="@seuinstagram">
+            <div class="form-group">
+              <label for="accommodationInstagram">Instagram</label>
+              <input type="text" id="accommodationInstagram" name="instagram" placeholder="@seuinstagram">
+            </div>
+
+            <div class="form-group">
+              <label for="accommodationCheckIn">Horario de Check-in</label>
+              <input type="time" id="accommodationCheckIn" name="checkInTime" value="14:00">
+            </div>
+
+            <div class="form-group">
+              <label for="accommodationCheckOut">Horario de Check-out</label>
+              <input type="time" id="accommodationCheckOut" name="checkOutTime" value="12:00">
+            </div>
           </div>
         </div>
         <div class="modal-footer">
@@ -662,7 +691,7 @@
     document.getElementById('addBusinessBtn').addEventListener('click', () => openModal('businessModal'));
     document.getElementById('addAccommodationBtn').addEventListener('click', () => openModal('accommodationModal'));
 
-    // Plan cards
+    // Plan cards - Business
     document.querySelectorAll('#businessModal .plan-card').forEach(card => {
       card.addEventListener('click', () => {
         document.querySelectorAll('#businessModal .plan-card').forEach(c => c.classList.remove('selected'));
@@ -673,6 +702,21 @@
           document.getElementById('businessCompleteFields').classList.remove('hidden');
         } else {
           document.getElementById('businessCompleteFields').classList.add('hidden');
+        }
+      });
+    });
+
+    // Plan cards - Accommodation
+    document.querySelectorAll('#accommodationModal .plan-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('#accommodationModal .plan-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        document.getElementById('accommodationPlan').value = card.dataset.plan;
+        
+        if (card.dataset.plan === 'complete') {
+          document.getElementById('accommodationCompleteFields').classList.remove('hidden');
+        } else {
+          document.getElementById('accommodationCompleteFields').classList.add('hidden');
         }
       });
     });
@@ -714,8 +758,23 @@
         if (response.ok) {
           closeModal('businessModal');
           document.getElementById('businessForm').reset();
-          showAlert('Empresa cadastrada com sucesso! Aguarde a aprovacao do administrador.');
-          loadListings();
+          document.getElementById('businessCompleteFields').classList.add('hidden');
+          document.querySelectorAll('#businessModal .plan-card').forEach(c => c.classList.remove('selected'));
+          document.querySelector('#businessModal .plan-card[data-plan="basic"]').classList.add('selected');
+          document.getElementById('businessPlan').value = 'basic';
+          
+          if (data.paymentUrl) {
+            showAlert('Cadastro realizado! Voce sera redirecionado para o pagamento...');
+            setTimeout(() => {
+              window.location.href = data.paymentUrl;
+            }, 1500);
+          } else if (data.requiresPayment) {
+            showAlert('Cadastro realizado! ' + (data.message || 'O pagamento sera processado posteriormente.'));
+            loadListings();
+          } else {
+            showAlert('Empresa cadastrada com sucesso! Aguarde a aprovacao do administrador.');
+            loadListings();
+          }
         } else {
           alert(data.error || 'Erro ao cadastrar empresa');
         }
@@ -742,13 +801,19 @@
         formData.append('phone', document.getElementById('accommodationPhone').value);
         formData.append('whatsapp', document.getElementById('accommodationWhatsapp').value);
         formData.append('email', document.getElementById('accommodationEmail').value);
-        formData.append('description', document.getElementById('accommodationDescription').value);
-        formData.append('website', document.getElementById('accommodationWebsite').value);
-        formData.append('instagram', document.getElementById('accommodationInstagram').value);
+        formData.append('plan', document.getElementById('accommodationPlan').value);
 
         const logoInput = document.getElementById('accommodationLogo');
         if (logoInput.files[0]) {
           formData.append('logo', logoInput.files[0]);
+        }
+
+        if (document.getElementById('accommodationPlan').value === 'complete') {
+          formData.append('description', document.getElementById('accommodationDescription').value);
+          formData.append('website', document.getElementById('accommodationWebsite').value);
+          formData.append('instagram', document.getElementById('accommodationInstagram').value);
+          formData.append('checkInTime', document.getElementById('accommodationCheckIn').value);
+          formData.append('checkOutTime', document.getElementById('accommodationCheckOut').value);
         }
 
         const response = await fetch('/api/owner/listings/accommodation', {
@@ -761,8 +826,23 @@
         if (response.ok) {
           closeModal('accommodationModal');
           document.getElementById('accommodationForm').reset();
-          showAlert('Hospedagem cadastrada com sucesso! Aguarde a aprovacao do administrador.');
-          loadListings();
+          document.getElementById('accommodationCompleteFields').classList.add('hidden');
+          document.querySelectorAll('#accommodationModal .plan-card').forEach(c => c.classList.remove('selected'));
+          document.querySelector('#accommodationModal .plan-card[data-plan="basic"]').classList.add('selected');
+          document.getElementById('accommodationPlan').value = 'basic';
+          
+          if (data.paymentUrl) {
+            showAlert('Cadastro realizado! Voce sera redirecionado para o pagamento...');
+            setTimeout(() => {
+              window.location.href = data.paymentUrl;
+            }, 1500);
+          } else if (data.requiresPayment) {
+            showAlert('Cadastro realizado! ' + (data.message || 'O pagamento sera processado posteriormente.'));
+            loadListings();
+          } else {
+            showAlert('Hospedagem cadastrada com sucesso! Aguarde a aprovacao do administrador.');
+            loadListings();
+          }
         } else {
           alert(data.error || 'Erro ao cadastrar hospedagem');
         }

@@ -2360,6 +2360,69 @@ export function registerAdminRoutes(app: Express) {
         listingId: newBusiness.id
       });
 
+      // If complete plan, create Mercado Pago payment
+      if (plan === 'complete') {
+        const settings = await storage.getAllAppSettings();
+        const settingsMap: Record<string, string> = {};
+        settings.forEach((s) => { if (s.value) settingsMap[s.key] = s.value; });
+
+        const isProduction = settingsMap['mp_environment'] === 'production';
+        const accessToken = isProduction 
+          ? settingsMap['mp_production_access_token']
+          : settingsMap['mp_sandbox_access_token'];
+        const price = parseFloat(settingsMap['plan_business_complete_price']) || 99.90;
+
+        if (accessToken) {
+          try {
+            const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                items: [{
+                  title: `Plano Completo - ${req.body.name}`,
+                  quantity: 1,
+                  unit_price: price,
+                  currency_id: 'BRL'
+                }],
+                external_reference: `business_${newBusiness.id}`,
+                back_urls: {
+                  success: `${req.protocol}://${req.get('host')}/cadastro/sucesso`,
+                  failure: `${req.protocol}://${req.get('host')}/cadastro/erro`,
+                  pending: `${req.protocol}://${req.get('host')}/cadastro/pendente`
+                },
+                auto_return: 'approved'
+              })
+            });
+
+            const mpData = await mpResponse.json();
+            const paymentUrl = isProduction ? mpData.init_point : (mpData.sandbox_init_point || mpData.init_point);
+            if (paymentUrl) {
+              return res.json({ 
+                success: true, 
+                listing: newBusiness, 
+                type: 'business',
+                paymentUrl: paymentUrl,
+                requiresPayment: true
+              });
+            }
+          } catch (mpError) {
+            console.error("Mercado Pago error:", mpError);
+          }
+        }
+
+        // If MP fails, return without payment URL
+        return res.json({ 
+          success: true, 
+          listing: newBusiness, 
+          type: 'business',
+          message: 'Cadastro realizado. O pagamento sera processado posteriormente.',
+          requiresPayment: true
+        });
+      }
+
       res.json({ success: true, listing: newBusiness, type: 'business' });
     } catch (error) {
       console.error("Create business error:", error);
@@ -2377,6 +2440,7 @@ export function registerAdminRoutes(app: Express) {
         return res.status(401).json({ error: "Usuário não encontrado" });
       }
 
+      const plan = req.body.plan || 'basic';
       let logoUrl = null;
       if (req.file) {
         logoUrl = `/uploads/cadastros/${req.file.filename}`;
@@ -2386,8 +2450,8 @@ export function registerAdminRoutes(app: Express) {
         name: req.body.name,
         type: req.body.accommodation_type || 'pousada',
         ownerId: ownerId,
-        planType: 'complete',
-        planStatus: 'pending',
+        planType: plan,
+        planStatus: plan === 'basic' ? 'active' : 'pending',
         ownerEmail: owner.email,
         ownerPhone: owner.phone,
         logoUrl: logoUrl,
@@ -2395,14 +2459,17 @@ export function registerAdminRoutes(app: Express) {
         whatsapp: req.body.whatsapp || owner.phone,
         phone: req.body.phone,
         email: req.body.email,
-        description: req.body.description,
-        website: req.body.website,
-        instagram: req.body.instagram,
-        checkInTime: req.body.checkInTime || '14:00',
-        checkOutTime: req.body.checkOutTime || '12:00',
         published: false,
         city: 'Trindade',
       };
+
+      if (plan === 'complete') {
+        accommodationData.description = req.body.description;
+        accommodationData.website = req.body.website;
+        accommodationData.instagram = req.body.instagram;
+        accommodationData.checkInTime = req.body.checkInTime || '14:00';
+        accommodationData.checkOutTime = req.body.checkOutTime || '12:00';
+      }
 
       const newAccommodation = await storage.createAccommodation(accommodationData);
 
@@ -2412,6 +2479,69 @@ export function registerAdminRoutes(app: Express) {
         listingType: 'accommodation',
         listingId: newAccommodation.id
       });
+
+      // If complete plan, create Mercado Pago payment
+      if (plan === 'complete') {
+        const settings = await storage.getAllAppSettings();
+        const settingsMap: Record<string, string> = {};
+        settings.forEach((s) => { if (s.value) settingsMap[s.key] = s.value; });
+
+        const isProduction = settingsMap['mp_environment'] === 'production';
+        const accessToken = isProduction 
+          ? settingsMap['mp_production_access_token']
+          : settingsMap['mp_sandbox_access_token'];
+        const price = parseFloat(settingsMap['plan_accommodation_price']) || 149.90;
+
+        if (accessToken) {
+          try {
+            const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                items: [{
+                  title: `Plano Completo Hospedagem - ${req.body.name}`,
+                  quantity: 1,
+                  unit_price: price,
+                  currency_id: 'BRL'
+                }],
+                external_reference: `accommodation_${newAccommodation.id}`,
+                back_urls: {
+                  success: `${req.protocol}://${req.get('host')}/cadastro/sucesso`,
+                  failure: `${req.protocol}://${req.get('host')}/cadastro/erro`,
+                  pending: `${req.protocol}://${req.get('host')}/cadastro/pendente`
+                },
+                auto_return: 'approved'
+              })
+            });
+
+            const mpData = await mpResponse.json();
+            const paymentUrl = isProduction ? mpData.init_point : (mpData.sandbox_init_point || mpData.init_point);
+            if (paymentUrl) {
+              return res.json({ 
+                success: true, 
+                listing: newAccommodation, 
+                type: 'accommodation',
+                paymentUrl: paymentUrl,
+                requiresPayment: true
+              });
+            }
+          } catch (mpError) {
+            console.error("Mercado Pago error:", mpError);
+          }
+        }
+
+        // If MP fails, return without payment URL
+        return res.json({ 
+          success: true, 
+          listing: newAccommodation, 
+          type: 'accommodation',
+          message: 'Cadastro realizado. O pagamento sera processado posteriormente.',
+          requiresPayment: true
+        });
+      }
 
       res.json({ success: true, listing: newAccommodation, type: 'accommodation' });
     } catch (error) {
