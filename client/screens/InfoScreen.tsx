@@ -1,10 +1,12 @@
-import { ScrollView, View, StyleSheet, Pressable, Linking, FlatList, Dimensions } from "react-native";
+import { ScrollView, View, StyleSheet, Pressable, Linking, FlatList, Dimensions, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useHeaderHeight } from "@react-navigation/elements";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feather } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigation } from "@react-navigation/native";
+import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -15,6 +17,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius } from "@/constants/theme";
 import { getApiUrl } from "@/lib/query-client";
+import type { RootStackParamList } from "@/navigation/RootStackNavigator";
 
 interface InfoPageContent {
   heroTitle: string;
@@ -24,6 +27,11 @@ interface InfoPageContent {
   nossaHistoria2: string;
   quemSomos: string;
   quemSomosImage: string | null;
+}
+
+interface AppSetting {
+  key: string;
+  value: string | null;
 }
 
 function getFullImageUrl(imageUrl: string | null): string | null {
@@ -62,12 +70,6 @@ const offerings = [
   { id: "6", icon: "book", title: "Cultura e Historia", color: VibrantColors.coral },
 ];
 
-const galleryImages = [
-  { id: "1", uri: "https://images.unsplash.com/photo-1548625149-fc4a29cf7092?w=400" },
-  { id: "2", uri: "https://images.unsplash.com/photo-1438032005730-c779502df39b?w=400" },
-  { id: "3", uri: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400" },
-];
-
 function OfferingCard({ icon, title, color }: { icon: string; title: string; color: string }) {
   const { theme } = useTheme();
   return (
@@ -81,13 +83,17 @@ function OfferingCard({ icon, title, color }: { icon: string; title: string; col
 }
 
 
-function SocialButton({ icon, onPress }: { icon: string; onPress: () => void }) {
+function SocialButton({ icon, onPress, disabled }: { icon: string; onPress: () => void; disabled?: boolean }) {
   const { theme } = useTheme();
   const scale = useSharedValue(1);
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
+
+  if (disabled) {
+    return null;
+  }
 
   return (
     <AnimatedPressable
@@ -103,11 +109,16 @@ function SocialButton({ icon, onPress }: { icon: string; onPress: () => void }) 
 
 export default function InfoScreen() {
   const insets = useSafeAreaInsets();
-  const headerHeight = useHeaderHeight();
+  const tabBarHeight = useBottomTabBarHeight();
   const { theme } = useTheme();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const { data: pageContent } = useQuery<{ content: InfoPageContent | null }>({
     queryKey: ["/api/static-pages/info"],
+  });
+
+  const { data: settingsData } = useQuery<{ settings: AppSetting[] }>({
+    queryKey: ["/api/public/settings"],
   });
 
   const content = pageContent?.content;
@@ -119,7 +130,20 @@ export default function InfoScreen() {
   const quemSomos = content?.quemSomos || "Somos peregrinos servindo peregrinos. Uma equipe apaixonada por Trindade, comprometida em levar informacao confiavel e manter viva a chama da devocao.";
   const quemSomosImage = content?.quemSomosImage ? getFullImageUrl(content.quemSomosImage) : "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600";
 
-  const handleOpenLink = async (url: string) => {
+  const getSettingValue = (key: string): string | null => {
+    if (!settingsData?.settings) return null;
+    const setting = settingsData.settings.find(s => s.key === key);
+    return setting?.value || null;
+  };
+
+  const socialInstagram = getSettingValue('social_instagram');
+  const socialFacebook = getSettingValue('social_facebook');
+  const socialYoutube = getSettingValue('social_youtube');
+
+  const hasSocialLinks = socialInstagram || socialFacebook || socialYoutube;
+
+  const handleOpenLink = async (url: string | null) => {
+    if (!url) return;
     try {
       await Linking.openURL(url);
     } catch (error) {}
@@ -128,7 +152,7 @@ export default function InfoScreen() {
   return (
     <ScrollView
       style={{ flex: 1, backgroundColor: theme.backgroundRoot }}
-      contentContainerStyle={{ paddingBottom: insets.bottom + Spacing.xl }}
+      contentContainerStyle={{ paddingBottom: tabBarHeight + Spacing.xl }}
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.heroBanner}>
@@ -235,39 +259,35 @@ export default function InfoScreen() {
           </View>
         </View>
 
-        <View style={styles.section}>
-          <ThemedText type="h3" style={styles.sectionTitle}>Galeria</ThemedText>
-          <FlatList
-            horizontal
-            data={galleryImages}
-            keyExtractor={(item) => item.id}
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.galleryList}
-            renderItem={({ item }) => (
-              <View style={styles.galleryImageWrapper}>
-                <Image source={{ uri: item.uri }} style={styles.galleryImage} contentFit="cover" />
-              </View>
-            )}
-          />
-        </View>
-
-        <View style={styles.ctaSection}>
-          <ThemedText type="h3" style={styles.ctaTitle}>Acompanhe as novidades</ThemedText>
-          <View style={styles.socialRow}>
-            <SocialButton icon="instagram" onPress={() => handleOpenLink("https://instagram.com")} />
-            <SocialButton icon="facebook" onPress={() => handleOpenLink("https://facebook.com")} />
-            <SocialButton icon="youtube" onPress={() => handleOpenLink("https://youtube.com")} />
+        {hasSocialLinks ? (
+          <View style={styles.ctaSection}>
+            <ThemedText type="h3" style={styles.ctaTitle}>Acompanhe as novidades</ThemedText>
+            <View style={styles.socialRow}>
+              {socialInstagram ? (
+                <SocialButton icon="instagram" onPress={() => handleOpenLink(socialInstagram)} />
+              ) : null}
+              {socialFacebook ? (
+                <SocialButton icon="facebook" onPress={() => handleOpenLink(socialFacebook)} />
+              ) : null}
+              {socialYoutube ? (
+                <SocialButton icon="youtube" onPress={() => handleOpenLink(socialYoutube)} />
+              ) : null}
+            </View>
           </View>
-        </View>
+        ) : null}
 
         <View style={styles.footer}>
           <ThemedText type="caption" secondary style={styles.footerText}>
             2024 Portal do Romeiro. Todos os direitos reservados.
           </ThemedText>
           <View style={styles.footerLinks}>
-            <ThemedText type="caption" style={styles.footerLink}>Politica de Privacidade</ThemedText>
+            <Pressable onPress={() => navigation.navigate("PrivacyPolicy")}>
+              <ThemedText type="caption" style={styles.footerLink}>Politica de Privacidade</ThemedText>
+            </Pressable>
             <ThemedText type="caption" secondary> | </ThemedText>
-            <ThemedText type="caption" style={styles.footerLink}>Termos de Uso</ThemedText>
+            <Pressable onPress={() => navigation.navigate("TermsOfUse")}>
+              <ThemedText type="caption" style={styles.footerLink}>Termos de Uso</ThemedText>
+            </Pressable>
           </View>
         </View>
       </View>
@@ -422,17 +442,6 @@ const styles = StyleSheet.create({
   },
   mascotInfoTitle: {
     marginBottom: Spacing.xs,
-  },
-  galleryList: {
-    gap: Spacing.sm,
-  },
-  galleryImageWrapper: {
-    borderRadius: BorderRadius.md,
-    overflow: "hidden",
-  },
-  galleryImage: {
-    width: 160,
-    height: 120,
   },
   ctaSection: {
     alignItems: "center",

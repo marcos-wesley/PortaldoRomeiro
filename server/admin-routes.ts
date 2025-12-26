@@ -1677,7 +1677,10 @@ export function registerAdminRoutes(app: Express) {
         'plan_accommodation_price',
         'plan_accommodation_duration',
         'app_name',
-        'contact_whatsapp'
+        'contact_whatsapp',
+        'social_facebook',
+        'social_instagram',
+        'social_youtube'
       ];
       const publicSettings = allSettings.filter(s => publicKeys.includes(s.key));
       res.json({ settings: publicSettings });
