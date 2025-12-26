@@ -203,6 +203,7 @@ function requireAuth(req: Request, res: Response, next: NextFunction) {
 
 export function registerAdminRoutes(app: Express) {
   const express = require("express");
+  const adminDir = path.join(process.cwd(), "server", "admin");
   app.use("/uploads/empresas", express.static(uploadsDir));
 
   app.post("/admin/api/upload/image", requireAuth, upload.single("image"), (req: Request, res: Response) => {
@@ -356,7 +357,7 @@ export function registerAdminRoutes(app: Express) {
     if (isAuthenticated(req)) {
       return res.redirect("/admin/dashboard");
     }
-    const loginPath = path.join(__dirname, "admin", "login.html");
+    const loginPath = path.join(adminDir, "login.html");
     res.sendFile(loginPath);
   });
 
