@@ -1,0 +1,259 @@
+# Guia de Build - Aplicativos Móveis
+## Portal do Romeiro - Android (APK/AAB) e iOS (IPA)
+
+Este guia explica como gerar os builds do aplicativo para publicação nas lojas.
+
+---
+
+## Importante: Limitações
+
+Os builds nativos (APK, AAB, IPA) **não podem ser gerados diretamente no Replit**. 
+É necessário usar o **EAS Build** (serviço cloud da Expo) ou um ambiente local.
+
+---
+
+## Opção 1: EAS Build (Recomendado)
+
+O EAS (Expo Application Services) é o serviço oficial da Expo para builds na nuvem.
+
+### Pré-requisitos
+
+1. **Conta Expo** gratuita em [expo.dev](https://expo.dev)
+2. **Conta de Desenvolvedor** (para publicar nas lojas):
+   - **Google Play Console**: $25 (taxa única)
+   - **Apple Developer Program**: $99/ano
+
+### Passo 1: Instalar EAS CLI
+
+```bash
+# Em sua máquina local (não no Replit)
+npm install -g eas-cli
+
+# Fazer login na conta Expo
+eas login
+```
+
+### Passo 2: Configurar o Projeto
+
+Copie os arquivos do projeto para sua máquina local:
+
+```bash
+# Baixar backup do Replit ou clonar repositório
+tar -xzf portal_romeiro_backup_XXXXXX.tar.gz
+cd portal_romeiro
+
+# Instalar dependências
+npm install
+```
+
+### Passo 3: Configurar eas.json
+
+O arquivo `eas.json` já está configurado no projeto:
+
+```json
+{
+  "cli": {
+    "version": ">= 5.0.0"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "android": {
+        "buildType": "app-bundle"
+      },
+      "ios": {
+        "resourceClass": "m-medium"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
+```
+
+### Passo 4: Build para Android
+
+#### APK (para testes internos)
+```bash
+eas build --platform android --profile preview
+```
+
+#### AAB (para Google Play Store)
+```bash
+eas build --platform android --profile production
+```
+
+Após o build (5-15 minutos), você receberá um link para download.
+
+### Passo 5: Build para iOS
+
+```bash
+# Requer conta Apple Developer configurada
+eas build --platform ios --profile production
+```
+
+O EAS irá:
+1. Solicitar suas credenciais Apple (ou gerar automaticamente)
+2. Criar certificados e provisioning profiles
+3. Compilar o app na nuvem
+4. Gerar o arquivo IPA
+
+---
+
+## Opção 2: Build Local (Avançado)
+
+### Android Local
+
+Requer **Android Studio** e **JDK 17**.
+
+```bash
+# Gerar projeto Android nativo
+npx expo prebuild --platform android
+
+# Abrir no Android Studio
+cd android
+./gradlew assembleRelease
+
+# APK gerado em:
+# android/app/build/outputs/apk/release/app-release.apk
+```
+
+### iOS Local
+
+Requer **macOS** com **Xcode 15+**.
+
+```bash
+# Gerar projeto iOS nativo
+npx expo prebuild --platform ios
+
+# Abrir no Xcode
+open ios/PortaldoRomeiro.xcworkspace
+
+# No Xcode:
+# 1. Selecionar "Any iOS Device"
+# 2. Product > Archive
+# 3. Distribute App
+```
+
+---
+
+## Publicando nas Lojas
+
+### Google Play Store
+
+1. Acesse [Google Play Console](https://play.google.com/console)
+2. Crie um novo aplicativo
+3. Preencha as informações:
+   - Nome: Portal do Romeiro
+   - Descrição
+   - Screenshots (mínimo 2)
+   - Ícone (512x512)
+   - Política de privacidade
+4. Faça upload do arquivo AAB
+5. Configure preço (Gratuito)
+6. Envie para revisão
+
+### App Store (iOS)
+
+1. Acesse [App Store Connect](https://appstoreconnect.apple.com)
+2. Crie um novo aplicativo
+3. Preencha as informações:
+   - Nome: Portal do Romeiro
+   - Descrição
+   - Screenshots (todos os tamanhos)
+   - Ícone (1024x1024)
+   - Política de privacidade
+4. Use EAS Submit ou Transporter para upload
+5. Envie para revisão
+
+---
+
+## Atualizando o App
+
+### Atualizações OTA (Over-The-Air)
+
+Para atualizações de JavaScript sem novo build:
+
+```bash
+eas update --branch production
+```
+
+### Nova Versão Completa
+
+1. Atualize a versão em `app.json`:
+```json
+{
+  "expo": {
+    "version": "1.0.1",
+    "android": {
+      "versionCode": 2
+    },
+    "ios": {
+      "buildNumber": "2"
+    }
+  }
+}
+```
+
+2. Gere novo build:
+```bash
+eas build --platform all --profile production
+```
+
+3. Envie para as lojas
+
+---
+
+## Informações do App.json
+
+O arquivo `app.json` contém as configurações principais:
+
+| Campo | Valor |
+|-------|-------|
+| Nome | Portal do Romeiro |
+| Bundle ID (iOS) | com.portalromeiro.app |
+| Package (Android) | com.portalromeiro.app |
+| Versão | 1.0.0 |
+
+---
+
+## Custos Estimados
+
+| Serviço | Custo |
+|---------|-------|
+| EAS Build (Free tier) | 30 builds/mês |
+| EAS Build (Production) | $99/mês (ilimitado) |
+| Google Play Console | $25 (única vez) |
+| Apple Developer | $99/ano |
+
+---
+
+## Checklist Antes de Publicar
+
+- [ ] Testar app em dispositivos reais
+- [ ] Verificar todas as funcionalidades
+- [ ] Configurar ícone e splash screen
+- [ ] Criar screenshots para as lojas
+- [ ] Escrever descrição do app
+- [ ] Criar política de privacidade
+- [ ] Configurar Mercado Pago em produção
+- [ ] Remover dados de teste
+
+---
+
+## Suporte
+
+- Documentação Expo: [docs.expo.dev](https://docs.expo.dev)
+- EAS Build: [docs.expo.dev/build/introduction](https://docs.expo.dev/build/introduction)
+- Google Play: [support.google.com/googleplay/android-developer](https://support.google.com/googleplay/android-developer)
+- App Store: [developer.apple.com/app-store](https://developer.apple.com/app-store)
