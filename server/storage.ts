@@ -1031,6 +1031,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteOwnerUser(id: string): Promise<boolean> {
+    await db.delete(ownerListings).where(eq(ownerListings.ownerId, id));
     const result = await db.delete(ownerUsers).where(eq(ownerUsers.id, id)).returning();
     return result.length > 0;
   }
