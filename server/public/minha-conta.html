@@ -110,7 +110,7 @@
 <body>
   <header class="header">
     <img src="/logo-oficial.png" alt="Portal do Romeiro - Fé, Devoção e Informação" style="margin-bottom: 8px;">
-    <a href="/">Voltar ao Portal do Romeiro</a>
+    <a href="#" id="linkSiteHeader" onclick="goToSite(event)">Voltar ao Portal do Romeiro</a>
   </header>
 
   <div class="container">
@@ -473,6 +473,38 @@
     let listings = [];
     let currentTab = 'all';
     let editingListing = null;
+    let siteSettings = {};
+
+    // Load public settings for site URL
+    async function loadPublicSettings() {
+      try {
+        const res = await fetch('/api/public/settings');
+        if (res.ok) {
+          const data = await res.json();
+          data.settings.forEach(s => {
+            siteSettings[s.key] = s.value;
+          });
+          updateSiteLink();
+        }
+      } catch (error) {
+        console.error('Error loading settings:', error);
+      }
+    }
+
+    function updateSiteLink() {
+      const siteUrl = siteSettings['link_website'] || '/';
+      const linkHeader = document.getElementById('linkSiteHeader');
+      if (linkHeader) linkHeader.href = siteUrl;
+    }
+
+    function goToSite(e) {
+      e.preventDefault();
+      const siteUrl = siteSettings['link_website'] || '/';
+      window.location.href = siteUrl;
+    }
+
+    // Load settings on page load
+    loadPublicSettings();
 
     async function checkAuth() {
       try {

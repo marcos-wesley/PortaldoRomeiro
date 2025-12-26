@@ -952,7 +952,7 @@
   </main>
 
   <footer class="footer">
-    <p>Portal do Romeiro - Seu guia em Trindade | <a href="/">Voltar ao site</a> | <a href="/minha-conta">Minha Conta</a></p>
+    <p>Portal do Romeiro - Seu guia em Trindade | <a href="#" id="linkSiteFooter" onclick="goToSite(event)">Voltar ao site</a> | <a href="/minha-conta">Minha Conta</a></p>
   </footer>
 
   <div id="toast" class="toast"></div>
@@ -987,6 +987,17 @@
       const accPrice = settings['plan_accommodation_price'] || '199.90';
       document.getElementById('business-complete-price').textContent = `R$ ${parseFloat(businessPrice).toFixed(2).replace('.', ',')}`;
       document.getElementById('accommodation-price').textContent = `R$ ${parseFloat(accPrice).toFixed(2).replace('.', ',')}`;
+      
+      // Update site link
+      const siteUrl = settings['link_website'] || '/';
+      const linkFooter = document.getElementById('linkSiteFooter');
+      if (linkFooter) linkFooter.href = siteUrl;
+    }
+    
+    function goToSite(e) {
+      e.preventDefault();
+      const siteUrl = settings['link_website'] || '/';
+      window.location.href = siteUrl;
     }
 
     function selectType(type) {

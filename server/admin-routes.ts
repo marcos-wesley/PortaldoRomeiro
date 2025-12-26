@@ -1740,7 +1740,8 @@ export function registerAdminRoutes(app: Express) {
         'contact_whatsapp',
         'social_facebook',
         'social_instagram',
-        'social_youtube'
+        'social_youtube',
+        'link_website'
       ];
       const publicSettings = allSettings.filter(s => publicKeys.includes(s.key));
       res.json({ settings: publicSettings });
