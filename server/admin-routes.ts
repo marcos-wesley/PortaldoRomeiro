@@ -1757,7 +1757,7 @@ export function registerAdminRoutes(app: Express) {
         const business = await storage.createBusiness(businessData);
 
         // Create owner user account
-        await storage.createOwnerUser({
+        const ownerUser = await storage.createOwnerUser({
           email: req.body.owner_email,
           password: passwordHash,
           name: req.body.owner_name,
@@ -1765,6 +1765,16 @@ export function registerAdminRoutes(app: Express) {
           ownerType: 'business',
           listingId: business.id,
         });
+
+        // Create owner_listing relationship
+        await storage.createOwnerListing({
+          ownerId: ownerUser.id,
+          listingType: 'business',
+          listingId: business.id
+        });
+
+        // Update business with ownerId
+        await storage.updateBusiness(business.id, { ownerId: ownerUser.id } as any);
 
         // For paid plans, create payment preference with Mercado Pago
         if (plan === 'complete') {
@@ -1855,7 +1865,7 @@ export function registerAdminRoutes(app: Express) {
         const accommodation = await storage.createAccommodation(accData);
 
         // Create owner user account
-        await storage.createOwnerUser({
+        const ownerUser = await storage.createOwnerUser({
           email: req.body.owner_email,
           password: passwordHash,
           name: req.body.owner_name,
@@ -1863,6 +1873,16 @@ export function registerAdminRoutes(app: Express) {
           ownerType: 'accommodation',
           listingId: accommodation.id,
         });
+
+        // Create owner_listing relationship
+        await storage.createOwnerListing({
+          ownerId: ownerUser.id,
+          listingType: 'accommodation',
+          listingId: accommodation.id
+        });
+
+        // Update accommodation with ownerId
+        await storage.updateAccommodation(accommodation.id, { ownerId: ownerUser.id } as any);
 
         // Basic plan - no payment needed
         if (isBasicPlan) {
@@ -2219,6 +2239,242 @@ export function registerAdminRoutes(app: Express) {
     } catch (error) {
       console.error("Update listing error:", error);
       res.status(500).json({ error: "Erro ao atualizar dados" });
+    }
+  });
+
+  // Get all owner's listings (businesses and accommodations)
+  app.get("/api/owner/listings", requireOwnerAuth, async (req, res) => {
+    try {
+      const ownerId = (req.session as any).ownerId;
+      const type = req.query.type as string | undefined;
+
+      if (type === 'business') {
+        const businessList = await storage.getBusinessesByOwnerId(ownerId);
+        return res.json({ 
+          listings: businessList.map(b => ({ ...b, listingType: 'business' })),
+          type: 'business'
+        });
+      } else if (type === 'accommodation') {
+        const accommodationList = await storage.getAccommodationsByOwnerId(ownerId);
+        return res.json({ 
+          listings: accommodationList.map(a => ({ ...a, listingType: 'accommodation' })),
+          type: 'accommodation'
+        });
+      }
+
+      // Return all listings
+      const businessList = await storage.getBusinessesByOwnerId(ownerId);
+      const accommodationList = await storage.getAccommodationsByOwnerId(ownerId);
+
+      const allListings = [
+        ...businessList.map(b => ({ ...b, listingType: 'business' as const })),
+        ...accommodationList.map(a => ({ ...a, listingType: 'accommodation' as const }))
+      ].sort((a, b) => {
+        const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return dateB - dateA;
+      });
+
+      res.json({ listings: allListings });
+    } catch (error) {
+      console.error("Get listings error:", error);
+      res.status(500).json({ error: "Erro ao carregar cadastros" });
+    }
+  });
+
+  // Get a specific listing by ID
+  app.get("/api/owner/listings/:type/:id", requireOwnerAuth, async (req, res) => {
+    try {
+      const ownerId = (req.session as any).ownerId;
+      const { type, id } = req.params;
+
+      if (type === 'business') {
+        const business = await storage.getBusinessById(id);
+        if (!business || business.ownerId !== ownerId) {
+          return res.status(404).json({ error: "Empresa não encontrada" });
+        }
+        return res.json({ type: 'business', listing: business });
+      } else if (type === 'accommodation') {
+        const accommodation = await storage.getAccommodationById(id);
+        if (!accommodation || accommodation.ownerId !== ownerId) {
+          return res.status(404).json({ error: "Hospedagem não encontrada" });
+        }
+        return res.json({ type: 'accommodation', listing: accommodation });
+      }
+
+      return res.status(400).json({ error: "Tipo de cadastro inválido" });
+    } catch (error) {
+      console.error("Get listing error:", error);
+      res.status(500).json({ error: "Erro ao carregar cadastro" });
+    }
+  });
+
+  // Create a new business (from owner portal)
+  app.post("/api/owner/listings/business", requireOwnerAuth, publicUpload.single("logo"), async (req, res) => {
+    try {
+      const ownerId = (req.session as any).ownerId;
+      const owner = await storage.getOwnerUserById(ownerId);
+
+      if (!owner) {
+        return res.status(401).json({ error: "Usuário não encontrado" });
+      }
+
+      const plan = req.body.plan || 'basic';
+      let logoUrl = null;
+      if (req.file) {
+        logoUrl = `/uploads/cadastros/${req.file.filename}`;
+      }
+
+      const businessData: any = {
+        name: req.body.name,
+        category: req.body.category || 'outros',
+        categoryId: req.body.category || 'outros',
+        ownerId: ownerId,
+        planType: plan,
+        planStatus: plan === 'basic' ? 'active' : 'pending',
+        ownerEmail: owner.email,
+        ownerPhone: owner.phone,
+        logoUrl: logoUrl,
+        address: req.body.address,
+        whatsapp: req.body.whatsapp || owner.phone,
+        published: false,
+        city: 'Trindade',
+      };
+
+      if (plan === 'complete') {
+        businessData.description = req.body.description;
+        businessData.shortDescription = req.body.shortDescription;
+        businessData.website = req.body.website;
+        businessData.instagram = req.body.instagram;
+        businessData.facebook = req.body.facebook;
+        businessData.hours = req.body.hours;
+        businessData.phone = req.body.phone;
+      }
+
+      const newBusiness = await storage.createBusiness(businessData);
+
+      // Create owner_listing relationship
+      await storage.createOwnerListing({
+        ownerId: ownerId,
+        listingType: 'business',
+        listingId: newBusiness.id
+      });
+
+      res.json({ success: true, listing: newBusiness, type: 'business' });
+    } catch (error) {
+      console.error("Create business error:", error);
+      res.status(500).json({ error: "Erro ao criar empresa" });
+    }
+  });
+
+  // Create a new accommodation (from owner portal)
+  app.post("/api/owner/listings/accommodation", requireOwnerAuth, publicUpload.single("logo"), async (req, res) => {
+    try {
+      const ownerId = (req.session as any).ownerId;
+      const owner = await storage.getOwnerUserById(ownerId);
+
+      if (!owner) {
+        return res.status(401).json({ error: "Usuário não encontrado" });
+      }
+
+      let logoUrl = null;
+      if (req.file) {
+        logoUrl = `/uploads/cadastros/${req.file.filename}`;
+      }
+
+      const accommodationData: any = {
+        name: req.body.name,
+        type: req.body.accommodation_type || 'pousada',
+        ownerId: ownerId,
+        planType: 'complete',
+        planStatus: 'pending',
+        ownerEmail: owner.email,
+        ownerPhone: owner.phone,
+        logoUrl: logoUrl,
+        address: req.body.address,
+        whatsapp: req.body.whatsapp || owner.phone,
+        phone: req.body.phone,
+        email: req.body.email,
+        description: req.body.description,
+        website: req.body.website,
+        instagram: req.body.instagram,
+        checkInTime: req.body.checkInTime || '14:00',
+        checkOutTime: req.body.checkOutTime || '12:00',
+        published: false,
+        city: 'Trindade',
+      };
+
+      const newAccommodation = await storage.createAccommodation(accommodationData);
+
+      // Create owner_listing relationship
+      await storage.createOwnerListing({
+        ownerId: ownerId,
+        listingType: 'accommodation',
+        listingId: newAccommodation.id
+      });
+
+      res.json({ success: true, listing: newAccommodation, type: 'accommodation' });
+    } catch (error) {
+      console.error("Create accommodation error:", error);
+      res.status(500).json({ error: "Erro ao criar hospedagem" });
+    }
+  });
+
+  // Update a specific listing
+  app.put("/api/owner/listings/:type/:id", requireOwnerAuth, publicUpload.single("logo"), async (req, res) => {
+    try {
+      const ownerId = (req.session as any).ownerId;
+      const { type, id } = req.params;
+
+      const updateData: any = {};
+      
+      if (req.file) {
+        updateData.logoUrl = `/uploads/cadastros/${req.file.filename}`;
+      }
+
+      if (req.body.name) updateData.name = req.body.name;
+      if (req.body.address) updateData.address = req.body.address;
+      if (req.body.whatsapp) updateData.whatsapp = req.body.whatsapp;
+      if (req.body.phone) updateData.phone = req.body.phone;
+
+      if (type === 'business') {
+        const business = await storage.getBusinessById(id);
+        if (!business || business.ownerId !== ownerId) {
+          return res.status(404).json({ error: "Empresa não encontrada" });
+        }
+
+        if (business.planType === 'complete') {
+          if (req.body.description !== undefined) updateData.description = req.body.description;
+          if (req.body.website !== undefined) updateData.website = req.body.website;
+          if (req.body.instagram !== undefined) updateData.instagram = req.body.instagram;
+          if (req.body.facebook !== undefined) updateData.facebook = req.body.facebook;
+          if (req.body.hours !== undefined) updateData.hours = req.body.hours;
+        }
+
+        const updated = await storage.updateBusiness(id, updateData);
+        return res.json({ success: true, listing: updated, type: 'business' });
+
+      } else if (type === 'accommodation') {
+        const accommodation = await storage.getAccommodationById(id);
+        if (!accommodation || accommodation.ownerId !== ownerId) {
+          return res.status(404).json({ error: "Hospedagem não encontrada" });
+        }
+
+        if (req.body.description !== undefined) updateData.description = req.body.description;
+        if (req.body.website !== undefined) updateData.website = req.body.website;
+        if (req.body.instagram !== undefined) updateData.instagram = req.body.instagram;
+        if (req.body.email !== undefined) updateData.email = req.body.email;
+        if (req.body.checkInTime !== undefined) updateData.checkInTime = req.body.checkInTime;
+        if (req.body.checkOutTime !== undefined) updateData.checkOutTime = req.body.checkOutTime;
+
+        const updated = await storage.updateAccommodation(id, updateData);
+        return res.json({ success: true, listing: updated, type: 'accommodation' });
+      }
+
+      return res.status(400).json({ error: "Tipo de cadastro inválido" });
+    } catch (error) {
+      console.error("Update listing error:", error);
+      res.status(500).json({ error: "Erro ao atualizar cadastro" });
     }
   });
 
