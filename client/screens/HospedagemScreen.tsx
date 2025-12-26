@@ -566,7 +566,6 @@ export default function HospedagemScreen() {
       <View style={styles.basicSection}>
         <View style={styles.basicSectionHeader}>
           <ThemedText type="h4" style={styles.basicSectionTitle}>Outras Hospedagens</ThemedText>
-          <ThemedText type="caption" secondary>Cadastros gratuitos</ThemedText>
         </View>
         {basicAccommodations.map((item) => (
           <BasicAccommodationCard
