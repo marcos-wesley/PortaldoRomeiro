@@ -219,6 +219,14 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
+  app.get("/admin/login.html", (req, res) => {
+  return res.sendFile(path.join(adminDir, "login.html"));
+  });
+
+  app.get("/admin/login", (req, res) => {
+    return res.sendFile(path.join(adminDir, "login.html"));
+  });
+
   app.post("/admin/api/upload/images", requireAuth, upload.array("images", 10), (req: Request, res: Response) => {
     try {
       const files = req.files as Express.Multer.File[];
