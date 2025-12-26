@@ -25,9 +25,7 @@
     .sidebar > p { color: #9ca3af; font-size: 12px; margin-bottom: 32px; }
     .nav-section { margin-bottom: 24px; }
     .nav-section-title { color: #6b7280; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; padding: 0 16px; }
-    .nav-item { display: block; padding: 12px 16px; color: #9ca3af; text-decoration: none; border-radius: 8px; margin-bottom: 4px; transition: all 0.2s; }
-    .nav-item:hover { background: #8b1a1d; color: white; }
-    .nav-item.active { background: #b22226; color: white; }
+
     .main { flex: 1; margin-left: 260px; padding: 32px; }
     .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; gap: 16px; flex-wrap: wrap; }
     .header h2 { font-size: 24px; color: #1f2937; }
@@ -95,6 +93,34 @@
         max-height: 32px;
         max-width: 80%;
       }
+    }
+      .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      color: rgba(255, 255, 255, 0.85);
+      text-decoration: none;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      font-size: 14px;
+    }
+    
+    .nav-item:hover {
+      background: rgba(247, 148, 29, 0.3);
+      color: #f7941d;
+    }
+    
+    .nav-item.active {
+      background: rgba(247, 148, 29, 0.9);
+      color: white;
+      font-weight: 600;
+    }
+    
+    .nav-item svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
     }
   </style>
 </head>
