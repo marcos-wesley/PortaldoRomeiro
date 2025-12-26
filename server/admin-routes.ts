@@ -134,8 +134,8 @@ const uploadBanners = multer({
   },
 });
 
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL?.trim();
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD?.trim();
 
 const isProduction = process.env.NODE_ENV === "production";
 const isAdminConfigured = ADMIN_EMAIL && ADMIN_PASSWORD;

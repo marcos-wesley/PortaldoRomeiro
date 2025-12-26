@@ -1,0 +1,19 @@
+env: load .env
+env: export DATABASE_URL SESSION_SECRET PORT MERCADOPAGO_ACCESS_TOKEN MERCADOPAGO_PUBLIC_KEY REPLIT_DEV_DOMAIN ADMIN_EMAIL ADMIN_PASSWORD EXPO_PUBLIC_DOMAIN EXPO_PUBLIC_SCHEME
+Starting project at C:\Users\Micro\PortaldoRomeiro
+React Compiler enabled
+Starting Metro Bundler
+warning: Bundler cache is empty, rebuilding (this may take a minute)
+Waiting on http://localhost:8081
+Logs for your project will appear below.
+Web client\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web client\index.js ▓▓▓▓▓▓▓▓▓▓▓░░░░░ 69.4% (35/42)
+Web client\index.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 94.3% (273/444)
+Web client\index.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 94.3% (665/913)
+Web client\index.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 94.3% ( 819/1043)
+Web client\index.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 94.6% (1347/1421)
+Web Bundled 18354ms client\index.js (1473 modules)
+ LOG  [web] Logs will appear in the browser console
+Web client\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Web Bundled 101ms client\index.js (1 module)
+ LOG  [web] Logs will appear in the browser console

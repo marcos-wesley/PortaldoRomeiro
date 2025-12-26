@@ -11,7 +11,8 @@ export function getApiUrl(): string {
     throw new Error("EXPO_PUBLIC_DOMAIN is not set");
   }
 
-  let url = new URL(`https://${host}`);
+  const scheme = process.env.EXPO_PUBLIC_SCHEME || "https";
+  let url = new URL(`${scheme}://${host}`);
 
   return url.href;
 }

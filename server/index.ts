@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import type { Request, Response, NextFunction } from "express";
 import session from "express-session";
@@ -28,21 +29,34 @@ declare module "http" {
 
 function setupCors(app: express.Application) {
   app.use((req, res, next) => {
-    const origins = new Set<string>();
+    const allowedHosts = new Set<string>();
 
     if (process.env.REPLIT_DEV_DOMAIN) {
-      origins.add(`https://${process.env.REPLIT_DEV_DOMAIN}`);
+      allowedHosts.add(process.env.REPLIT_DEV_DOMAIN);
     }
 
     if (process.env.REPLIT_DOMAINS) {
       process.env.REPLIT_DOMAINS.split(",").forEach((d) => {
-        origins.add(`https://${d.trim()}`);
+        const trimmed = d.trim();
+        if (trimmed) {
+          allowedHosts.add(trimmed);
+        }
       });
     }
 
     const origin = req.header("origin");
+    let isAllowedOrigin = false;
 
-    if (origin && origins.has(origin)) {
+    if (origin) {
+      try {
+        const originUrl = new URL(origin);
+        isAllowedOrigin = allowedHosts.has(originUrl.hostname);
+      } catch {
+        isAllowedOrigin = false;
+      }
+    }
+
+    if (origin && isAllowedOrigin) {
       res.header("Access-Control-Allow-Origin", origin);
       res.header(
         "Access-Control-Allow-Methods",
@@ -252,14 +266,15 @@ function setupErrorHandler(app: express.Application) {
   setupErrorHandler(app);
 
   const port = parseInt(process.env.PORT || "5000", 10);
-  server.listen(
-    {
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    },
-    () => {
-      log(`express server serving on port ${port}`);
-    },
-  );
+  const listenOptions: { port: number; host: string; reusePort?: boolean } = {
+    port,
+    host: "0.0.0.0",
+  };
+  if (process.platform !== "win32") {
+    listenOptions.reusePort = true;
+  }
+
+  server.listen(listenOptions, () => {
+    log(`express server serving on port ${port}`);
+  });
 })();

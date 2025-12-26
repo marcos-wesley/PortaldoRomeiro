@@ -25,9 +25,10 @@ export function PartnerBanner({ type }: PartnerBannerProps) {
   }));
 
   const handlePress = () => {
+    const scheme = process.env.EXPO_PUBLIC_SCHEME || "https";
     const baseUrl = Platform.select({
       web: "",
-      default: "https://" + (process.env.EXPO_PUBLIC_DOMAIN || ""),
+      default: scheme + "://" + (process.env.EXPO_PUBLIC_DOMAIN || ""),
     });
     const path = type === "business" ? "/cadastro.html" : "/cadastro.html#hospedagem";
     Linking.openURL(baseUrl + path).catch(() => {});
