@@ -2718,6 +2718,172 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
+  // Create or retry subscription for existing business
+  app.post("/api/business/subscription", requireOwnerAuth, async (req, res) => {
+    try {
+      const ownerId = (req.session as any).ownerId;
+      const { listingId } = req.body;
+
+      if (!listingId) {
+        return res.status(400).json({ error: "ID do cadastro é obrigatório" });
+      }
+
+      const business = await storage.getBusinessById(listingId);
+      if (!business || business.ownerId !== ownerId) {
+        return res.status(404).json({ error: "Empresa não encontrada" });
+      }
+
+      if (business.planType !== 'complete') {
+        return res.status(400).json({ error: "Esta empresa está no plano gratuito" });
+      }
+
+      if (business.planStatus === 'active') {
+        return res.status(400).json({ error: "Pagamento já foi aprovado para esta empresa" });
+      }
+
+      const owner = await storage.getOwnerUserById(ownerId);
+      if (!owner) {
+        return res.status(404).json({ error: "Proprietário não encontrado" });
+      }
+
+      const allSettings = await storage.getAllAppSettings();
+      const settingsMap: Record<string, string> = {};
+      allSettings.forEach(s => { settingsMap[s.key] = s.value || ''; });
+
+      const isProduction = settingsMap['mp_production_mode'] === 'true';
+      const accessToken = isProduction 
+        ? settingsMap['mp_production_access_token']
+        : settingsMap['mp_sandbox_access_token'];
+      const businessPlanPrice = parseFloat(settingsMap['business_plan_complete_price'] || '29.90');
+
+      if (!accessToken) {
+        return res.status(400).json({ error: "Credenciais de pagamento não configuradas" });
+      }
+
+      const subscriptionBody = {
+        reason: 'Plano Completo - Guia Comercial Portal do Romeiro',
+        external_reference: `business_${business.id}`,
+        payer_email: owner.email,
+        auto_recurring: {
+          frequency: 1,
+          frequency_type: 'months',
+          transaction_amount: businessPlanPrice,
+          currency_id: 'BRL'
+        },
+        back_url: `${req.protocol}://${req.get('host')}/minha-conta?subscription_status=success`,
+        status: 'pending'
+      };
+
+      const mpResponse = await fetch('https://api.mercadopago.com/preapproval', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(subscriptionBody)
+      });
+
+      const mpData = await mpResponse.json();
+      console.log('MP Business Subscription retry response:', JSON.stringify(mpData, null, 2));
+
+      if (mpData.init_point) {
+        await storage.updateBusiness(business.id, { subscriptionId: mpData.id } as any);
+        return res.json({ 
+          success: true, 
+          paymentUrl: mpData.init_point,
+          subscriptionId: mpData.id
+        });
+      } else {
+        console.error('MP Subscription error:', mpData.message || mpData);
+        return res.status(500).json({ error: "Erro ao criar assinatura no Mercado Pago" });
+      }
+    } catch (error) {
+      console.error("Business subscription error:", error);
+      res.status(500).json({ error: "Erro ao processar assinatura" });
+    }
+  });
+
+  // Create or retry subscription for existing accommodation
+  app.post("/api/accommodation/subscription", requireOwnerAuth, async (req, res) => {
+    try {
+      const ownerId = (req.session as any).ownerId;
+      const { listingId } = req.body;
+
+      if (!listingId) {
+        return res.status(400).json({ error: "ID do cadastro é obrigatório" });
+      }
+
+      const accommodation = await storage.getAccommodationById(listingId);
+      if (!accommodation || accommodation.ownerId !== ownerId) {
+        return res.status(404).json({ error: "Hospedagem não encontrada" });
+      }
+
+      if (accommodation.planStatus === 'active') {
+        return res.status(400).json({ error: "Pagamento já foi aprovado para esta hospedagem" });
+      }
+
+      const owner = await storage.getOwnerUserById(ownerId);
+      if (!owner) {
+        return res.status(404).json({ error: "Proprietário não encontrado" });
+      }
+
+      const allSettings = await storage.getAllAppSettings();
+      const settingsMap: Record<string, string> = {};
+      allSettings.forEach(s => { settingsMap[s.key] = s.value || ''; });
+
+      const isProduction = settingsMap['mp_production_mode'] === 'true';
+      const accessToken = isProduction 
+        ? settingsMap['mp_production_access_token']
+        : settingsMap['mp_sandbox_access_token'];
+      const accommodationPlanPrice = parseFloat(settingsMap['accommodation_plan_complete_price'] || '49.90');
+
+      if (!accessToken) {
+        return res.status(400).json({ error: "Credenciais de pagamento não configuradas" });
+      }
+
+      const subscriptionBody = {
+        reason: 'Plano Completo - Hospedagem Portal do Romeiro',
+        external_reference: `accommodation_${accommodation.id}`,
+        payer_email: owner.email,
+        auto_recurring: {
+          frequency: 1,
+          frequency_type: 'months',
+          transaction_amount: accommodationPlanPrice,
+          currency_id: 'BRL'
+        },
+        back_url: `${req.protocol}://${req.get('host')}/minha-conta?subscription_status=success`,
+        status: 'pending'
+      };
+
+      const mpResponse = await fetch('https://api.mercadopago.com/preapproval', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(subscriptionBody)
+      });
+
+      const mpData = await mpResponse.json();
+      console.log('MP Accommodation Subscription retry response:', JSON.stringify(mpData, null, 2));
+
+      if (mpData.init_point) {
+        await storage.updateAccommodation(accommodation.id, { subscriptionId: mpData.id } as any);
+        return res.json({ 
+          success: true, 
+          paymentUrl: mpData.init_point,
+          subscriptionId: mpData.id
+        });
+      } else {
+        console.error('MP Subscription error:', mpData.message || mpData);
+        return res.status(500).json({ error: "Erro ao criar assinatura no Mercado Pago" });
+      }
+    } catch (error) {
+      console.error("Accommodation subscription error:", error);
+      res.status(500).json({ error: "Erro ao processar assinatura" });
+    }
+  });
+
   // Webhook for Mercado Pago payment and subscription notifications
   app.post("/api/webhooks/mercadopago", async (req, res) => {
     try {

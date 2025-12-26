@@ -40,6 +40,16 @@
     .status-pending { background: rgba(245, 158, 11, 0.1); color: #d97706; }
     .status-unpublished { background: rgba(239, 68, 68, 0.1); color: #dc2626; }
     
+    .listing-plan-status { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+    .plan-badge { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 12px; font-size: 0.65rem; font-weight: 600; }
+    .status-basic { background: #e5e7eb; color: #4b5563; }
+    .status-paid { background: rgba(16, 185, 129, 0.15); color: #059669; }
+    .status-pending-payment { background: rgba(245, 158, 11, 0.15); color: #d97706; }
+    .status-pending-approval { background: rgba(59, 130, 246, 0.15); color: #2563eb; }
+    .pay-btn { background: #b22226; color: white; border: none; padding: 4px 10px; border-radius: 12px; font-size: 0.65rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+    .pay-btn:hover { background: #8b1a1d; }
+    .pay-btn:disabled { background: #9ca3af; cursor: not-allowed; }
+    
     .empty-state { text-align: center; padding: 40px 20px; color: #6b7280; }
     .empty-state svg { width: 48px; height: 48px; margin-bottom: 16px; color: #d1d5db; }
     .empty-state p { margin-bottom: 16px; }
@@ -621,6 +631,51 @@
       }
     }
 
+    function getPlanStatusInfo(planType, planStatus) {
+      if (planType !== 'complete') {
+        return { label: 'Gratuito', class: 'status-basic', showPayBtn: false };
+      }
+      switch (planStatus) {
+        case 'active':
+          return { label: 'Completo - Pago', class: 'status-paid', showPayBtn: false };
+        case 'pending':
+          return { label: 'Aguardando Pagamento', class: 'status-pending-payment', showPayBtn: true };
+        case 'pending_approval':
+          return { label: 'Aguardando Aprovacao', class: 'status-pending-approval', showPayBtn: false };
+        default:
+          return { label: 'Completo - Pendente', class: 'status-pending-payment', showPayBtn: true };
+      }
+    }
+
+    async function retryPayment(listingId, listingType, e) {
+      e.stopPropagation();
+      const btn = e.target;
+      btn.disabled = true;
+      btn.textContent = 'Processando...';
+      
+      try {
+        const endpoint = listingType === 'business' ? '/api/business/subscription' : '/api/accommodation/subscription';
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ listingId })
+        });
+        
+        const data = await response.json();
+        if (response.ok && data.paymentUrl) {
+          window.open(data.paymentUrl, '_blank');
+        } else {
+          showAlert(data.error || 'Erro ao gerar link de pagamento', 'error');
+        }
+      } catch (error) {
+        console.error('Payment error:', error);
+        showAlert('Erro ao processar pagamento', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Pagar Agora';
+      }
+    }
+
     function renderListings() {
       const container = document.getElementById('listingsContainer');
       const emptyState = document.getElementById('emptyState');
@@ -637,6 +692,7 @@
         const typeLabel = isBusiness ? (listing.category || 'Empresa') : (listing.type || 'Hospedagem');
         const statusClass = listing.published ? 'status-published' : 'status-pending';
         const statusText = listing.published ? 'Publicado' : 'Pendente';
+        const planInfo = getPlanStatusInfo(listing.planType, listing.planStatus);
 
         return `
           <div class="listing-item" onclick="showEdit(${JSON.stringify(listing).replace(/"/g, '&quot;')}, '${listing.listingType}')">
@@ -646,6 +702,10 @@
             <div class="listing-info">
               <div class="listing-name">${listing.name}</div>
               <div class="listing-type">${isBusiness ? 'Empresa' : 'Hospedagem'} - ${typeLabel}</div>
+              <div class="listing-plan-status">
+                <span class="plan-badge ${planInfo.class}">${planInfo.label}</span>
+                ${planInfo.showPayBtn ? `<button class="pay-btn" onclick="retryPayment('${listing.id}', '${listing.listingType}', event)">Pagar Agora</button>` : ''}
+              </div>
             </div>
             <div class="listing-status">
               <span class="status-badge ${statusClass}">${statusText}</span>

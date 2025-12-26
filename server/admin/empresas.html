@@ -399,12 +399,12 @@
       }
     }
 
-    function getPlanBadge(plan, planStatus) {
-      const planName = plan === 'complete' ? 'Completo' : 'Gratuito';
+    function getPlanBadge(planType, planStatus) {
+      const planName = planType === 'complete' ? 'Completo' : 'Gratuito';
       let statusClass = 'badge-secondary';
       let statusText = planName;
       
-      if (plan === 'complete') {
+      if (planType === 'complete') {
         switch (planStatus) {
           case 'active':
             statusClass = 'badge-success';
@@ -461,7 +461,7 @@
           <td>${b.category}</td>
           <td>${b.city || '-'}</td>
           <td>
-            ${getPlanBadge(b.plan, b.planStatus)}
+            ${getPlanBadge(b.planType, b.planStatus)}
           </td>
           <td>
             <span class="badge ${b.published ? 'badge-success' : 'badge-warning'}">

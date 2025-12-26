@@ -425,12 +425,12 @@
       }
     }
 
-    function getPlanBadge(plan, planStatus) {
-      const planName = plan === 'complete' ? 'Completo' : 'Gratuito';
+    function getPlanBadge(planType, planStatus) {
+      const planName = planType === 'complete' ? 'Completo' : 'Gratuito';
       let statusClass = 'badge-secondary';
       let statusText = planName;
       
-      if (plan === 'complete') {
+      if (planType === 'complete') {
         switch (planStatus) {
           case 'active':
             statusClass = 'badge-success';
@@ -500,7 +500,7 @@
           <td>${a.city || '-'}</td>
           <td>${a.roomCount || 0} quartos</td>
           <td>
-            ${getPlanBadge(a.plan, a.planStatus)}
+            ${getPlanBadge(a.planType, a.planStatus)}
           </td>
           <td>
             <span class="badge ${a.published ? 'badge-success' : 'badge-warning'}">
