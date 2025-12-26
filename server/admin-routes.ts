@@ -458,6 +458,11 @@ export function registerAdminRoutes(app: Express) {
     res.sendFile(usuariosPath);
   });
 
+  app.get("/admin/proprietarios", requireAuth, (req, res) => {
+    const proprietariosPath = path.join(__dirname, "admin", "proprietarios.html");
+    res.sendFile(proprietariosPath);
+  });
+
   app.get("/admin/telefones", requireAuth, (req, res) => {
     const telefonesPath = path.join(__dirname, "admin", "telefones.html");
     res.sendFile(telefonesPath);
@@ -844,6 +849,61 @@ export function registerAdminRoutes(app: Express) {
     } catch (error) {
       console.error("Admin delete user error:", error);
       return res.status(500).json({ error: "Erro ao excluir usuario" });
+    }
+  });
+
+  // Owner Users (Proprietarios) API
+  app.get("/admin/api/owners", requireAuth, async (req, res) => {
+    try {
+      const owners = await storage.getAllOwnerUsers();
+      const ownerListingsData = await Promise.all(
+        owners.map(async (owner) => {
+          const listings = await storage.getOwnerListingsByOwnerId(owner.id);
+          const { password, ...sanitizedOwner } = owner;
+          return {
+            ...sanitizedOwner,
+            listings: listings
+          };
+        })
+      );
+      return res.json(ownerListingsData);
+    } catch (error) {
+      console.error("Admin get owners error:", error);
+      return res.status(500).json({ error: "Erro ao buscar proprietarios" });
+    }
+  });
+
+  app.get("/admin/api/owners/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const owner = await storage.getOwnerUserById(id);
+      
+      if (!owner) {
+        return res.status(404).json({ error: "Proprietario nao encontrado" });
+      }
+
+      const listings = await storage.getOwnerListingsByOwnerId(id);
+      const { password, ...sanitizedOwner } = owner;
+      return res.json({ ...sanitizedOwner, listings });
+    } catch (error) {
+      console.error("Admin get owner error:", error);
+      return res.status(500).json({ error: "Erro ao buscar proprietario" });
+    }
+  });
+
+  app.delete("/admin/api/owners/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteOwnerUser(id);
+      
+      if (!deleted) {
+        return res.status(404).json({ error: "Proprietario nao encontrado" });
+      }
+
+      return res.json({ message: "Proprietario excluido com sucesso!" });
+    } catch (error) {
+      console.error("Admin delete owner error:", error);
+      return res.status(500).json({ error: "Erro ao excluir proprietario" });
     }
   });
 

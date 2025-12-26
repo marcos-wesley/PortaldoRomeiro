@@ -1015,6 +1015,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Owner Users (Business/Accommodation owners)
+  async getAllOwnerUsers(): Promise<OwnerUser[]> {
+    const result = await db.select().from(ownerUsers).orderBy(desc(ownerUsers.createdAt));
+    return result;
+  }
+
   async getOwnerUserById(id: string): Promise<OwnerUser | undefined> {
     const result = await db.select().from(ownerUsers).where(eq(ownerUsers.id, id));
     return result[0];
@@ -1023,6 +1028,11 @@ export class DatabaseStorage implements IStorage {
   async getOwnerUserByEmail(email: string): Promise<OwnerUser | undefined> {
     const result = await db.select().from(ownerUsers).where(eq(ownerUsers.email, email));
     return result[0];
+  }
+
+  async deleteOwnerUser(id: string): Promise<boolean> {
+    const result = await db.delete(ownerUsers).where(eq(ownerUsers.id, id)).returning();
+    return result.length > 0;
   }
 
   async createOwnerUser(data: { email: string; password: string; name: string; phone?: string; ownerType: string; listingId?: string }): Promise<OwnerUser> {

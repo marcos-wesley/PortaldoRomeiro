@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Usuarios - Admin Portal do Romeiro</title>
+  <title>Proprietarios - Admin Portal do Romeiro</title>
   <style>
     :root {
       --primary: #b22226;
@@ -207,12 +207,6 @@
       font-weight: 600;
       font-size: 14px;
     }
-    .user-avatar img {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-      object-fit: cover;
-    }
     .user-name { color: #1f2937; font-weight: 500; }
     .user-email { color: #6b7280; font-size: 12px; }
     .badge {
@@ -226,6 +220,7 @@
     .badge-warning { background: #fef3c7; color: #d97706; }
     .badge-info { background: #dbeafe; color: #2563eb; }
     .badge-secondary { background: #e5e7eb; color: #6b7280; }
+    .badge-purple { background: #ede9fe; color: #7c3aed; }
     .actions { display: flex; gap: 8px; }
     .empty-state {
       text-align: center;
@@ -255,7 +250,7 @@
       background: white;
       border-radius: 12px;
       padding: 24px;
-      max-width: 500px;
+      max-width: 600px;
       width: 90%;
       max-height: 90vh;
       overflow-y: auto;
@@ -274,50 +269,6 @@
       color: #6b7280;
       padding: 4px;
     }
-    .form-group {
-      margin-bottom: 16px;
-    }
-    .form-group label {
-      display: block;
-      font-weight: 500;
-      color: #374151;
-      margin-bottom: 6px;
-      font-size: 14px;
-    }
-    .form-group input,
-    .form-group select {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
-      font-size: 14px;
-    }
-    .form-group input:focus,
-    .form-group select:focus {
-      outline: none;
-      border-color: var(--primary);
-    }
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-    }
-    .checkbox-group {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .checkbox-group input {
-      width: 18px;
-      height: 18px;
-      accent-color: var(--primary);
-    }
-    .modal-actions {
-      display: flex;
-      gap: 12px;
-      justify-content: flex-end;
-      margin-top: 24px;
-    }
     .user-detail-row {
       display: flex;
       padding: 12px 0;
@@ -325,7 +276,7 @@
     }
     .user-detail-row:last-child { border-bottom: none; }
     .user-detail-label {
-      width: 120px;
+      width: 140px;
       font-weight: 500;
       color: #6b7280;
       font-size: 14px;
@@ -334,6 +285,26 @@
       flex: 1;
       color: #1f2937;
       font-size: 14px;
+    }
+    .listing-item {
+      background: #f9fafb;
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 8px;
+    }
+    .listing-item .listing-name {
+      font-weight: 500;
+      color: #1f2937;
+    }
+    .listing-item .listing-type {
+      font-size: 12px;
+      color: #6b7280;
+    }
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 24px;
     }
     .pagination {
       display: flex;
@@ -391,21 +362,13 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
             <span>Hospedagens</span>
           </a>
-          <a href="/admin/eventos" class="nav-item">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-            <span>Eventos</span>
-          </a>
-          <a href="/admin/oracoes" class="nav-item">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-            <span>Oracoes</span>
+          <a href="/admin/empresas" class="nav-item">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3z"></path><path d="M14 3h7v7h-7z"></path><path d="M14 14h7v7h-7z"></path><path d="M3 14h7v7H3z"></path></svg>
+            <span>Guia Comercial</span>
           </a>
           <a href="/admin/pontos-turisticos" class="nav-item">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
             <span>Pontos Turisticos</span>
-          </a>
-          <a href="/admin/paginas" class="nav-item">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
-            <span>Paginas Estaticas</span>
           </a>
           <a href="/admin/telefones" class="nav-item">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
@@ -419,9 +382,9 @@
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
             <span>Servicos</span>
           </a>
-          <a href="/admin/empresas" class="nav-item">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3z"></path><path d="M14 3h7v7h-7z"></path><path d="M14 14h7v7h-7z"></path><path d="M3 14h7v7H3z"></path></svg>
-            <span>Guia Comercial</span>
+          <a href="/admin/paginas" class="nav-item">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+            <span>Paginas Estaticas</span>
           </a>
         </div>
         
@@ -435,11 +398,11 @@
         
         <div class="nav-section">
           <div class="nav-section-title">Usuarios</div>
-          <a href="/admin/usuarios" class="nav-item active">
+          <a href="/admin/usuarios" class="nav-item">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
             <span>Usuarios App</span>
           </a>
-          <a href="/admin/proprietarios" class="nav-item">
+          <a href="/admin/proprietarios" class="nav-item active">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
             <span>Proprietarios</span>
           </a>
@@ -476,31 +439,31 @@
 
   <main class="main">
     <div class="header">
-      <h2>Usuarios</h2>
+      <h2>Proprietarios do Guia Comercial</h2>
       <div class="header-actions">
         <div class="search-box">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          <input type="text" id="searchInput" placeholder="Buscar usuarios..." oninput="filterUsers()">
+          <input type="text" id="searchInput" placeholder="Buscar proprietarios..." oninput="filterOwners()">
         </div>
       </div>
     </div>
 
     <div class="stats-row" id="statsRow">
       <div class="stat-card">
-        <h3>Total de Usuarios</h3>
-        <div class="value" id="totalUsers">-</div>
+        <h3>Total de Proprietarios</h3>
+        <div class="value" id="totalOwners">-</div>
       </div>
       <div class="stat-card">
-        <h3>Recebem Noticias</h3>
-        <div class="value" id="newsSubscribers">-</div>
+        <h3>Com Empresas</h3>
+        <div class="value" id="businessOwners">-</div>
+      </div>
+      <div class="stat-card">
+        <h3>Com Hospedagens</h3>
+        <div class="value" id="accommodationOwners">-</div>
       </div>
       <div class="stat-card">
         <h3>Novos Este Mes</h3>
         <div class="value" id="newThisMonth">-</div>
-      </div>
-      <div class="stat-card">
-        <h3>Com Perfil Completo</h3>
-        <div class="value" id="completeProfiles">-</div>
       </div>
     </div>
 
@@ -508,17 +471,16 @@
       <table>
         <thead>
           <tr>
-            <th>Usuario</th>
+            <th>Proprietario</th>
             <th>Telefone</th>
-            <th>Cidade/Estado</th>
-            <th>Newsletter</th>
+            <th>Anuncios</th>
             <th>Cadastro</th>
             <th>Acoes</th>
           </tr>
         </thead>
-        <tbody id="usersTableBody">
+        <tbody id="ownersTableBody">
           <tr>
-            <td colspan="6" class="loading">Carregando usuarios...</td>
+            <td colspan="5" class="loading">Carregando proprietarios...</td>
           </tr>
         </tbody>
       </table>
@@ -530,12 +492,12 @@
   <div class="modal-overlay" id="viewModal">
     <div class="modal">
       <div class="modal-header">
-        <h3>Detalhes do Usuario</h3>
+        <h3>Detalhes do Proprietario</h3>
         <button class="modal-close" onclick="closeModal('viewModal')">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>
-      <div id="userDetails"></div>
+      <div id="ownerDetails"></div>
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeModal('viewModal')">Fechar</button>
       </div>
@@ -550,7 +512,7 @@
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>
-      <p style="color: #6b7280; margin-bottom: 20px;">Tem certeza que deseja excluir este usuario? Esta acao nao pode ser desfeita.</p>
+      <p style="color: #6b7280; margin-bottom: 20px;">Tem certeza que deseja excluir este proprietario? Esta acao nao pode ser desfeita. Os anuncios vinculados nao serao excluidos.</p>
       <div class="modal-actions">
         <button class="btn btn-secondary" onclick="closeModal('deleteModal')">Cancelar</button>
         <button class="btn btn-danger" id="confirmDeleteBtn">Excluir</button>
@@ -559,107 +521,128 @@
   </div>
 
   <script>
-    let allUsers = [];
-    let filteredUsers = [];
+    let allOwners = [];
+    let filteredOwners = [];
     let currentPage = 1;
     const itemsPerPage = 10;
 
-    async function loadUsers() {
+    async function loadOwners() {
       try {
-        const response = await fetch('/admin/api/users');
-        if (!response.ok) throw new Error('Erro ao carregar usuarios');
-        allUsers = await response.json();
-        filteredUsers = [...allUsers];
+        const response = await fetch('/admin/api/owners');
+        if (!response.ok) throw new Error('Erro ao carregar proprietarios');
+        allOwners = await response.json();
+        filteredOwners = [...allOwners];
         updateStats();
-        renderUsers();
+        renderOwners();
       } catch (error) {
         console.error('Erro:', error);
-        document.getElementById('usersTableBody').innerHTML = 
-          '<tr><td colspan="6" class="empty-state"><h3>Erro ao carregar usuarios</h3><p>Tente novamente mais tarde</p></td></tr>';
+        document.getElementById('ownersTableBody').innerHTML = 
+          '<tr><td colspan="5" class="empty-state"><h3>Erro ao carregar proprietarios</h3><p>Tente novamente mais tarde</p></td></tr>';
       }
     }
 
     function updateStats() {
-      document.getElementById('totalUsers').textContent = allUsers.length;
+      document.getElementById('totalOwners').textContent = allOwners.length;
       
-      const newsSubscribers = allUsers.filter(u => u.receiveNews).length;
-      document.getElementById('newsSubscribers').textContent = newsSubscribers;
+      const businessOwners = allOwners.filter(o => 
+        o.listings && o.listings.some(l => l.listingType === 'business')
+      ).length;
+      document.getElementById('businessOwners').textContent = businessOwners;
+      
+      const accommodationOwners = allOwners.filter(o => 
+        o.listings && o.listings.some(l => l.listingType === 'accommodation')
+      ).length;
+      document.getElementById('accommodationOwners').textContent = accommodationOwners;
       
       const thisMonth = new Date();
       thisMonth.setDate(1);
       thisMonth.setHours(0, 0, 0, 0);
-      const newThisMonth = allUsers.filter(u => new Date(u.createdAt) >= thisMonth).length;
+      const newThisMonth = allOwners.filter(o => new Date(o.createdAt) >= thisMonth).length;
       document.getElementById('newThisMonth').textContent = newThisMonth;
-      
-      const completeProfiles = allUsers.filter(u => u.name && u.email && u.phone && u.city && u.state).length;
-      document.getElementById('completeProfiles').textContent = completeProfiles;
     }
 
-    function filterUsers() {
-      const search = document.getElementById('searchInput').value.toLowerCase();
-      filteredUsers = allUsers.filter(user => 
-        user.name?.toLowerCase().includes(search) ||
-        user.email?.toLowerCase().includes(search) ||
-        user.phone?.toLowerCase().includes(search) ||
-        user.city?.toLowerCase().includes(search)
+    function filterOwners() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      filteredOwners = allOwners.filter(owner => 
+        owner.name.toLowerCase().includes(searchTerm) ||
+        owner.email.toLowerCase().includes(searchTerm) ||
+        (owner.phone && owner.phone.toLowerCase().includes(searchTerm))
       );
       currentPage = 1;
-      renderUsers();
+      renderOwners();
     }
 
-    function renderUsers() {
-      const tbody = document.getElementById('usersTableBody');
-      const start = (currentPage - 1) * itemsPerPage;
-      const end = start + itemsPerPage;
-      const pageUsers = filteredUsers.slice(start, end);
-
-      if (filteredUsers.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><h3>Nenhum usuario encontrado</h3><p>Nao ha usuarios cadastrados no sistema</p></td></tr>';
+    function renderOwners() {
+      const tbody = document.getElementById('ownersTableBody');
+      
+      if (filteredOwners.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="5" class="empty-state">
+              <h3>Nenhum proprietario encontrado</h3>
+              <p>Os proprietarios aparecerao aqui quando se cadastrarem pelo portal</p>
+            </td>
+          </tr>
+        `;
         document.getElementById('pagination').innerHTML = '';
         return;
       }
 
-      tbody.innerHTML = pageUsers.map(user => `
-        <tr>
-          <td>
-            <div class="user-info">
-              <div class="user-avatar">
-                ${user.avatarUrl 
-                  ? `<img src="${user.avatarUrl}" alt="${user.name}">` 
-                  : getInitials(user.name)}
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const paginatedOwners = filteredOwners.slice(startIndex, endIndex);
+
+      tbody.innerHTML = paginatedOwners.map(owner => {
+        const initials = owner.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+        const createdDate = new Date(owner.createdAt).toLocaleDateString('pt-BR');
+        
+        const businessCount = owner.listings ? owner.listings.filter(l => l.listingType === 'business').length : 0;
+        const accommodationCount = owner.listings ? owner.listings.filter(l => l.listingType === 'accommodation').length : 0;
+        
+        let listingBadges = '';
+        if (businessCount > 0) {
+          listingBadges += `<span class="badge badge-info">${businessCount} empresa${businessCount > 1 ? 's' : ''}</span> `;
+        }
+        if (accommodationCount > 0) {
+          listingBadges += `<span class="badge badge-purple">${accommodationCount} hospedagem${accommodationCount > 1 ? 's' : ''}</span>`;
+        }
+        if (!listingBadges) {
+          listingBadges = '<span class="badge badge-secondary">Nenhum</span>';
+        }
+        
+        return `
+          <tr>
+            <td>
+              <div class="user-info">
+                <div class="user-avatar">${initials}</div>
+                <div>
+                  <div class="user-name">${owner.name}</div>
+                  <div class="user-email">${owner.email}</div>
+                </div>
               </div>
-              <div>
-                <div class="user-name">${escapeHtml(user.name)}</div>
-                <div class="user-email">${escapeHtml(user.email)}</div>
+            </td>
+            <td>${owner.phone || '-'}</td>
+            <td>${listingBadges}</td>
+            <td>${createdDate}</td>
+            <td>
+              <div class="actions">
+                <button class="btn btn-secondary btn-sm" onclick="viewOwner('${owner.id}')">
+                  Ver
+                </button>
+                <button class="btn btn-danger btn-sm" onclick="confirmDelete('${owner.id}')">
+                  Excluir
+                </button>
               </div>
-            </div>
-          </td>
-          <td>${user.phone || '-'}</td>
-          <td>${user.city && user.state ? `${user.city}/${user.state}` : (user.city || user.state || '-')}</td>
-          <td>
-            ${user.receiveNews 
-              ? '<span class="badge badge-success">Sim</span>' 
-              : '<span class="badge badge-secondary">Nao</span>'}
-          </td>
-          <td>${formatDate(user.createdAt)}</td>
-          <td class="actions">
-            <button class="btn btn-secondary btn-sm" onclick="viewUser('${user.id}')">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-              Ver
-            </button>
-            <button class="btn btn-danger btn-sm" onclick="confirmDelete('${user.id}')">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-              Excluir
-            </button>
-          </td>
-        </tr>
-      `).join('');
+            </td>
+          </tr>
+        `;
+      }).join('');
 
       renderPagination();
     }
 
     function renderPagination() {
-      const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+      const totalPages = Math.ceil(filteredOwners.length / itemsPerPage);
       const pagination = document.getElementById('pagination');
       
       if (totalPages <= 1) {
@@ -670,155 +653,125 @@
       let html = `
         <button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>Anterior</button>
       `;
-      
+
       for (let i = 1; i <= totalPages; i++) {
-        if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+        if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
           html += `<button onclick="goToPage(${i})" class="${i === currentPage ? 'active' : ''}">${i}</button>`;
-        } else if (i === currentPage - 3 || i === currentPage + 3) {
+        } else if (i === currentPage - 2 || i === currentPage + 2) {
           html += `<button disabled>...</button>`;
         }
       }
-      
+
       html += `
         <button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Proximo</button>
       `;
-      
+
       pagination.innerHTML = html;
     }
 
     function goToPage(page) {
-      const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+      const totalPages = Math.ceil(filteredOwners.length / itemsPerPage);
       if (page >= 1 && page <= totalPages) {
         currentPage = page;
-        renderUsers();
+        renderOwners();
       }
     }
 
-    function viewUser(id) {
-      const user = allUsers.find(u => u.id === id);
-      if (!user) return;
+    async function viewOwner(id) {
+      try {
+        const response = await fetch(`/admin/api/owners/${id}`);
+        if (!response.ok) throw new Error('Erro ao carregar detalhes');
+        const owner = await response.json();
+        
+        let listingsHtml = '';
+        if (owner.listings && owner.listings.length > 0) {
+          listingsHtml = owner.listings.map(listing => {
+            const typeName = listing.listingType === 'business' ? 'Empresa' : 'Hospedagem';
+            const link = listing.listingType === 'business' 
+              ? `/admin/empresas-form?id=${listing.listingId}` 
+              : `/admin/hospedagens-form?id=${listing.listingId}`;
+            return `
+              <div class="listing-item">
+                <div class="listing-name"><a href="${link}" style="color: var(--primary);">${listing.listingName || 'Ver anuncio'}</a></div>
+                <div class="listing-type">${typeName}</div>
+              </div>
+            `;
+          }).join('');
+        } else {
+          listingsHtml = '<p style="color: #6b7280; font-size: 14px;">Nenhum anuncio vinculado</p>';
+        }
 
-      const details = document.getElementById('userDetails');
-      details.innerHTML = `
-        <div style="text-align: center; margin-bottom: 20px;">
-          <div class="user-avatar" style="width: 80px; height: 80px; font-size: 28px; margin: 0 auto;">
-            ${user.avatarUrl 
-              ? `<img src="${user.avatarUrl}" alt="${user.name}">` 
-              : getInitials(user.name)}
+        document.getElementById('ownerDetails').innerHTML = `
+          <div class="user-detail-row">
+            <div class="user-detail-label">Nome</div>
+            <div class="user-detail-value">${owner.name}</div>
           </div>
-          <h3 style="margin-top: 12px; color: #1f2937;">${escapeHtml(user.name)}</h3>
-        </div>
-        <div class="user-detail-row">
-          <span class="user-detail-label">E-mail</span>
-          <span class="user-detail-value">${escapeHtml(user.email)}</span>
-        </div>
-        <div class="user-detail-row">
-          <span class="user-detail-label">Telefone</span>
-          <span class="user-detail-value">${user.phone || '-'}</span>
-        </div>
-        <div class="user-detail-row">
-          <span class="user-detail-label">Cidade</span>
-          <span class="user-detail-value">${user.city || '-'}</span>
-        </div>
-        <div class="user-detail-row">
-          <span class="user-detail-label">Estado</span>
-          <span class="user-detail-value">${user.state || '-'}</span>
-        </div>
-        <div class="user-detail-row">
-          <span class="user-detail-label">Newsletter</span>
-          <span class="user-detail-value">
-            ${user.receiveNews 
-              ? '<span class="badge badge-success">Inscrito</span>' 
-              : '<span class="badge badge-secondary">Nao inscrito</span>'}
-          </span>
-        </div>
-        <div class="user-detail-row">
-          <span class="user-detail-label">Termos</span>
-          <span class="user-detail-value">
-            ${user.acceptedTerms 
-              ? '<span class="badge badge-success">Aceito</span>' 
-              : '<span class="badge badge-warning">Pendente</span>'}
-          </span>
-        </div>
-        <div class="user-detail-row">
-          <span class="user-detail-label">Cadastrado em</span>
-          <span class="user-detail-value">${formatDateTime(user.createdAt)}</span>
-        </div>
-        <div class="user-detail-row">
-          <span class="user-detail-label">Atualizado em</span>
-          <span class="user-detail-value">${formatDateTime(user.updatedAt)}</span>
-        </div>
-      `;
-      
-      openModal('viewModal');
+          <div class="user-detail-row">
+            <div class="user-detail-label">E-mail</div>
+            <div class="user-detail-value">${owner.email}</div>
+          </div>
+          <div class="user-detail-row">
+            <div class="user-detail-label">Telefone</div>
+            <div class="user-detail-value">${owner.phone || '-'}</div>
+          </div>
+          <div class="user-detail-row">
+            <div class="user-detail-label">Cadastro</div>
+            <div class="user-detail-value">${new Date(owner.createdAt).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>
+          </div>
+          <div class="user-detail-row">
+            <div class="user-detail-label">Anuncios</div>
+            <div class="user-detail-value">${listingsHtml}</div>
+          </div>
+        `;
+        
+        document.getElementById('viewModal').classList.add('active');
+      } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao carregar detalhes do proprietario');
+      }
     }
 
-    let userToDelete = null;
+    let deleteId = null;
 
     function confirmDelete(id) {
-      userToDelete = id;
-      openModal('deleteModal');
+      deleteId = id;
+      document.getElementById('deleteModal').classList.add('active');
     }
 
-    async function deleteUser() {
-      if (!userToDelete) return;
+    async function deleteOwner() {
+      if (!deleteId) return;
       
       try {
-        const response = await fetch(`/admin/api/users/${userToDelete}`, {
+        const response = await fetch(`/admin/api/owners/${deleteId}`, {
           method: 'DELETE'
         });
         
-        if (!response.ok) throw new Error('Erro ao excluir usuario');
+        if (!response.ok) throw new Error('Erro ao excluir');
         
         closeModal('deleteModal');
-        userToDelete = null;
-        loadUsers();
+        loadOwners();
       } catch (error) {
         console.error('Erro:', error);
-        alert('Erro ao excluir usuario. Tente novamente.');
+        alert('Erro ao excluir proprietario');
       }
     }
 
-    function openModal(id) {
-      document.getElementById(id).classList.add('active');
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove('active');
     }
 
-    function closeModal(id) {
-      document.getElementById(id).classList.remove('active');
-    }
+    document.getElementById('confirmDeleteBtn').addEventListener('click', deleteOwner);
 
-    function getInitials(name) {
-      if (!name) return '?';
-      return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
-    }
+    document.getElementById('logout-btn').addEventListener('click', async () => {
+      try {
+        await fetch('/admin/logout', { method: 'POST' });
+        window.location.href = '/admin/login';
+      } catch (error) {
+        console.error('Erro ao fazer logout:', error);
+      }
+    });
 
-    function formatDate(dateStr) {
-      if (!dateStr) return '-';
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('pt-BR');
-    }
-
-    function formatDateTime(dateStr) {
-      if (!dateStr) return '-';
-      const date = new Date(dateStr);
-      return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    }
-
-    function escapeHtml(text) {
-      if (!text) return '';
-      const div = document.createElement('div');
-      div.textContent = text;
-      return div.innerHTML;
-    }
-
-    async function logout() {
-      await fetch('/admin/api/logout', { method: 'POST' });
-      location.href = '/admin';
-    }
-
-    document.getElementById('confirmDeleteBtn').addEventListener('click', deleteUser);
-    
-    loadUsers();
+    loadOwners();
   </script>
 </body>
 </html>
