@@ -75,11 +75,24 @@ export const ownerUsers = pgTable("owner_users", {
   password: text("password").notNull(),
   name: text("name").notNull(),
   phone: text("phone"),
-  ownerType: text("owner_type").notNull(), // 'business' or 'accommodation'
-  listingId: varchar("listing_id"), // ID of the business or accommodation
+  ownerType: text("owner_type"), // deprecated - kept for backward compatibility
+  listingId: varchar("listing_id"), // deprecated - kept for backward compatibility
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+// Owner Listings - relates owners to multiple businesses/accommodations
+export const ownerListings = pgTable("owner_listings", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  ownerId: varchar("owner_id").notNull(),
+  listingType: text("listing_type").notNull(), // 'business' or 'accommodation'
+  listingId: varchar("listing_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export type OwnerListing = typeof ownerListings.$inferSelect;
 
 export const ownerLoginSchema = z.object({
   email: z.string().email("E-mail inválido"),
@@ -91,7 +104,7 @@ export const ownerRegisterSchema = z.object({
   password: z.string().min(6, "Senha deve ter pelo menos 6 caracteres"),
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   phone: z.string().optional(),
-  ownerType: z.enum(["business", "accommodation"]),
+  ownerType: z.enum(["business", "accommodation"]).optional(),
 });
 
 export type OwnerUser = typeof ownerUsers.$inferSelect;
@@ -440,6 +453,7 @@ export const businesses = pgTable("businesses", {
   name: text("name").notNull(),
   category: text("category").notNull(),
   categoryId: text("category_id").notNull(),
+  ownerId: varchar("owner_id"), // ID of the owner user
   planType: text("plan_type").default("basic"), // basic (free) or complete (paid)
   planStatus: text("plan_status").default("active"), // active, pending, expired
   planExpiresAt: timestamp("plan_expires_at"),
@@ -477,6 +491,7 @@ export const createBusinessSchema = z.object({
   name: z.string().min(2, "Nome deve ter pelo menos 2 caracteres"),
   category: z.string().min(1, "Categoria é obrigatória"),
   categoryId: z.string().min(1, "Categoria é obrigatória"),
+  ownerId: z.string().optional().nullable(),
   planType: z.string().optional().default("basic"),
   planStatus: z.string().optional().default("active"),
   ownerEmail: z.string().optional().nullable(),
@@ -574,6 +589,7 @@ export const accommodations = pgTable("accommodations", {
     .default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
   type: text("type").notNull(), // hotel, pousada, hostel
+  ownerId: varchar("owner_id"), // ID of the owner user
   planType: text("plan_type").default("basic"), // basic (free) or complete (paid)
   planStatus: text("plan_status").default("pending"), // active, pending, expired
   planExpiresAt: timestamp("plan_expires_at"),

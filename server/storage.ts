@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type UpdateProfileInput, users, type News, type InsertNews, type UpdateNewsInput, news, type Video, type InsertVideo, type UpdateVideoInput, videos, type Attraction, type InsertAttraction, type UpdateAttractionInput, attractions, type StaticPage, type InsertStaticPage, type UpdateStaticPageInput, staticPages, type UsefulPhone, type CreateUsefulPhoneInput, type UpdateUsefulPhoneInput, usefulPhones, type PilgrimTip, type CreatePilgrimTipInput, type UpdatePilgrimTipInput, pilgrimTips, type Service, type CreateServiceInput, type UpdateServiceInput, services, type Business, type CreateBusinessInput, type UpdateBusinessInput, businesses, type BusinessReview, type CreateBusinessReviewInput, businessReviews, type Accommodation, type CreateAccommodationInput, type UpdateAccommodationInput, accommodations, type Room, type CreateRoomInput, type UpdateRoomInput, rooms, type RoomBlockedDate, type CreateRoomBlockedDateInput, roomBlockedDates, type AccommodationReview, type CreateAccommodationReviewInput, accommodationReviews, type Partner, type CreatePartnerInput, type UpdatePartnerInput, partners, type Banner, type CreateBannerInput, type UpdateBannerInput, banners, type Notification, type CreateNotificationInput, type UpdateNotificationInput, notifications, type UserNotification, userNotifications, type PushDevice, type RegisterPushDeviceInput, pushDevices, type UserNotificationPreference, type UpdateNotificationPreferencesInput, userNotificationPreferences, type UserActivityLog, type CreateActivityLogInput, userActivityLogs, type AppSetting, type UpdateAppSettingInput, appSettings, type OwnerUser, ownerUsers, type AnalyticsEvent, type CreateAnalyticsEventInput, analyticsEvents } from "@shared/schema";
+import { type User, type InsertUser, type UpdateProfileInput, users, type News, type InsertNews, type UpdateNewsInput, news, type Video, type InsertVideo, type UpdateVideoInput, videos, type Attraction, type InsertAttraction, type UpdateAttractionInput, attractions, type StaticPage, type InsertStaticPage, type UpdateStaticPageInput, staticPages, type UsefulPhone, type CreateUsefulPhoneInput, type UpdateUsefulPhoneInput, usefulPhones, type PilgrimTip, type CreatePilgrimTipInput, type UpdatePilgrimTipInput, pilgrimTips, type Service, type CreateServiceInput, type UpdateServiceInput, services, type Business, type CreateBusinessInput, type UpdateBusinessInput, businesses, type BusinessReview, type CreateBusinessReviewInput, businessReviews, type Accommodation, type CreateAccommodationInput, type UpdateAccommodationInput, accommodations, type Room, type CreateRoomInput, type UpdateRoomInput, rooms, type RoomBlockedDate, type CreateRoomBlockedDateInput, roomBlockedDates, type AccommodationReview, type CreateAccommodationReviewInput, accommodationReviews, type Partner, type CreatePartnerInput, type UpdatePartnerInput, partners, type Banner, type CreateBannerInput, type UpdateBannerInput, banners, type Notification, type CreateNotificationInput, type UpdateNotificationInput, notifications, type UserNotification, userNotifications, type PushDevice, type RegisterPushDeviceInput, pushDevices, type UserNotificationPreference, type UpdateNotificationPreferencesInput, userNotificationPreferences, type UserActivityLog, type CreateActivityLogInput, userActivityLogs, type AppSetting, type UpdateAppSettingInput, appSettings, type OwnerUser, ownerUsers, type OwnerListing, ownerListings, type AnalyticsEvent, type CreateAnalyticsEventInput, analyticsEvents } from "@shared/schema";
 import { db } from "./db";
 import { eq, count, desc, ilike, or, and, asc, gte, sql, countDistinct } from "drizzle-orm";
 
@@ -1122,6 +1122,42 @@ export class DatabaseStorage implements IStorage {
 
   async getRecentEvents(limit: number = 50): Promise<AnalyticsEvent[]> {
     return await db.select().from(analyticsEvents).orderBy(desc(analyticsEvents.createdAt)).limit(limit);
+  }
+
+  // Owner Listings - manage multiple listings per owner
+  async createOwnerListing(data: { ownerId: string; listingType: string; listingId: string }): Promise<OwnerListing> {
+    const result = await db.insert(ownerListings).values(data).returning();
+    return result[0];
+  }
+
+  async getOwnerListingsByOwnerId(ownerId: string): Promise<OwnerListing[]> {
+    return await db.select().from(ownerListings).where(eq(ownerListings.ownerId, ownerId)).orderBy(desc(ownerListings.createdAt));
+  }
+
+  async getOwnerListingsByOwnerIdAndType(ownerId: string, listingType: string): Promise<OwnerListing[]> {
+    return await db.select().from(ownerListings).where(
+      and(eq(ownerListings.ownerId, ownerId), eq(ownerListings.listingType, listingType))
+    ).orderBy(desc(ownerListings.createdAt));
+  }
+
+  async getOwnerListingByListingId(listingId: string, listingType: string): Promise<OwnerListing | undefined> {
+    const result = await db.select().from(ownerListings).where(
+      and(eq(ownerListings.listingId, listingId), eq(ownerListings.listingType, listingType))
+    );
+    return result[0];
+  }
+
+  async deleteOwnerListing(id: string): Promise<boolean> {
+    const result = await db.delete(ownerListings).where(eq(ownerListings.id, id)).returning();
+    return result.length > 0;
+  }
+
+  async getBusinessesByOwnerId(ownerId: string): Promise<Business[]> {
+    return await db.select().from(businesses).where(eq(businesses.ownerId, ownerId)).orderBy(desc(businesses.createdAt));
+  }
+
+  async getAccommodationsByOwnerId(ownerId: string): Promise<Accommodation[]> {
+    return await db.select().from(accommodations).where(eq(accommodations.ownerId, ownerId)).orderBy(desc(accommodations.createdAt));
   }
 }
 
