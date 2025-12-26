@@ -10,6 +10,7 @@ import NotificationsScreen from "@/screens/NotificationsScreen";
 import SearchScreen from "@/screens/SearchScreen";
 import AdminNotificationsScreen from "@/screens/AdminNotificationsScreen";
 import PrivacyPolicyScreen from "@/screens/PrivacyPolicyScreen";
+import TermsOfUseScreen from "@/screens/TermsOfUseScreen";
 import { useScreenOptions } from "@/hooks/useScreenOptions";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/hooks/useTheme";
@@ -21,6 +22,7 @@ export type RootStackParamList = {
   Search: undefined;
   AdminNotifications: undefined;
   PrivacyPolicy: undefined;
+  TermsOfUse: undefined;
   Login: undefined;
   Register: undefined;
   ForgotPassword: undefined;
@@ -91,6 +93,14 @@ export default function RootStackNavigator() {
               presentation: "modal",
             }}
           />
+          <Stack.Screen
+            name="TermsOfUse"
+            component={TermsOfUseScreen}
+            options={{ 
+              headerTitle: "Termos de Uso",
+              presentation: "modal",
+            }}
+          />
         </>
       ) : (
         <>
@@ -114,6 +124,14 @@ export default function RootStackNavigator() {
             component={PrivacyPolicyScreen}
             options={{ 
               headerTitle: "Politica de Privacidade",
+              presentation: "modal",
+            }}
+          />
+          <Stack.Screen
+            name="TermsOfUse"
+            component={TermsOfUseScreen}
+            options={{ 
+              headerTitle: "Termos de Uso",
               presentation: "modal",
             }}
           />

@@ -504,6 +504,7 @@
         <button class="tab" data-tab="historia">Historia</button>
         <button class="tab" data-tab="info">Info</button>
         <button class="tab" data-tab="privacidade">Privacidade</button>
+        <button class="tab" data-tab="termos">Termos de Uso</button>
       </div>
       
       <!-- HOME TAB -->
@@ -677,6 +678,34 @@
           </div>
         </div>
       </div>
+      
+      <!-- TERMOS TAB -->
+      <div id="termos-content" class="tab-content">
+        <div class="content-section">
+          <div class="content-section-header">
+            <h3 class="content-section-title">Termos de Uso</h3>
+            <button class="btn btn-primary" id="save-termos-btn">Salvar Alteracoes</button>
+          </div>
+          <div class="content-section-body">
+            <div class="form-group">
+              <label for="termos-titulo">Titulo</label>
+              <input type="text" id="termos-titulo" placeholder="Ex: Termos de Uso">
+            </div>
+            <div class="form-group">
+              <label for="termos-conteudo">Conteudo Completo</label>
+              <textarea id="termos-conteudo" style="min-height: 500px;" placeholder="Digite aqui o texto completo dos termos de uso..."></textarea>
+            </div>
+            <div class="form-group">
+              <label for="termos-email">E-mail de Contato</label>
+              <input type="email" id="termos-email" placeholder="Ex: contato@portaldoromeiro.com.br">
+            </div>
+            <div class="form-group">
+              <label for="termos-ultima-atualizacao">Ultima Atualizacao</label>
+              <input type="date" id="termos-ultima-atualizacao">
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
   
@@ -784,6 +813,13 @@
       ultimaAtualizacao: ''
     };
     
+    let termosData = {
+      titulo: 'Termos de Uso',
+      conteudo: '',
+      email: 'contato@portaldoromeiro.com.br',
+      ultimaAtualizacao: ''
+    };
+    
     async function loadPageData(pageKey) {
       try {
         const response = await fetch(`/api/static-pages/${pageKey}`);
@@ -869,6 +905,15 @@
         document.getElementById('privacidade-email').value = privacidadeData.email || '';
         document.getElementById('privacidade-ultima-atualizacao').value = privacidadeData.ultimaAtualizacao || '';
       }
+      
+      const savedTermos = await loadPageData('termos-de-uso');
+      if (savedTermos) {
+        termosData = { ...termosData, ...savedTermos };
+        document.getElementById('termos-titulo').value = termosData.titulo || '';
+        document.getElementById('termos-conteudo').value = termosData.conteudo || '';
+        document.getElementById('termos-email').value = termosData.email || '';
+        document.getElementById('termos-ultima-atualizacao').value = termosData.ultimaAtualizacao || '';
+      }
     }
     
     setupImageUpload('home-hero-upload', 'home-hero-image-input', 'home-hero-preview', (url) => {
@@ -918,6 +963,14 @@
       privacidadeData.email = document.getElementById('privacidade-email').value;
       privacidadeData.ultimaAtualizacao = document.getElementById('privacidade-ultima-atualizacao').value;
       await savePageData('privacidade', privacidadeData);
+    });
+    
+    document.getElementById('save-termos-btn').addEventListener('click', async () => {
+      termosData.titulo = document.getElementById('termos-titulo').value;
+      termosData.conteudo = document.getElementById('termos-conteudo').value;
+      termosData.email = document.getElementById('termos-email').value;
+      termosData.ultimaAtualizacao = document.getElementById('termos-ultima-atualizacao').value;
+      await savePageData('termos-de-uso', termosData);
     });
     
     document.getElementById('logout-btn').addEventListener('click', async () => {

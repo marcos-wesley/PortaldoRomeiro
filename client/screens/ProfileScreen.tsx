@@ -362,6 +362,12 @@ export default function ProfileScreen() {
           <View style={styles.optionsContainer}>
             <ProfileOption
               icon="file-text"
+              title="Termos de Uso"
+              iconColor="#10B981"
+              onPress={() => navigation.navigate("TermsOfUse")}
+            />
+            <ProfileOption
+              icon="file-text"
               title="Politica de Privacidade"
               iconColor="#6366F1"
               onPress={() => navigation.navigate("PrivacyPolicy")}
