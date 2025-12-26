@@ -1,7 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "node:http";
 import { randomBytes, pbkdf2Sync, timingSafeEqual } from "node:crypto";
-import { registerUserSchema, loginUserSchema, updateProfileSchema, createNewsSchema, updateNewsSchema, createVideoSchema, updateVideoSchema, createAttractionSchema, updateAttractionSchema, createBusinessReviewSchema, createAccommodationReviewSchema, createNotificationSchema, updateNotificationSchema, registerPushDeviceSchema, updateNotificationPreferencesSchema, createActivityLogSchema } from "@shared/schema";
+import { registerUserSchema, loginUserSchema, updateProfileSchema, createNewsSchema, updateNewsSchema, createVideoSchema, updateVideoSchema, createAttractionSchema, updateAttractionSchema, createBusinessReviewSchema, createAccommodationReviewSchema, createNotificationSchema, updateNotificationSchema, registerPushDeviceSchema, updateNotificationPreferencesSchema, createActivityLogSchema, createAnalyticsEventSchema } from "@shared/schema";
 import { storage } from "./storage";
 import { fromError } from "zod-validation-error";
 import * as fs from "node:fs";
@@ -1114,6 +1114,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get suggestions error:", error);
       return res.status(500).json({ error: "Erro ao buscar sugestoes" });
+    }
+  });
+
+  // Analytics API - Record events from mobile app
+  app.post("/api/analytics/event", async (req, res) => {
+    try {
+      const validationResult = createAnalyticsEventSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        const errorMessage = fromError(validationResult.error).toString();
+        return res.status(400).json({ error: errorMessage });
+      }
+
+      const event = await storage.createAnalyticsEvent(validationResult.data);
+      return res.status(201).json({ event });
+    } catch (error) {
+      console.error("Create analytics event error:", error);
+      return res.status(500).json({ error: "Erro ao registrar evento" });
+    }
+  });
+
+  // Analytics API - Get summary for dashboard
+  app.get("/admin/api/analytics/summary", async (req, res) => {
+    try {
+      const days = parseInt(req.query.days as string) || 30;
+      const summary = await storage.getAnalyticsSummary(days);
+      return res.json(summary);
+    } catch (error) {
+      console.error("Get analytics summary error:", error);
+      return res.status(500).json({ error: "Erro ao buscar resumo" });
+    }
+  });
+
+  // Analytics API - Get top performing entities
+  app.get("/admin/api/analytics/top/:entityType", async (req, res) => {
+    try {
+      const { entityType } = req.params;
+      const days = parseInt(req.query.days as string) || 30;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const topEntities = await storage.getTopEntities(entityType, days, limit);
+      return res.json({ entities: topEntities });
+    } catch (error) {
+      console.error("Get top entities error:", error);
+      return res.status(500).json({ error: "Erro ao buscar top entidades" });
+    }
+  });
+
+  // Analytics API - Get events by day for chart
+  app.get("/admin/api/analytics/timeline", async (req, res) => {
+    try {
+      const days = parseInt(req.query.days as string) || 30;
+      const timeline = await storage.getEventsByDay(days);
+      return res.json({ timeline });
+    } catch (error) {
+      console.error("Get analytics timeline error:", error);
+      return res.status(500).json({ error: "Erro ao buscar timeline" });
+    }
+  });
+
+  // Analytics API - Get recent events
+  app.get("/admin/api/analytics/recent", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 50;
+      const events = await storage.getRecentEvents(limit);
+      return res.json({ events });
+    } catch (error) {
+      console.error("Get recent events error:", error);
+      return res.status(500).json({ error: "Erro ao buscar eventos recentes" });
     }
   });
 
