@@ -16,6 +16,28 @@ export function getApiUrl(): string {
   return url.href;
 }
 
+/**
+ * Resolves a relative image URL to a full URL using the API base
+ * @param url - The relative or absolute image URL
+ * @returns The full URL for the image, or undefined if no URL provided
+ */
+export function resolveImageUrl(url: string | null | undefined): string | undefined {
+  if (!url) return undefined;
+  
+  // If already absolute URL, return as-is
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+  
+  // For relative URLs starting with /, prepend the API base URL
+  if (url.startsWith('/')) {
+    const baseUrl = getApiUrl();
+    return baseUrl.replace(/\/$/, '') + url;
+  }
+  
+  return url;
+}
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;

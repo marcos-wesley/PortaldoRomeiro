@@ -18,7 +18,7 @@ import { ThemedText } from "@/components/ThemedText";
 import { useTheme } from "@/hooks/useTheme";
 import { Spacing, BorderRadius, Colors } from "@/constants/theme";
 import { businessCategories } from "@/lib/data";
-import { apiRequest } from "@/lib/query-client";
+import { apiRequest, resolveImageUrl } from "@/lib/query-client";
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { GuiaStackParamList } from "@/navigation/GuiaStackNavigator";
 
@@ -352,7 +352,7 @@ export default function EmpresaDetailScreen({ route }: Props) {
       >
       {business.coverUrl ? (
         <Image
-          source={{ uri: business.coverUrl }}
+          source={{ uri: resolveImageUrl(business.coverUrl) }}
           style={styles.coverImage}
           contentFit="cover"
         />
@@ -366,7 +366,7 @@ export default function EmpresaDetailScreen({ route }: Props) {
         <View style={styles.header}>
           {business.logoUrl ? (
             <Image
-              source={{ uri: business.logoUrl }}
+              source={{ uri: resolveImageUrl(business.logoUrl) }}
               style={styles.logo}
               contentFit="cover"
             />

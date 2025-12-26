@@ -7,7 +7,7 @@ import { useRoute, RouteProp } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/query-client";
+import { apiRequest, resolveImageUrl } from "@/lib/query-client";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -212,7 +212,7 @@ function RoomCard({
       style={[styles.roomCard, { backgroundColor: theme.backgroundDefault }, animatedStyle]}
     >
       {room.imageUrl ? (
-        <Image source={{ uri: room.imageUrl }} style={styles.roomImage} contentFit="cover" />
+        <Image source={{ uri: resolveImageUrl(room.imageUrl) }} style={styles.roomImage} contentFit="cover" />
       ) : (
         <View style={[styles.roomImage, styles.roomImagePlaceholder, { backgroundColor: Colors.light.highlight }]}>
           <Feather name="home" size={32} color={Colors.light.primary} />
@@ -420,7 +420,7 @@ export default function HospedagemDetailScreen() {
         showsVerticalScrollIndicator={false}
       >
         {accommodation.coverUrl ? (
-          <Image source={{ uri: accommodation.coverUrl }} style={styles.heroImage} contentFit="cover" />
+          <Image source={{ uri: resolveImageUrl(accommodation.coverUrl) }} style={styles.heroImage} contentFit="cover" />
         ) : (
           <View style={[styles.heroImage, styles.heroPlaceholder, { backgroundColor: Colors.light.highlight }]}>
             <Feather name="home" size={64} color={Colors.light.primary} />
@@ -516,7 +516,7 @@ export default function HospedagemDetailScreen() {
                     }}
                   >
                     <Image
-                      source={{ uri: imageUrl }}
+                      source={{ uri: resolveImageUrl(imageUrl) }}
                       style={styles.galleryImage}
                       contentFit="cover"
                     />
@@ -697,7 +697,7 @@ export default function HospedagemDetailScreen() {
             {gallery.map((imageUrl, index) => (
               <View key={index} style={styles.galleryModalImageContainer}>
                 <Image
-                  source={{ uri: imageUrl }}
+                  source={{ uri: resolveImageUrl(imageUrl) }}
                   style={styles.galleryModalImage}
                   contentFit="contain"
                 />

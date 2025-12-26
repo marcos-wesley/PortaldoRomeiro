@@ -22,6 +22,7 @@ import { businessCategories, BusinessCategory } from "@/lib/data";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { GuiaStackParamList } from "@/navigation/GuiaStackNavigator";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import { resolveImageUrl } from "@/lib/query-client";
 
 interface Business {
   id: string;
@@ -134,7 +135,7 @@ function SimpleBusinessCard({
     >
       {business.logoUrl ? (
         <Image
-          source={{ uri: business.logoUrl }}
+          source={{ uri: resolveImageUrl(business.logoUrl) }}
           style={styles.simpleCardLogo}
           contentFit="cover"
         />
@@ -219,7 +220,7 @@ function FeaturedBusinessCard({
     >
       {business.coverUrl ? (
         <Image
-          source={{ uri: business.coverUrl }}
+          source={{ uri: resolveImageUrl(business.coverUrl) }}
           style={styles.featuredCardCover}
           contentFit="cover"
         />
@@ -232,7 +233,7 @@ function FeaturedBusinessCard({
         <View style={styles.featuredCardHeader}>
           {business.logoUrl ? (
             <Image
-              source={{ uri: business.logoUrl }}
+              source={{ uri: resolveImageUrl(business.logoUrl) }}
               style={styles.featuredCardLogo}
               contentFit="cover"
             />

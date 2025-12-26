@@ -6,6 +6,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useQuery } from "@tanstack/react-query";
+import { resolveImageUrl } from "@/lib/query-client";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -333,7 +334,7 @@ function AccommodationCard({
       style={[styles.accommodationCard, { backgroundColor: theme.backgroundDefault }, animatedStyle]}
     >
       {item.coverUrl ? (
-        <Image source={{ uri: item.coverUrl }} style={styles.accommodationImage} contentFit="cover" />
+        <Image source={{ uri: resolveImageUrl(item.coverUrl) }} style={styles.accommodationImage} contentFit="cover" />
       ) : (
         <View style={[styles.accommodationImage, styles.imagePlaceholder, { backgroundColor: Colors.light.highlight }]}>
           <Feather name="home" size={40} color={Colors.light.primary} />
@@ -447,7 +448,7 @@ function BasicAccommodationCard({
       <View style={styles.basicCardContent}>
         {item.coverUrl || item.logoUrl ? (
           <Image 
-            source={{ uri: item.coverUrl || item.logoUrl || "" }} 
+            source={{ uri: resolveImageUrl(item.coverUrl || item.logoUrl) }} 
             style={styles.basicCardImage} 
             contentFit="cover" 
           />
