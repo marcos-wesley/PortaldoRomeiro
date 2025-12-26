@@ -123,11 +123,11 @@ export default function InfoScreen() {
 
   const content = pageContent?.content;
   const heroTitle = content?.heroTitle || "Portal do Romeiro";
-  const heroSubtitle = content?.heroSubtitle || "Fe, devocao e informacao na Capital da Fe";
+  const heroSubtitle = content?.heroSubtitle || "Sua fonte confiavel de fe, devocao e informacoes";
   const heroImage = content?.heroImage ? getFullImageUrl(content.heroImage) : "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200";
-  const nossaHistoria1 = content?.nossaHistoria1 || "O Portal do Romeiro nasceu do desejo de conectar o coracao dos fieis a Capital da Fe. Percebemos a necessidade de um guia completo que nao apenas informasse, mas acolhesse cada visitante com o carinho que Trindade oferece.";
-  const nossaHistoria2 = content?.nossaHistoria2 || "Nossa jornada comecou com um pequeno blog e hoje somos a principal referencia digital para milhoes de romeiros, unindo tradicao, cultura e tecnologia para servir a Fe.";
-  const quemSomos = content?.quemSomos || "Somos peregrinos servindo peregrinos. Uma equipe apaixonada por Trindade, comprometida em levar informacao confiavel e manter viva a chama da devocao.";
+  const nossaHistoria1 = content?.nossaHistoria1 || "Bem-vindo ao Portal do Romeiro - sua fonte confiavel de fe, devocao e informacoes para os visitantes que exploram Trindade-GO, a capital da fe dos goianos. Neste espaco virtual, mergulhe em uma experiencia unica, onde a espiritualidade se encontra com a rica cultura e hospitalidade dessa cidade tao especial.";
+  const nossaHistoria2 = content?.nossaHistoria2 || "";
+  const quemSomos = content?.quemSomos || "O Portal do Romeiro e mais do que um guia online, e um elo entre os peregrinos e a mistica Capital da fe dos goianos. Nosso compromisso e oferecer informacoes abrangentes e atualizadas para turistas, peregrinos e devotos, permitindo que todos explorem a cidade com confianca.";
   const quemSomosImage = content?.quemSomosImage ? getFullImageUrl(content.quemSomosImage) : "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600";
 
   const getSettingValue = (key: string): string | null => {
@@ -176,14 +176,16 @@ export default function InfoScreen() {
             <View style={[styles.sectionIcon, { backgroundColor: VibrantColors.orange + "20" }]}>
               <Feather name="book-open" size={18} color={VibrantColors.orange} />
             </View>
-            <ThemedText type="h3">Nossa Historia</ThemedText>
+            <ThemedText type="h3">Um pouco sobre nos</ThemedText>
           </View>
           <ThemedText type="body" secondary style={styles.paragraph}>
             {nossaHistoria1}
           </ThemedText>
-          <ThemedText type="body" secondary style={styles.paragraph}>
-            {nossaHistoria2}
-          </ThemedText>
+          {nossaHistoria2 ? (
+            <ThemedText type="body" secondary style={styles.paragraph}>
+              {nossaHistoria2}
+            </ThemedText>
+          ) : null}
         </View>
 
         <View style={[styles.quemSomosCard, { backgroundColor: theme.backgroundDefault }]}>
@@ -205,9 +207,9 @@ export default function InfoScreen() {
           <FlatList
             horizontal
             data={[
-              { id: "1", icon: "compass", title: "Nossa Missao", description: "Orientar e guiar peregrinos com seguranca, devocao e acolhimento, proporcionando a melhor experiencia de fe.", color: VibrantColors.blue },
-              { id: "2", icon: "eye", title: "Nossa Visao", description: "Ser a principal fonte de informacao sobre Trindade e a Romaria, elevando a experiencia de cada visitante.", color: VibrantColors.teal },
-              { id: "3", icon: "heart", title: "Nossos Valores", description: "Fe, acolhimento, respeito, transparencia e compromisso com o bem-estar de cada romeiro que nos visita.", color: VibrantColors.pink },
+              { id: "1", icon: "compass", title: "Nossa Missao", description: "Facilitar a jornada daqueles que buscam experiencias significativas em Trindade, proporcionando um espaco virtual onde a fe se entrelaca com a pratica turistica. Queremos ser a bussola que guia os romeiros.", color: VibrantColors.blue },
+              { id: "2", icon: "eye", title: "Nossa Visao", description: "Ser o principal guia online para aqueles que exploram a capital da fe, inspirando a conexao cultural entre os visitantes e a cidade, tornando-nos um ponto de referencia para a vivencia completa.", color: VibrantColors.teal },
+              { id: "3", icon: "heart", title: "Nossos Valores", description: "Fe e Respeito, Integridade, Hospitalidade, Colaboracao, Inovacao, Compromisso Social, Cultura e Historia.", color: VibrantColors.pink },
             ]}
             keyExtractor={(item) => item.id}
             showsHorizontalScrollIndicator={false}
