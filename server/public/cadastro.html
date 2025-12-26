@@ -1242,12 +1242,88 @@
             }
           }
         } else {
-          showToast(data.error || 'Erro ao enviar cadastro', 'error');
+          if (data.action === 'login') {
+            showEmailExistsAlert(data.error, data.redirectUrl || '/minha-conta');
+          } else {
+            showToast(data.error || 'Erro ao processar cadastro', 'error');
+          }
         }
       } catch (error) {
         document.getElementById('loading-overlay').classList.add('hidden');
         showToast('Erro ao enviar cadastro. Tente novamente.', 'error');
       }
+    }
+
+    function showEmailExistsAlert(message, loginUrl) {
+      const existingAlert = document.getElementById('email-exists-alert');
+      if (existingAlert) existingAlert.remove();
+      
+      const alertHtml = `
+        <div id="email-exists-alert" style="
+          position: fixed;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: rgba(0,0,0,0.6);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 1001;
+          padding: 24px;
+        ">
+          <div style="
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+          ">
+            <div style="
+              width: 64px;
+              height: 64px;
+              background: #fef3c7;
+              border-radius: 50%;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              margin: 0 auto 20px;
+            ">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+            </div>
+            <h3 style="font-size: 18px; color: #1f2937; margin-bottom: 12px;">Email ja cadastrado</h3>
+            <p style="color: #6b7280; font-size: 14px; margin-bottom: 24px;">${message}</p>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+              <button onclick="document.getElementById('email-exists-alert').remove()" style="
+                padding: 12px 24px;
+                border: 1px solid #e5e7eb;
+                border-radius: 8px;
+                background: #f8f9fa;
+                color: #1f2937;
+                font-weight: 500;
+                cursor: pointer;
+              ">Fechar</button>
+              <a href="${loginUrl}" style="
+                padding: 12px 24px;
+                border: none;
+                border-radius: 8px;
+                background: #b22226;
+                color: white;
+                font-weight: 500;
+                text-decoration: none;
+                display: inline-block;
+              ">Ir para Login</a>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.insertAdjacentHTML('beforeend', alertHtml);
     }
 
     function showToast(message, type) {

@@ -472,9 +472,58 @@
           currentOwner = data.owner;
           showDashboard();
           loadListings();
+          handleIntentParams();
+        } else {
+          handleIntentParams();
         }
       } catch (error) {
         console.error('Auth check error:', error);
+      }
+    }
+
+    function handleIntentParams() {
+      const params = new URLSearchParams(window.location.search);
+      const action = params.get('action');
+      const plan = params.get('plan');
+      
+      if (!currentOwner && (action === 'new-business' || action === 'new-accommodation')) {
+        const loginAlert = document.createElement('div');
+        loginAlert.className = 'alert alert-info';
+        loginAlert.style.marginBottom = '16px';
+        loginAlert.textContent = 'Faca login ou registre-se para adicionar seu negocio.';
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+          loginForm.parentNode.insertBefore(loginAlert, loginForm);
+        }
+        return;
+      }
+      
+      if (action === 'new-business' && currentOwner) {
+        setTimeout(() => {
+          const modal = document.getElementById('businessModal');
+          if (modal) {
+            modal.classList.remove('hidden');
+            modal.style.display = 'flex';
+          }
+          if (plan === 'complete') {
+            selectBusinessPlan('complete');
+          }
+        }, 500);
+      } else if (action === 'new-accommodation' && currentOwner) {
+        setTimeout(() => {
+          const modal = document.getElementById('accommodationModal');
+          if (modal) {
+            modal.classList.remove('hidden');
+            modal.style.display = 'flex';
+          }
+          if (plan === 'complete') {
+            selectAccommodationPlan('complete');
+          }
+        }, 500);
+      }
+      
+      if (action) {
+        window.history.replaceState({}, document.title, window.location.pathname);
       }
     }
 

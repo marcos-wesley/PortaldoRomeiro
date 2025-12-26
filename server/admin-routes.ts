@@ -1718,6 +1718,22 @@ export function registerAdminRoutes(app: Express) {
       const { type, plan } = req.body;
       const logoUrl = req.file ? `/uploads/cadastros/${req.file.filename}` : null;
 
+      // Validate email first
+      const ownerEmail = req.body.owner_email;
+      if (!ownerEmail || typeof ownerEmail !== 'string' || !ownerEmail.includes('@')) {
+        return res.status(400).json({ error: 'Email invalido ou nao fornecido' });
+      }
+
+      // Check if email already exists
+      const existingOwner = await storage.getOwnerUserByEmail(ownerEmail);
+      if (existingOwner) {
+        return res.status(409).json({ 
+          error: 'Ja existe uma conta com este email. Faca login para adicionar novos negocios.',
+          action: 'login',
+          redirectUrl: '/minha-conta'
+        });
+      }
+
       // Validate password
       const password = req.body.owner_password;
       if (!password || password.length < 6) {
