@@ -2,17 +2,14 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# deps
 COPY package*.json ./
 RUN npm ci
 
-# código
 COPY . .
 
-# build (typescript -> dist)
-RUN npm run build || npx tsc -p tsconfig.json
+# builda SOMENTE o server (gera server_dist/)
+RUN npm run server:build
 
 EXPOSE 3000
 
-# start (usa o script do package.json)
-CMD ["npm", "run", "start"]
+CMD ["npm", "run", "server:prod"]
