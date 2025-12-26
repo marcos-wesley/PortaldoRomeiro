@@ -21,6 +21,7 @@ import { Spacing, BorderRadius, Colors } from "@/constants/theme";
 import { HomeStackParamList } from "@/navigation/HomeStackNavigator";
 import { quickActions, QuickAction } from "@/lib/data";
 import { getApiUrl } from "@/lib/query-client";
+import { trackBannerClick, trackBannerImpression, trackNewsView } from "@/lib/analytics";
 
 interface HomePageContent {
   heroTitle: string;
@@ -445,11 +446,12 @@ function HomeBannerSlideshow({ banners }: { banners: Banner[] }) {
     transform: [{ scale: scale.value }],
   }));
 
-  const openLink = async (link: string | null) => {
-    if (link) {
+  const openLink = async (banner: Banner) => {
+    if (banner.link) {
+      trackBannerClick(banner.id, banner.title || "Banner");
       try {
         const { openBrowserAsync } = await import("expo-web-browser");
-        await openBrowserAsync(link);
+        await openBrowserAsync(banner.link);
       } catch (e) {
         console.error("Error opening URL:", e);
       }
@@ -510,7 +512,7 @@ function HomeBannerSlideshow({ banners }: { banners: Banner[] }) {
         {validBanners.map((banner) => (
           <AnimatedPressable
             key={banner.id}
-            onPress={() => openLink(banner.link)}
+            onPress={() => openLink(banner)}
             onPressIn={() => { scale.value = withSpring(0.98); }}
             onPressOut={() => { scale.value = withSpring(1); }}
             style={[animatedStyle, styles.bannerAdContainer, { width: bannerSize, height: bannerSize }]}
@@ -1115,12 +1117,6 @@ const styles = StyleSheet.create({
   videoTitle: {
     fontSize: 13,
     fontWeight: "500",
-  },
-  partnersSectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: Spacing.md,
   },
   sponsoredBadge: {
     paddingHorizontal: Spacing.sm,

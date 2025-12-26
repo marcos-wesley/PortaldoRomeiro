@@ -1,5 +1,6 @@
 import { ScrollView, View, StyleSheet, Pressable, Linking, Platform, Modal, Dimensions, TextInput, ActivityIndicator, Alert } from "react-native";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { trackBusinessView, trackPhoneClick, trackWhatsAppClick, trackWebsiteClick, trackMapClick } from "@/lib/analytics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useHeaderHeight } from "@react-navigation/elements";
@@ -223,6 +224,12 @@ export default function EmpresaDetailScreen({ route }: Props) {
     enabled: !!business,
   });
 
+  useEffect(() => {
+    if (business) {
+      trackBusinessView(business.id, business.name);
+    }
+  }, [business?.id]);
+
   const createReviewMutation = useMutation({
     mutationFn: async (data: { userName: string; rating: number; comment?: string }) => {
       return apiRequest("POST", `/api/businesses/${businessId}/reviews`, data);
@@ -282,18 +289,21 @@ export default function EmpresaDetailScreen({ route }: Props) {
 
   const handleCall = () => {
     if (business.phone) {
+      trackPhoneClick("business", business.id, business.name);
       Linking.openURL(`tel:${business.phone}`).catch(() => {});
     }
   };
 
   const handleWhatsApp = () => {
     if (business.whatsapp) {
+      trackWhatsAppClick("business", business.id, business.name);
       Linking.openURL(`https://wa.me/${business.whatsapp}`).catch(() => {});
     }
   };
 
   const handleDirections = () => {
     if (business.latitude && business.longitude) {
+      trackMapClick("business", business.id, business.name);
       const url = Platform.select({
         ios: `maps://app?daddr=${business.latitude},${business.longitude}`,
         android: `google.navigation:q=${business.latitude},${business.longitude}`,
@@ -305,6 +315,7 @@ export default function EmpresaDetailScreen({ route }: Props) {
 
   const handleWebsite = () => {
     if (business.website) {
+      trackWebsiteClick("business", business.id, business.name);
       Linking.openURL(business.website).catch(() => {});
     }
   };

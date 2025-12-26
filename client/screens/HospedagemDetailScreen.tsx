@@ -1,5 +1,6 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ScrollView, View, StyleSheet, Pressable, Linking, ActivityIndicator, TextInput, Modal, Dimensions } from "react-native";
+import { trackAccommodationView, trackReservationClick, trackPhoneClick, trackWhatsAppClick } from "@/lib/analytics";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useRoute, RouteProp } from "@react-navigation/native";
@@ -335,6 +336,12 @@ export default function HospedagemDetailScreen() {
     enabled: !!accommodation,
   });
 
+  useEffect(() => {
+    if (accommodation) {
+      trackAccommodationView(accommodation.id, accommodation.name);
+    }
+  }, [accommodation?.id]);
+
   const createReviewMutation = useMutation({
     mutationFn: async (data: { userName: string; rating: number; comment?: string }) => {
       return apiRequest("POST", `/api/accommodations/${id}/reviews`, data);
@@ -363,6 +370,11 @@ export default function HospedagemDetailScreen() {
     const phone = accommodation.whatsapp || accommodation.phone;
     if (!phone) return;
     
+    if (room) {
+      trackReservationClick(accommodation.id, accommodation.name);
+    }
+    trackWhatsAppClick("accommodation", accommodation.id, accommodation.name);
+    
     const cleanPhone = phone.replace(/\D/g, "");
     const message = room 
       ? `Ola! Gostaria de reservar o ${room.name} no ${accommodation.name} para ${nights} noite${nights > 1 ? "s" : ""}, de ${formatDisplayDate(effectiveCheckIn)} a ${formatDisplayDate(effectiveCheckOut)}.`
@@ -373,6 +385,7 @@ export default function HospedagemDetailScreen() {
 
   const handleCall = () => {
     if (!accommodation?.phone) return;
+    trackPhoneClick("accommodation", accommodation.id, accommodation.name);
     Linking.openURL(`tel:${accommodation.phone}`);
   };
 
