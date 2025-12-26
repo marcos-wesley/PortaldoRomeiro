@@ -1806,36 +1806,45 @@ export function registerAdminRoutes(app: Express) {
 
           if (accessToken) {
             try {
-              const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
+              // Create subscription using Mercado Pago Subscriptions API (preapproval)
+              const subscriptionBody = {
+                reason: 'Plano Completo - Guia Comercial Portal do Romeiro',
+                external_reference: `business_${business.id}`,
+                payer_email: req.body.owner_email,
+                auto_recurring: {
+                  frequency: 1,
+                  frequency_type: 'months',
+                  transaction_amount: price,
+                  currency_id: 'BRL'
+                },
+                back_url: `${req.protocol}://${req.get('host')}/minha-conta?subscription_status=success`,
+                status: 'pending'
+              };
+
+              const mpResponse = await fetch('https://api.mercadopago.com/preapproval', {
                 method: 'POST',
                 headers: {
                   'Authorization': `Bearer ${accessToken}`,
                   'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                  items: [{
-                    title: 'Plano Completo - Guia Comercial Portal do Romeiro',
-                    quantity: 1,
-                    unit_price: price,
-                    currency_id: 'BRL'
-                  }],
-                  external_reference: `business_${business.id}`,
-                  back_urls: {
-                    success: `${req.protocol}://${req.get('host')}/cadastro/sucesso`,
-                    failure: `${req.protocol}://${req.get('host')}/cadastro/erro`,
-                    pending: `${req.protocol}://${req.get('host')}/cadastro/pendente`
-                  },
-                  auto_return: 'approved'
-                })
+                body: JSON.stringify(subscriptionBody)
               });
 
               const mpData = await mpResponse.json();
+              console.log('MP Subscription response:', JSON.stringify(mpData, null, 2));
+
               if (mpData.init_point) {
+                // Save subscription ID
+                await storage.updateBusiness(business.id, { subscriptionId: mpData.id } as any);
+                
                 return res.json({ 
                   success: true, 
                   id: business.id,
-                  paymentUrl: isProduction ? mpData.init_point : mpData.sandbox_init_point
+                  subscriptionId: mpData.id,
+                  paymentUrl: mpData.init_point
                 });
+              } else if (mpData.message) {
+                console.error('MP Subscription error:', mpData.message);
               }
             } catch (mpError) {
               console.error('Mercado Pago error:', mpError);
@@ -1846,7 +1855,7 @@ export function registerAdminRoutes(app: Express) {
           return res.json({ 
             success: true, 
             id: business.id,
-            message: 'Cadastro realizado. O pagamento sera processado posteriormente.'
+            message: 'Cadastro realizado. Configure as credenciais do Mercado Pago no painel admin para ativar pagamentos.'
           });
         }
 
@@ -1918,36 +1927,45 @@ export function registerAdminRoutes(app: Express) {
 
         if (accessToken) {
           try {
-            const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
+            // Create subscription using Mercado Pago Subscriptions API
+            const subscriptionBody = {
+              reason: 'Plano Completo - Hospedagem Portal do Romeiro',
+              external_reference: `accommodation_${accommodation.id}`,
+              payer_email: req.body.owner_email,
+              auto_recurring: {
+                frequency: 1,
+                frequency_type: 'months',
+                transaction_amount: price,
+                currency_id: 'BRL'
+              },
+              back_url: `${req.protocol}://${req.get('host')}/minha-conta?subscription_status=success`,
+              status: 'pending'
+            };
+
+            const mpResponse = await fetch('https://api.mercadopago.com/preapproval', {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${accessToken}`,
                 'Content-Type': 'application/json'
               },
-              body: JSON.stringify({
-                items: [{
-                  title: 'Plano Anual - Hospedagem Portal do Romeiro',
-                  quantity: 1,
-                  unit_price: price,
-                  currency_id: 'BRL'
-                }],
-                external_reference: `accommodation_${accommodation.id}`,
-                back_urls: {
-                  success: `${req.protocol}://${req.get('host')}/cadastro/sucesso`,
-                  failure: `${req.protocol}://${req.get('host')}/cadastro/erro`,
-                  pending: `${req.protocol}://${req.get('host')}/cadastro/pendente`
-                },
-                auto_return: 'approved'
-              })
+              body: JSON.stringify(subscriptionBody)
             });
 
             const mpData = await mpResponse.json();
+            console.log('MP Accommodation Subscription response:', JSON.stringify(mpData, null, 2));
+
             if (mpData.init_point) {
+              // Save subscription ID
+              await storage.updateAccommodation(accommodation.id, { subscriptionId: mpData.id } as any);
+              
               return res.json({ 
                 success: true, 
                 id: accommodation.id,
-                paymentUrl: isProduction ? mpData.init_point : mpData.sandbox_init_point
+                subscriptionId: mpData.id,
+                paymentUrl: mpData.init_point
               });
+            } else if (mpData.message) {
+              console.error('MP Subscription error:', mpData.message);
             }
           } catch (mpError) {
             console.error('Mercado Pago error:', mpError);
@@ -1957,7 +1975,7 @@ export function registerAdminRoutes(app: Express) {
         return res.json({ 
           success: true, 
           id: accommodation.id,
-          message: 'Cadastro realizado. O pagamento sera processado posteriormente.'
+          message: 'Cadastro realizado. Configure as credenciais do Mercado Pago no painel admin para ativar pagamentos.'
         });
       }
 
@@ -2382,7 +2400,7 @@ export function registerAdminRoutes(app: Express) {
         const settingsMap: Record<string, string> = {};
         settings.forEach((s) => { if (s.value) settingsMap[s.key] = s.value; });
 
-        const isProduction = settingsMap['mp_environment'] === 'production';
+        const isProduction = settingsMap['mp_production_mode'] === 'true';
         const accessToken = isProduction 
           ? settingsMap['mp_production_access_token']
           : settingsMap['mp_sandbox_access_token'];
@@ -2390,39 +2408,47 @@ export function registerAdminRoutes(app: Express) {
 
         if (accessToken) {
           try {
-            const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
+            // Create subscription using Mercado Pago Subscriptions API
+            const subscriptionBody = {
+              reason: `Plano Completo - ${req.body.name}`,
+              external_reference: `business_${newBusiness.id}`,
+              payer_email: owner.email,
+              auto_recurring: {
+                frequency: 1,
+                frequency_type: 'months',
+                transaction_amount: price,
+                currency_id: 'BRL'
+              },
+              back_url: `${req.protocol}://${req.get('host')}/minha-conta?subscription_status=success`,
+              status: 'pending'
+            };
+
+            const mpResponse = await fetch('https://api.mercadopago.com/preapproval', {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${accessToken}`,
                 'Content-Type': 'application/json'
               },
-              body: JSON.stringify({
-                items: [{
-                  title: `Plano Completo - ${req.body.name}`,
-                  quantity: 1,
-                  unit_price: price,
-                  currency_id: 'BRL'
-                }],
-                external_reference: `business_${newBusiness.id}`,
-                back_urls: {
-                  success: `${req.protocol}://${req.get('host')}/cadastro/sucesso`,
-                  failure: `${req.protocol}://${req.get('host')}/cadastro/erro`,
-                  pending: `${req.protocol}://${req.get('host')}/cadastro/pendente`
-                },
-                auto_return: 'approved'
-              })
+              body: JSON.stringify(subscriptionBody)
             });
 
             const mpData = await mpResponse.json();
-            const paymentUrl = isProduction ? mpData.init_point : (mpData.sandbox_init_point || mpData.init_point);
-            if (paymentUrl) {
+            console.log('MP Owner Business Subscription:', JSON.stringify(mpData, null, 2));
+
+            if (mpData.init_point) {
+              // Save subscription ID
+              await storage.updateBusiness(newBusiness.id, { subscriptionId: mpData.id } as any);
+              
               return res.json({ 
                 success: true, 
                 listing: newBusiness, 
                 type: 'business',
-                paymentUrl: paymentUrl,
+                subscriptionId: mpData.id,
+                paymentUrl: mpData.init_point,
                 requiresPayment: true
               });
+            } else if (mpData.message) {
+              console.error('MP Subscription error:', mpData.message);
             }
           } catch (mpError) {
             console.error("Mercado Pago error:", mpError);
@@ -2434,7 +2460,7 @@ export function registerAdminRoutes(app: Express) {
           success: true, 
           listing: newBusiness, 
           type: 'business',
-          message: 'Cadastro realizado. O pagamento sera processado posteriormente.',
+          message: 'Cadastro realizado. Configure as credenciais do Mercado Pago no painel admin para ativar pagamentos.',
           requiresPayment: true
         });
       }
@@ -2502,7 +2528,7 @@ export function registerAdminRoutes(app: Express) {
         const settingsMap: Record<string, string> = {};
         settings.forEach((s) => { if (s.value) settingsMap[s.key] = s.value; });
 
-        const isProduction = settingsMap['mp_environment'] === 'production';
+        const isProduction = settingsMap['mp_production_mode'] === 'true';
         const accessToken = isProduction 
           ? settingsMap['mp_production_access_token']
           : settingsMap['mp_sandbox_access_token'];
@@ -2510,39 +2536,47 @@ export function registerAdminRoutes(app: Express) {
 
         if (accessToken) {
           try {
-            const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
+            // Create subscription using Mercado Pago Subscriptions API
+            const subscriptionBody = {
+              reason: `Plano Completo Hospedagem - ${req.body.name}`,
+              external_reference: `accommodation_${newAccommodation.id}`,
+              payer_email: owner.email,
+              auto_recurring: {
+                frequency: 1,
+                frequency_type: 'months',
+                transaction_amount: price,
+                currency_id: 'BRL'
+              },
+              back_url: `${req.protocol}://${req.get('host')}/minha-conta?subscription_status=success`,
+              status: 'pending'
+            };
+
+            const mpResponse = await fetch('https://api.mercadopago.com/preapproval', {
               method: 'POST',
               headers: {
                 'Authorization': `Bearer ${accessToken}`,
                 'Content-Type': 'application/json'
               },
-              body: JSON.stringify({
-                items: [{
-                  title: `Plano Completo Hospedagem - ${req.body.name}`,
-                  quantity: 1,
-                  unit_price: price,
-                  currency_id: 'BRL'
-                }],
-                external_reference: `accommodation_${newAccommodation.id}`,
-                back_urls: {
-                  success: `${req.protocol}://${req.get('host')}/cadastro/sucesso`,
-                  failure: `${req.protocol}://${req.get('host')}/cadastro/erro`,
-                  pending: `${req.protocol}://${req.get('host')}/cadastro/pendente`
-                },
-                auto_return: 'approved'
-              })
+              body: JSON.stringify(subscriptionBody)
             });
 
             const mpData = await mpResponse.json();
-            const paymentUrl = isProduction ? mpData.init_point : (mpData.sandbox_init_point || mpData.init_point);
-            if (paymentUrl) {
+            console.log('MP Owner Accommodation Subscription:', JSON.stringify(mpData, null, 2));
+
+            if (mpData.init_point) {
+              // Save subscription ID
+              await storage.updateAccommodation(newAccommodation.id, { subscriptionId: mpData.id } as any);
+              
               return res.json({ 
                 success: true, 
                 listing: newAccommodation, 
                 type: 'accommodation',
-                paymentUrl: paymentUrl,
+                subscriptionId: mpData.id,
+                paymentUrl: mpData.init_point,
                 requiresPayment: true
               });
+            } else if (mpData.message) {
+              console.error('MP Subscription error:', mpData.message);
             }
           } catch (mpError) {
             console.error("Mercado Pago error:", mpError);
@@ -2554,7 +2588,7 @@ export function registerAdminRoutes(app: Express) {
           success: true, 
           listing: newAccommodation, 
           type: 'accommodation',
-          message: 'Cadastro realizado. O pagamento sera processado posteriormente.',
+          message: 'Cadastro realizado. Configure as credenciais do Mercado Pago no painel admin para ativar pagamentos.',
           requiresPayment: true
         });
       }
@@ -2624,22 +2658,118 @@ export function registerAdminRoutes(app: Express) {
     }
   });
 
-  // Webhook for Mercado Pago payment notifications
+  // Webhook for Mercado Pago payment and subscription notifications
   app.post("/api/webhooks/mercadopago", async (req, res) => {
     try {
-      const { type, data } = req.body;
+      const { type, data, action } = req.body;
+      console.log('MP Webhook received:', JSON.stringify(req.body, null, 2));
       
+      const allSettings = await storage.getAllAppSettings();
+      const settingsMap: Record<string, string> = {};
+      allSettings.forEach(s => { settingsMap[s.key] = s.value || ''; });
+
+      const isProduction = settingsMap['mp_production_mode'] === 'true';
+      const accessToken = isProduction 
+        ? settingsMap['mp_production_access_token']
+        : settingsMap['mp_sandbox_access_token'];
+
+      if (!accessToken) {
+        console.error('MP Webhook: No access token configured');
+        return res.sendStatus(200);
+      }
+
+      // Handle subscription notifications (preapproval)
+      if (type === 'subscription_preapproval' || type === 'preapproval') {
+        if (data?.id) {
+          const subscriptionResponse = await fetch(`https://api.mercadopago.com/preapproval/${data.id}`, {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+          });
+          const subscription = await subscriptionResponse.json();
+          console.log('MP Subscription details:', JSON.stringify(subscription, null, 2));
+
+          // Subscription is authorized (first payment approved)
+          if (subscription.status === 'authorized' && subscription.external_reference) {
+            const [entityType, entityId] = subscription.external_reference.split('_');
+
+            if (entityType === 'business') {
+              // Check current status - only update to pending_approval if not already approved/active
+              const business = await storage.getBusinessById(entityId);
+              if (business && business.planStatus !== 'active') {
+                await storage.updateBusiness(entityId, {
+                  planStatus: 'pending_approval', // Pending admin approval
+                  subscriptionId: subscription.id,
+                  paymentId: subscription.id,
+                });
+                console.log(`Business ${entityId} subscription authorized - pending admin approval`);
+              } else {
+                // Just update subscription/payment IDs without changing status
+                await storage.updateBusiness(entityId, {
+                  subscriptionId: subscription.id,
+                  paymentId: subscription.id,
+                });
+                console.log(`Business ${entityId} subscription renewed - keeping active status`);
+              }
+            } else if (entityType === 'accommodation') {
+              const accommodation = await storage.getAccommodationById(entityId);
+              if (accommodation && accommodation.planStatus !== 'active') {
+                await storage.updateAccommodation(entityId, {
+                  planStatus: 'pending_approval', // Pending admin approval
+                  subscriptionId: subscription.id,
+                  paymentId: subscription.id,
+                });
+                console.log(`Accommodation ${entityId} subscription authorized - pending admin approval`);
+              } else {
+                await storage.updateAccommodation(entityId, {
+                  subscriptionId: subscription.id,
+                  paymentId: subscription.id,
+                });
+                console.log(`Accommodation ${entityId} subscription renewed - keeping active status`);
+              }
+            }
+          }
+        }
+      }
+
+      // Handle subscription payment notifications (recurring payments)
+      if (type === 'subscription_authorized_payment') {
+        if (data?.id) {
+          const paymentResponse = await fetch(`https://api.mercadopago.com/authorized_payments/${data.id}`, {
+            headers: { 'Authorization': `Bearer ${accessToken}` }
+          });
+          const payment = await paymentResponse.json();
+          console.log('MP Subscription payment details:', JSON.stringify(payment, null, 2));
+
+          if (payment.status === 'approved' && payment.preapproval_id) {
+            // Get subscription to find external_reference
+            const subscriptionResponse = await fetch(`https://api.mercadopago.com/preapproval/${payment.preapproval_id}`, {
+              headers: { 'Authorization': `Bearer ${accessToken}` }
+            });
+            const subscription = await subscriptionResponse.json();
+
+            if (subscription.external_reference) {
+              const [entityType, entityId] = subscription.external_reference.split('_');
+
+              // For recurring payments, only update payment ID - don't change status
+              // This ensures approved listings stay active after renewal payments
+              if (entityType === 'business') {
+                await storage.updateBusiness(entityId, {
+                  paymentId: payment.id,
+                });
+                console.log(`Business ${entityId} recurring payment approved - status preserved`);
+              } else if (entityType === 'accommodation') {
+                await storage.updateAccommodation(entityId, {
+                  paymentId: payment.id,
+                });
+                console.log(`Accommodation ${entityId} recurring payment approved - status preserved`);
+              }
+            }
+          }
+        }
+      }
+      
+      // Handle legacy single payment notifications
       if (type === 'payment') {
-        const allSettings = await storage.getAllAppSettings();
-        const settingsMap: Record<string, string> = {};
-        allSettings.forEach(s => { settingsMap[s.key] = s.value || ''; });
-
-        const isProduction = settingsMap['mp_production_mode'] === 'true';
-        const accessToken = isProduction 
-          ? settingsMap['mp_production_access_token']
-          : settingsMap['mp_sandbox_access_token'];
-
-        if (accessToken && data?.id) {
+        if (data?.id) {
           const paymentResponse = await fetch(`https://api.mercadopago.com/v1/payments/${data.id}`, {
             headers: { 'Authorization': `Bearer ${accessToken}` }
           });
@@ -2647,21 +2777,16 @@ export function registerAdminRoutes(app: Express) {
 
           if (payment.status === 'approved' && payment.external_reference) {
             const [entityType, entityId] = payment.external_reference.split('_');
-            const duration = entityType === 'business' 
-              ? parseInt(settingsMap['plan_business_complete_duration']) || 365
-              : parseInt(settingsMap['plan_accommodation_duration']) || 365;
-            const expiresAt = new Date();
-            expiresAt.setDate(expiresAt.getDate() + duration);
 
             if (entityType === 'business') {
               await storage.updateBusiness(entityId, {
-                planStatus: 'active',
-                published: true,
+                planStatus: 'pending_approval',
+                paymentId: payment.id?.toString(),
               });
             } else if (entityType === 'accommodation') {
               await storage.updateAccommodation(entityId, {
-                planStatus: 'active',
-                published: true,
+                planStatus: 'pending_approval',
+                paymentId: payment.id?.toString(),
               });
             }
           }

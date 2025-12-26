@@ -458,6 +458,7 @@ export const businesses = pgTable("businesses", {
   planStatus: text("plan_status").default("active"), // active, pending, expired
   planExpiresAt: timestamp("plan_expires_at"),
   paymentId: text("payment_id"), // Mercado Pago payment ID
+  subscriptionId: text("subscription_id"), // Mercado Pago subscription ID
   ownerEmail: text("owner_email"), // Email of the business owner
   ownerPhone: text("owner_phone"), // Phone of the business owner
   logoUrl: text("logo_url"),
@@ -527,6 +528,8 @@ export const updateBusinessSchema = z.object({
   categoryId: z.string().optional(),
   planType: z.string().optional(),
   planStatus: z.string().optional(),
+  paymentId: z.string().optional().nullable(),
+  subscriptionId: z.string().optional().nullable(),
   ownerEmail: z.string().optional().nullable(),
   ownerPhone: z.string().optional().nullable(),
   logoUrl: z.string().optional().nullable(),
@@ -594,6 +597,7 @@ export const accommodations = pgTable("accommodations", {
   planStatus: text("plan_status").default("pending"), // active, pending, expired
   planExpiresAt: timestamp("plan_expires_at"),
   paymentId: text("payment_id"), // Mercado Pago payment ID
+  subscriptionId: text("subscription_id"), // Mercado Pago subscription ID
   ownerEmail: text("owner_email"), // Email of the accommodation owner
   ownerPhone: text("owner_phone"), // Phone of the accommodation owner
   description: text("description"),
@@ -656,6 +660,8 @@ export const updateAccommodationSchema = z.object({
   type: z.enum(["hotel", "pousada", "hostel"]).optional(),
   planType: z.string().optional(),
   planStatus: z.string().optional(),
+  paymentId: z.string().optional().nullable(),
+  subscriptionId: z.string().optional().nullable(),
   ownerEmail: z.string().optional().nullable(),
   ownerPhone: z.string().optional().nullable(),
   description: z.string().optional().nullable(),
