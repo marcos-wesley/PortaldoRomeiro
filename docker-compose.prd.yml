@@ -1,0 +1,35 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: pr_postgres
+    environment:
+      POSTGRES_DB: portalromeiro
+      POSTGRES_USER: portal
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pr_pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  api:
+    build: ./backend
+    container_name: pr_api
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://portal:${POSTGRES_PASSWORD}@db:5432/portalromeiro
+    depends_on:
+      - db
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+
+  admin:
+    build: ./admin
+    container_name: pr_admin
+    depends_on:
+      - api
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+
+volumes:
+  pr_pgdata:
