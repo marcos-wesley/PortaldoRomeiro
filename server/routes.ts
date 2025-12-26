@@ -330,6 +330,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Romaria (Pilgrimage Countdown) - Public API
+  app.get("/api/romaria", async (req, res) => {
+    try {
+      const settings = await storage.getAppSettingsByCategory("romaria");
+      const romariaData: Record<string, string | null> = {};
+      
+      for (const setting of settings) {
+        const key = setting.key.replace("romaria_", "");
+        romariaData[key] = setting.value;
+      }
+      
+      return res.json(romariaData);
+    } catch (error) {
+      console.error("Get romaria settings error:", error);
+      return res.status(500).json({ error: "Erro ao buscar configurações da romaria" });
+    }
+  });
+
   // Upload image for news
   app.post("/api/upload/image", async (req, res) => {
     try {

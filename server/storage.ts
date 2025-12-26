@@ -993,6 +993,14 @@ export class DatabaseStorage implements IStorage {
       { key: "link_play_store", value: "", category: "links", label: "Play Store (Android)", type: "url" },
       { key: "link_tv_ao_vivo", value: "", category: "links", label: "Link TV ao Vivo", type: "url" },
       
+      // Romaria (Pilgrimage Countdown)
+      { key: "romaria_name", value: "Romaria 2026", category: "romaria", label: "Nome da Romaria", type: "text" },
+      { key: "romaria_start_date", value: "2026-06-26", category: "romaria", label: "Data de Inicio", type: "date" },
+      { key: "romaria_end_date", value: "2026-07-05", category: "romaria", label: "Data de Termino", type: "date" },
+      { key: "romaria_message_before", value: "Prepare sua caminhada.", category: "romaria", label: "Mensagem Antes", type: "text" },
+      { key: "romaria_message_during", value: "Viva esse momento de fe.", category: "romaria", label: "Mensagem Durante", type: "text" },
+      { key: "romaria_enabled", value: "true", category: "romaria", label: "Exibir Contador", type: "boolean" },
+      
       // Configuracoes Gerais
       { key: "maintenance_mode", value: "false", category: "sistema", label: "Modo Manutencao", type: "boolean" },
       { key: "notifications_enabled", value: "true", category: "sistema", label: "Notificacoes Ativas", type: "boolean" },
