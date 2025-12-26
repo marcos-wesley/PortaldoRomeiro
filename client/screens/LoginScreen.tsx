@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   StyleSheet,
@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import { ThemedView } from "@/components/ThemedView";
 import { ThemedText } from "@/components/ThemedText";
@@ -23,6 +24,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Spacing, BorderRadius, Colors } from "@/constants/theme";
 import { apiRequest } from "@/lib/query-client";
 import type { RootStackParamList } from "@/navigation/RootStackNavigator";
+
+const CREDENTIALS_STORAGE_KEY = "@portal_romeiro_saved_credentials";
 
 interface FormData {
   email: string;
@@ -53,12 +56,56 @@ export default function LoginScreen() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [showPassword, setShowPassword] = useState(false);
 
+  useEffect(() => {
+    loadSavedCredentials();
+  }, []);
+
+  const loadSavedCredentials = async () => {
+    try {
+      const savedCredentials = await AsyncStorage.getItem(CREDENTIALS_STORAGE_KEY);
+      if (savedCredentials) {
+        const { email, password } = JSON.parse(savedCredentials);
+        setFormData({
+          email: email || "",
+          password: password || "",
+          rememberMe: true,
+        });
+      }
+    } catch (error) {
+      console.error("Error loading saved credentials:", error);
+    }
+  };
+
+  const saveCredentials = async (email: string, password: string) => {
+    try {
+      await AsyncStorage.setItem(
+        CREDENTIALS_STORAGE_KEY,
+        JSON.stringify({ email, password })
+      );
+    } catch (error) {
+      console.error("Error saving credentials:", error);
+    }
+  };
+
+  const clearSavedCredentials = async () => {
+    try {
+      await AsyncStorage.removeItem(CREDENTIALS_STORAGE_KEY);
+    } catch (error) {
+      console.error("Error clearing credentials:", error);
+    }
+  };
+
   const loginMutation = useMutation({
     mutationFn: async (data: { email: string; password: string }) => {
       const response = await apiRequest("POST", "/api/auth/login", data);
       return response.json();
     },
     onSuccess: async (data) => {
+      if (formData.rememberMe) {
+        await saveCredentials(formData.email, formData.password);
+      } else {
+        await clearSavedCredentials();
+      }
       await login(data.user, formData.rememberMe);
     },
     onError: (error: Error) => {
