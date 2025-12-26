@@ -356,19 +356,6 @@ export default function ProfileScreen() {
           </View>
         </View>
 
-        <View style={styles.section}>
-          <ThemedText type="caption" secondary style={styles.sectionTitle}>ADMINISTRACAO</ThemedText>
-
-          <View style={styles.optionsContainer}>
-            <ProfileOption
-              icon="send"
-              title="Gerenciar Notificacoes"
-              iconColor="#22C55E"
-              onPress={() => navigation.navigate("AdminNotifications")}
-            />
-          </View>
-        </View>
-
         <View style={styles.logoutSection}>
           <Pressable 
             onPress={handleLogout}
