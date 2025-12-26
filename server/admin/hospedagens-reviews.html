@@ -80,6 +80,22 @@
     .toast.success { background: #10b981; display: block; }
     .toast.error { background: #ef4444; display: block; }
     @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+      .sidebar-logo {
+      display: block;
+      margin: 0 auto 12px;
+      width: auto;
+      max-width: calc(100% - 16px);
+      height: auto;
+      max-height: 40px;
+      object-fit: contain;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar-logo {
+        max-height: 32px;
+        max-width: 80%;
+      }
+    }
   </style>
 </head>
 <body>

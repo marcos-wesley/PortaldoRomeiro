@@ -100,12 +100,28 @@
     .gallery-item img { width: 100%; height: 100%; object-fit: cover; border-radius: 6px; }
     .gallery-item .remove-btn { position: absolute; top: -6px; right: -6px; width: 20px; height: 20px; border-radius: 50%; background: #ef4444; color: white; border: none; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; }
     .uploading { opacity: 0.6; pointer-events: none; }
+      .sidebar-logo {
+      display: block;
+      margin: 0 auto 12px;
+      width: auto;
+      max-width: calc(100% - 16px);
+      height: auto;
+      max-height: 40px;
+      object-fit: contain;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar-logo {
+        max-height: 32px;
+        max-width: 80%;
+      }
+    }
   </style>
 </head>
 <body>
   <aside class="sidebar">
     <div class="sidebar-header">
-    <img src="/logo-oficial.png" alt="Portal do Romeiro - Fé, Devoção e Informação" style="max-height: 60px; width: auto; margin-bottom: 8px; display: block; margin-left: auto; margin-right: auto;">
+      <img src="/logo-oficial.png" alt="Portal do Romeiro" class="sidebar-logo">
       <h1>Portal do Romeiro</h1>
       <p>Painel Administrativo</p>
     </div>
